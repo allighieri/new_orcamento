@@ -10,6 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- CSS Customizado -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     @stack('styles')
 </head>
@@ -47,10 +49,12 @@
                             <i class="bi bi-file-earmark-text"></i> Orçamentos
                         </a>
                     </li>
+                    @if(Auth::check() && Auth::user()->role === 'super_admin')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}" href="{{ route('companies.index') }}">
                             <i class="bi bi-building-add"></i> Empresas</a>
                     </li>
+                    @endif
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" href="{{ route('categories.index') }}">
                             <i class="bi bi-tags"></i> Categorias</a>
@@ -67,6 +71,12 @@
                         <a class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}" href="{{ route('contacts.index') }}">
                             <i class="bi bi-person-rolodex"></i> Contatos</a>
                     </li>
+                    @if(Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin']))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
+                            <i class="bi bi-people"></i> Usuários</a>
+                    </li>
+                    @endif
                 </ul>
                 
                 <!-- User Dropdown -->
@@ -87,6 +97,13 @@
                                     <i class="bi bi-gear"></i> Configurações
                                 </a>
                             </li>
+                            @if(Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin']) && Auth::user()->company)
+                            <li>
+                                <a class="dropdown-item" href="{{ route('companies.show', Auth::user()->company) }}">
+                                    <i class="bi bi-building-add"></i> Dados da Empresa
+                                </a>
+                            </li>
+                            @endif
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}" class="d-inline">
@@ -109,6 +126,13 @@
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('warning'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ session('warning') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif

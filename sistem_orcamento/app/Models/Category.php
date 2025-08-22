@@ -14,7 +14,8 @@ class Category extends Model
         'slug',
         'description',
         'parent_id',
-        'level'
+        'level',
+        'company_id'
     ];
 
     /**
@@ -46,15 +47,20 @@ class Category extends Model
      */
     public function allChildren(): HasMany
     {
-        return $this->hasMany(Category::class, 'parent_id')->with('allChildren');
+        return $this->hasMany(Category::class, 'parent_id')
+            ->where('company_id', $this->company_id)
+            ->with('allChildren');
     }
 
     /**
      * Obter todas as categorias em formato de árvore
      */
-    public static function getTree()
+    public static function getTree($companyId = null)
     {
-        return static::whereNull('parent_id')
+        $companyId = $companyId ?? session('tenant_company_id');
+        
+        return static::where('company_id', $companyId)
+            ->whereNull('parent_id')
             ->with('allChildren')
             ->orderBy('name')
             ->get();
@@ -63,9 +69,9 @@ class Category extends Model
     /**
      * Obter todas as categorias em formato plano para select
      */
-    public static function getTreeForSelect($excludeId = null)
+    public static function getTreeForSelect($excludeId = null, $companyId = null)
     {
-        $categories = static::getTree();
+        $categories = static::getTree($companyId);
         $result = [];
         
         foreach ($categories as $category) {
@@ -121,6 +127,14 @@ class Category extends Model
         }
         
         return $level;
+    }
+
+    /**
+     * Relacionamento com empresa
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**

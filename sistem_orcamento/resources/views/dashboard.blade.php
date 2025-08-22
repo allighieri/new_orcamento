@@ -97,6 +97,7 @@
         </div>
     </div>
 
+    @if(Auth::check() && Auth::user()->role === 'super_admin')
     <div class="col-md-2 mb-3">
         <div class="card bg-danger text-white">
             <div class="card-body">
@@ -117,6 +118,7 @@
             </div>
         </div>
     </div>
+    @endif
     <div class="col-md-2 mb-3">
         <div class="card bg-info text-white">
             <div class="card-body">
@@ -162,12 +164,14 @@
                             Novo Cliente
                         </a>
                     </div>
+                    @if(Auth::check() && Auth::user()->role === 'super_admin')
                     <div class="col-md-3 mb-3">
                         <a href="{{ route('companies.create') }}" class="btn btn-secondary btn-lg w-100">
                             <i class="bi bi-building-add"></i><br>
                             Nova Empresa
                         </a>
                     </div>
+                    @endif
                     <div class="col-md-3 mb-3">
                         <a href="{{ route('contacts.create') }}" class="btn btn-dark btn-lg w-100">
                             <i class="bi bi-person-rolodex"></i><br>

@@ -14,7 +14,10 @@ class ClientController extends Controller
      */
     public function index(): View
     {
-        $clients = Client::orderBy('fantasy_name')->paginate(15);
+        $companyId = session('tenant_company_id');
+        $clients = Client::where('company_id', $companyId)
+            ->orderBy('fantasy_name')
+            ->paginate(15);
         return view('clients.index', compact('clients'));
     }
 
@@ -51,6 +54,7 @@ class ClientController extends Controller
             ])->withInput();
         }
 
+        $validated['company_id'] = session('tenant_company_id');
         Client::create($validated);
 
         return redirect()->route('clients.index')
@@ -62,6 +66,11 @@ class ClientController extends Controller
      */
     public function show(Client $client): View
     {
+        // Verificar se o cliente pertence à empresa do usuário
+        if ($client->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         $client->load('contacts', 'budgets');
         return view('clients.show', compact('client'));
     }
@@ -71,6 +80,11 @@ class ClientController extends Controller
      */
     public function edit(Client $client): View
     {
+        // Verificar se o cliente pertence à empresa do usuário
+        if ($client->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         return view('clients.edit', compact('client'));
     }
 
@@ -79,6 +93,11 @@ class ClientController extends Controller
      */
     public function update(Request $request, Client $client): RedirectResponse
     {
+        // Verificar se o cliente pertence à empresa do usuário
+        if ($client->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         $validated = $request->validate([
             'fantasy_name' => 'nullable|string|max:255',
             'corporate_name' => 'nullable|string|max:255',
@@ -110,6 +129,11 @@ class ClientController extends Controller
      */
     public function destroy(Client $client): RedirectResponse
     {
+        // Verificar se o cliente pertence à empresa do usuário
+        if ($client->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         try {
             // Desassocia os contatos do cliente (define client_id como null)
             $client->contacts()->update(['client_id' => null]);

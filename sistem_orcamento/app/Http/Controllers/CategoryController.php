@@ -14,7 +14,9 @@ class CategoryController extends Controller
      */
     public function index(): View
     {
-        $categories = Category::with(['parent', 'allChildren'])
+        $companyId = session('tenant_company_id');
+        $categories = Category::where('company_id', $companyId)
+            ->with(['parent', 'allChildren'])
             ->withCount('products')
             ->get();
         
@@ -48,6 +50,7 @@ class CategoryController extends Controller
             $this->validateHierarchy(null, $validated['parent_id']);
         }
 
+        $validated['company_id'] = session('tenant_company_id');
         $category = Category::create($validated);
 
         // Se for uma requisição AJAX, retornar JSON
@@ -68,6 +71,11 @@ class CategoryController extends Controller
      */
     public function show(Category $category): View
     {
+        // Verificar se a categoria pertence à empresa do usuário
+        if ($category->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         $category->load('products');
         return view('categories.show', compact('category'));
     }
@@ -77,6 +85,11 @@ class CategoryController extends Controller
      */
     public function products(Category $category): View
     {
+        // Verificar se a categoria pertence à empresa do usuário
+        if ($category->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         $products = $category->products()->paginate(10);
         return view('categories.products', compact('category', 'products'));
     }
@@ -86,6 +99,11 @@ class CategoryController extends Controller
      */
     public function edit(Category $category): View
     {
+        // Verificar se a categoria pertence à empresa do usuário
+        if ($category->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         return view('categories.edit', compact('category'));
     }
 
@@ -94,6 +112,11 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category): RedirectResponse
     {
+        // Verificar se a categoria pertence à empresa do usuário
+        if ($category->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
             'description' => 'nullable|string|max:1000',
@@ -197,6 +220,11 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category): RedirectResponse
     {
+        // Verificar se a categoria pertence à empresa do usuário
+        if ($category->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         try {
             // Coletar todas as categorias que serão excluídas (categoria principal + todas as subcategorias)
             $allCategoryIds = $this->getAllSubcategories($category->id);

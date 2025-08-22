@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Client extends Model
 {
@@ -16,7 +17,8 @@ class Client extends Model
         'email',
         'address',
         'city',
-        'state'
+        'state',
+        'company_id'
     ];
 
     /**
@@ -33,5 +35,13 @@ class Client extends Model
     public function budgets(): HasMany
     {
         return $this->hasMany(Budget::class);
+    }
+
+    /**
+     * Relacionamento com empresa
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 }

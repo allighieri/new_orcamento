@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'tenant' => \App\Http\Middleware\TenantMiddleware::class,
+            'require.company' => \App\Http\Middleware\RequireCompanyMiddleware::class,
+            'user.active' => \App\Http\Middleware\CheckUserActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -45,13 +45,21 @@ class LoginController extends Controller implements HasMiddleware
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
             
-            // Redireciona baseado no role do usuário
             $user = Auth::user();
             
-            if ($user->isSuperAdmin()) {
-                return redirect()->intended('/admin/dashboard')->with('success', 'Bem-vindo, Super Admin!');
-            } elseif ($user->isAdmin()) {
-                return redirect()->intended('/admin/dashboard')->with('success', 'Bem-vindo, Admin!');
+            // Verificar se o usuário está ativo
+            if (!$user->active) {
+                Auth::logout();
+                return redirect()->route('login')->withErrors([
+                    'email' => __('messages.user_inactive')
+                ]);
+            }
+            
+            // Redireciona baseado no role do usuário
+            if ($user->role === 'super_admin') {
+                return redirect()->intended('/dashboard')->with('success', 'Bem-vindo, Super Admin!');
+            } elseif ($user->role === 'admin') {
+                return redirect()->intended('/dashboard')->with('success', 'Bem-vindo, Admin!');
             } else {
                 return redirect()->intended('/dashboard')->with('success', 'Bem-vindo!');
             }

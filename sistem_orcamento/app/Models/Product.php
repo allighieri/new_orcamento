@@ -14,7 +14,8 @@ class Product extends Model
         'slug',
         'price',
         'description',
-        'category_id'
+        'category_id',
+        'company_id'
     ];
 
     protected $casts = [
@@ -35,6 +36,14 @@ class Product extends Model
     public function budgetItems(): HasMany
     {
         return $this->hasMany(BudgetItem::class);
+    }
+
+    /**
+     * Relacionamento com empresa
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**

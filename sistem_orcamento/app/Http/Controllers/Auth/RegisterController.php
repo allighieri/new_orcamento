@@ -49,7 +49,7 @@ class RegisterController extends Controller implements HasMiddleware
 
         // Apenas super_admin pode criar usuários com role admin ou super_admin
         $role = 'user'; // Padrão
-        if ($request->has('role') && Auth::check() && Auth::user()->isSuperAdmin()) {
+        if ($request->has('role') && Auth::check() && Auth::user()->role === 'super_admin') {
             $role = $request->role;
         }
 
@@ -58,12 +58,12 @@ class RegisterController extends Controller implements HasMiddleware
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $role,
+            'active' => 0, // Novos usuários são criados como inativos
         ]);
 
-        // Se for um registro público (sem estar logado), faz login automático
+        // Se for um registro público (sem estar logado), redireciona para login com mensagem
         if (!Auth::check()) {
-            Auth::login($user);
-            return redirect('/dashboard')->with('success', 'Conta criada com sucesso!');
+            return redirect()->route('login')->with('success', 'Conta criada com sucesso! Aguarde até que um admin lhe dê permissão para logar no sistema.');
         }
 
         // Se for um admin criando usuário, redireciona para lista de usuários

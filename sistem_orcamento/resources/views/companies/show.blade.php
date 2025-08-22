@@ -133,7 +133,7 @@
         </div>
         
         <!-- Contatos -->
-        <div class="card">
+        <div class="card mt-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-people"></i> Contatos ({{ $company->contacts->count() }})

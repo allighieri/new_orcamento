@@ -22,6 +22,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'company_id',
+        'active',
     ];
 
     /**
@@ -44,7 +46,16 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'active' => 'boolean',
         ];
+    }
+
+    /**
+     * Relacionamento com Company
+     */
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**

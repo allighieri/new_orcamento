@@ -22,6 +22,7 @@ class SuperAdminSeeder extends Seeder
                 'email_verified_at' => now(),
                 'password' => Hash::make('123456'),
                 'role' => 'super_admin',
+                'active' => 1, // Super admin deve estar ativo
             ]);
 
             $this->command->info('Super Admin criado com sucesso!');

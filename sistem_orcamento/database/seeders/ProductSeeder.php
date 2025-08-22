@@ -13,53 +13,68 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        $categories = Category::all();
+        $companies = \App\Models\Company::all();
         
-        if ($categories->isEmpty()) {
-            $this->command->warn('Nenhuma categoria encontrada. Execute CategorySeeder primeiro.');
+        if ($companies->isEmpty()) {
+            $this->command->warn('Nenhuma empresa encontrada. Execute CompanySeeder primeiro.');
             return;
         }
-
+        
         $products = [
             [
                 'name' => 'Notebook Dell Inspiron',
                 'slug' => 'notebook-dell-inspiron',
                 'price' => 2500.00,
                 'description' => 'Notebook Dell Inspiron 15 com processador Intel i5',
-                'category_id' => $categories->where('slug', 'informatica')->first()->id ?? $categories->first()->id
+                'category_slug_base' => 'informatica'
             ],
             [
                 'name' => 'Mouse Logitech',
                 'slug' => 'mouse-logitech',
                 'price' => 89.90,
                 'description' => 'Mouse óptico Logitech com fio',
-                'category_id' => $categories->where('slug', 'informatica')->first()->id ?? $categories->first()->id
+                'category_slug_base' => 'informatica'
             ],
             [
                 'name' => 'Teclado Mecânico',
                 'slug' => 'teclado-mecanico',
                 'price' => 299.90,
                 'description' => 'Teclado mecânico RGB para games',
-                'category_id' => $categories->where('slug', 'informatica')->first()->id ?? $categories->first()->id
+                'category_slug_base' => 'informatica'
             ],
             [
                 'name' => 'Smartphone Samsung',
                 'slug' => 'smartphone-samsung',
                 'price' => 1200.00,
                 'description' => 'Smartphone Samsung Galaxy A54',
-                'category_id' => $categories->where('slug', 'eletronicos')->first()->id ?? $categories->first()->id
+                'category_slug_base' => 'eletronicos'
             ],
             [
                 'name' => 'Mesa de Escritório',
                 'slug' => 'mesa-escritorio',
                 'price' => 450.00,
                 'description' => 'Mesa de escritório em MDF com gavetas',
-                'category_id' => $categories->where('slug', 'moveis')->first()->id ?? $categories->first()->id
+                'category_slug_base' => 'moveis'
             ]
         ];
 
-        foreach ($products as $productData) {
-            Product::create($productData);
+        // Criar produtos para cada empresa
+        foreach ($companies as $company) {
+            $categories = Category::where('company_id', $company->id)->get();
+            
+            foreach ($products as $productData) {
+                $categorySlug = $productData['category_slug_base'] . '-' . $company->id;
+                $category = $categories->where('slug', $categorySlug)->first();
+                
+                if ($category) {
+                    $productData['company_id'] = $company->id;
+                    $productData['category_id'] = $category->id;
+                    $productData['slug'] = $productData['slug'] . '-' . $company->id; // Tornar slug único por empresa
+                    unset($productData['category_slug_base']); // Remove campo auxiliar
+                    
+                    Product::create($productData);
+                }
+            }
         }
     }
 }

@@ -78,8 +78,8 @@
             <div class="card bg-secondary text-white">
                 <div class="card-body text-center">
                     <i class="bi bi-person-plus" style="font-size: 2rem;"></i>
-                    <h4 class="mt-2"><a href="{{ route('register') }}" class="text-white text-decoration-none">+</a></h4>
-                    <p class="mb-0">Novo Usuário</p>
+                    <h4 class="mt-2"><a href="{{ route('users.index') }}" class="text-white text-decoration-none">+</a></h4>
+                    <p class="mb-0">Gerenciar Usuários</p>
                 </div>
             </div>
         </div>
@@ -171,7 +171,7 @@
                     @endif
                 </div>
                 <div class="card-footer">
-                    <a href="{{ route('register') }}" class="btn btn-sm btn-success">
+                    <a href="{{ route('users.create') }}" class="btn btn-sm btn-success">
                         Criar novo usuário <i class="bi bi-person-plus"></i>
                     </a>
                 </div>

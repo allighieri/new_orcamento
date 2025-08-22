@@ -12,6 +12,13 @@ class ClientSeeder extends Seeder
      */
     public function run(): void
     {
+        $companies = \App\Models\Company::all();
+        
+        if ($companies->isEmpty()) {
+            $this->command->warn('Nenhuma empresa encontrada. Execute CompanySeeder primeiro.');
+            return;
+        }
+        
         $clients = [
             [
                 'fantasy_name' => 'Tech Solutions',
@@ -48,8 +55,14 @@ class ClientSeeder extends Seeder
             ]
         ];
 
-        foreach ($clients as $clientData) {
-            Client::create($clientData);
+        // Criar clientes para cada empresa
+        foreach ($companies as $company) {
+            foreach ($clients as $clientData) {
+                $clientData['company_id'] = $company->id;
+                // Tornar document_number único por empresa
+                $clientData['document_number'] = str_replace('/', $company->id . '/', $clientData['document_number']);
+                Client::create($clientData);
+            }
         }
     }
 }

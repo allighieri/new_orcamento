@@ -20,12 +20,13 @@ class DashboardController extends Controller implements HasMiddleware
     public function index()
     {
         $user = Auth::user();
+        $companyId = session('tenant_company_id');
         
-        // Estatísticas básicas
+        // Estatísticas básicas filtradas por empresa
         $stats = [
-            'budgets_count' => Budget::count(),
-            'clients_count' => Client::count(),
-            'products_count' => Product::count(),
+            'budgets_count' => Budget::where('company_id', $companyId)->count(),
+            'clients_count' => Client::where('company_id', $companyId)->count(),
+            'products_count' => Product::where('company_id', $companyId)->count(),
         ];
         
         return view('dashboard', compact('user', 'stats'));

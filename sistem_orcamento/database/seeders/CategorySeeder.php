@@ -12,6 +12,13 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
+        $companies = \App\Models\Company::all();
+        
+        if ($companies->isEmpty()) {
+            $this->command->warn('Nenhuma empresa encontrada. Execute CompanySeeder primeiro.');
+            return;
+        }
+        
         $categories = [
             [
                 'name' => 'Eletrônicos',
@@ -30,8 +37,13 @@ class CategorySeeder extends Seeder
             ]
         ];
 
-        foreach ($categories as $categoryData) {
-            Category::create($categoryData);
+        // Criar categorias para cada empresa
+        foreach ($companies as $company) {
+            foreach ($categories as $categoryData) {
+                $categoryData['company_id'] = $company->id;
+                $categoryData['slug'] = $categoryData['slug'] . '-' . $company->id; // Tornar slug único por empresa
+                Category::create($categoryData);
+            }
         }
     }
 }

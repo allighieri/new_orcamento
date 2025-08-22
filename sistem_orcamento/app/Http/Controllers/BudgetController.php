@@ -19,7 +19,9 @@ class BudgetController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Budget::with(['client', 'company'])
+        $companyId = session('tenant_company_id');
+        $query = Budget::where('company_id', $companyId)
+            ->with(['client', 'company'])
             ->orderBy('created_at', 'desc');
         
         // Filtrar por cliente se especificado
@@ -32,7 +34,9 @@ class BudgetController extends Controller
         // Buscar dados do cliente para exibir no título se filtrado
         $client = null;
         if ($request->has('client') && $request->client) {
-            $client = Client::find($request->client);
+            $client = Client::where('id', $request->client)
+                ->where('company_id', $companyId)
+                ->first();
         }
         
         return view('budgets.index', compact('budgets', 'client'));
@@ -43,9 +47,10 @@ class BudgetController extends Controller
      */
     public function create()
     {
-        $clients = Client::orderBy('fantasy_name')->get();
-        $companies = Company::orderBy('fantasy_name')->get();
-        $products = Product::with(['category'])->orderBy('name')->get();
+        $companyId = session('tenant_company_id');
+        $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
+        $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
+        $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
         
         return view('budgets.create', compact('clients', 'companies', 'products'));
     }
@@ -109,7 +114,7 @@ class BudgetController extends Controller
             $budget = Budget::create([
                 'number' => $budgetNumber,
                 'client_id' => $request->client_id,
-                'company_id' => $request->company_id,
+                'company_id' => session('tenant_company_id'),
                 'issue_date' => $request->issue_date,
                 'valid_until' => $request->valid_until,
                 'status' => 'Pendente',
@@ -164,6 +169,11 @@ class BudgetController extends Controller
      */
     public function show(Budget $budget)
     {
+        // Verificar se o orçamento pertence à empresa do usuário
+        if ($budget->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         $budget->load(['client', 'company', 'items.product']);
         return view('budgets.show', compact('budget'));
     }
@@ -173,9 +183,15 @@ class BudgetController extends Controller
      */
     public function edit(Budget $budget)
     {
-        $clients = Client::orderBy('fantasy_name')->get();
-        $companies = Company::orderBy('fantasy_name')->get();
-        $products = Product::with(['category'])->orderBy('name')->get();
+        // Verificar se o orçamento pertence à empresa do usuário
+        if ($budget->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
+        $companyId = session('tenant_company_id');
+        $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
+        $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
+        $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
         $budget->load(['items.product']);
         
         return view('budgets.edit', compact('budget', 'clients', 'companies', 'products'));
@@ -186,6 +202,11 @@ class BudgetController extends Controller
      */
     public function update(Request $request, Budget $budget)
     {
+        // Verificar se o orçamento pertence à empresa do usuário
+        if ($budget->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         // Processar dados monetários antes da validação
         if ($request->has('total_discount')) {
             $request->merge([
@@ -223,7 +244,7 @@ class BudgetController extends Controller
             // Atualizar orçamento
             $budget->update([
                 'client_id' => $request->client_id,
-                'company_id' => $request->company_id,
+                'company_id' => session('tenant_company_id'),
                 'issue_date' => $request->issue_date,
                 'valid_until' => $request->valid_until,
                 'status' => 'Pendente',
@@ -275,6 +296,11 @@ class BudgetController extends Controller
      */
     public function destroy(Budget $budget)
     {
+        // Verificar se o orçamento pertence à empresa do usuário
+        if ($budget->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         try {
             // Gerar nome do arquivo PDF usando o mesmo padrão da função generatePdf
             if(empty($budget->client->corporate_name)){
@@ -319,6 +345,11 @@ class BudgetController extends Controller
      */
     public function generatePdf(Budget $budget)
     {
+        // Verificar se o orçamento pertence à empresa do usuário
+        if ($budget->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         $budget->load(['client', 'items.product']);
         
         $pdf = Pdf::loadView('pdf.budget', compact('budget'));

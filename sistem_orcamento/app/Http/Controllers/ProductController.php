@@ -16,7 +16,10 @@ class ProductController extends Controller
      */
     public function index(): View
     {
-        $products = Product::with('category')->paginate(10);
+        $companyId = session('tenant_company_id');
+        $products = Product::where('company_id', $companyId)
+            ->with('category')
+            ->paginate(10);
         return view('products.index', compact('products'));
     }
 
@@ -25,7 +28,8 @@ class ProductController extends Controller
      */
     public function create(): View
     {
-        $categories = Category::all();
+        $companyId = session('tenant_company_id');
+        $categories = Category::where('company_id', $companyId)->get();
         return view('products.create', compact('categories'));
     }
 
@@ -56,6 +60,7 @@ class ProductController extends Controller
             $counter++;
         }
 
+        $validated['company_id'] = session('tenant_company_id');
         $product = Product::create($validated);
         
         // Se for uma requisição AJAX, retornar JSON
@@ -83,6 +88,11 @@ class ProductController extends Controller
      */
     public function show(Product $product): View
     {
+        // Verificar se o produto pertence à empresa do usuário
+        if ($product->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         $product->load('category');
         return view('products.show', compact('product'));
     }
@@ -92,7 +102,13 @@ class ProductController extends Controller
      */
     public function edit(Product $product): View
     {
-        $categories = Category::all();
+        // Verificar se o produto pertence à empresa do usuário
+        if ($product->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
+        $companyId = session('tenant_company_id');
+        $categories = Category::where('company_id', $companyId)->get();
         return view('products.edit', compact('product', 'categories'));
     }
 
@@ -101,6 +117,11 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product): RedirectResponse
     {
+        // Verificar se o produto pertence à empresa do usuário
+        if ($product->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|string',
@@ -136,6 +157,11 @@ class ProductController extends Controller
      */
     public function destroy(Product $product): RedirectResponse
     {
+        // Verificar se o produto pertence à empresa do usuário
+        if ($product->company_id !== session('tenant_company_id')) {
+            abort(404);
+        }
+        
         try {
             $product->delete();
             return redirect()->route('products.index')
