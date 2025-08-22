@@ -1,0 +1,109 @@
+@extends('layouts.app')
+
+@section('title', 'Produtos da Categoria: ' . $category->name . ' - Sistema de Orçamento')
+
+@section('content')
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ route('categories.index') }}">Categorias</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ $category->name }}</li>
+                    </ol>
+                </nav>
+                <h1>
+                    <i class="bi bi-box"></i> Produtos da Categoria: {{ $category->name }}
+                </h1>
+                @if($category->description)
+                    <p class="text-muted">{{ $category->description }}</p>
+                @endif
+            </div>
+            <div>
+                <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <a href="{{ route('products.create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus"></i> Novo Produto
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                @if($products->count() > 0)
+                    <div class="mb-3">
+                        <small class="text-muted">{{ $products->total() }} produto(s) encontrado(s)</small>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Descrição</th>
+                                    <th>Preço</th>
+                                    <th>Estoque</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($products as $product)
+                                <tr>
+                                    <td>{{ $product->id }}</td>
+                                    <td>{{ $product->name }}</td>
+                                    <td>{{ $product->description ? Str::limit($product->description, 50) : 'N/A' }}</td>
+                                    <td>R$ {{ number_format($product->price, 2, ',', '.') }}</td>
+                                    <td>
+                                        @if($product->stock)
+                                            <span class="badge {{ $product->stock->quantity > 10 ? 'bg-success' : ($product->stock->quantity > 0 ? 'bg-warning' : 'bg-danger') }}">
+                                                {{ $product->stock->quantity }}
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary">N/A</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este produto?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {{ $products->links() }}
+                @else
+                    <div class="text-center py-5">
+                        <i class="bi bi-box fs-1 text-muted"></i>
+                        <h4 class="text-muted mt-3">Nenhum produto nesta categoria</h4>
+                        <p class="text-muted">A categoria "{{ $category->name }}" ainda não possui produtos cadastrados</p>
+                        <a href="{{ route('products.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus"></i> Cadastrar Produto
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

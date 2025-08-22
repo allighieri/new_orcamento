@@ -1,0 +1,390 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="37HF4C6NPuk5rJxZB78IGjg4G2jK38o9Is6smRmC">
+    <title>Novo Orçamento</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    </head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="http://localhost:8000">
+                <i class="bi bi-calculator"></i> Sistema de Orçamento
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="http://localhost:8000">
+                            <i class="bi bi-house"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-building"></i> Cadastros
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="http://localhost:8000/companies">Empresas</a></li>
+                            <li><a class="dropdown-item" href="http://localhost:8000/categories">Categorias</a></li>
+                            <li><a class="dropdown-item" href="http://localhost:8000/products">Produtos</a></li>
+                            <li><a class="dropdown-item" href="http://localhost:8000/clients">Clientes</a></li>
+                            <li><a class="dropdown-item" href="http://localhost:8000/contacts">Contatos</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="http://localhost:8000/budgets">
+                            <i class="bi bi-file-earmark-text"></i> Orçamentos
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container-fluid mt-4">
+        
+        
+        <div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Novo Orçamento</h3>
+                </div>
+                <div class="card-body">
+                    <form action="http://localhost:8000/budgets" method="POST" id="budgetForm">
+                        <input type="hidden" name="_token" value="37HF4C6NPuk5rJxZB78IGjg4G2jK38o9Is6smRmC" autocomplete="off">                        
+                        <div class="row">
+                            <!-- Informações Básicas -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="client_id" class="form-label">Cliente *</label>
+                                    <select class="form-select " id="client_id" name="client_id" required>
+                                        <option value="">Selecione um cliente</option>
+                                                                                    <option value="5" >
+                                                Consultoria Empresarial
+                                            </option>
+                                                                                    <option value="8" >
+                                                Consultoria Empresarial
+                                            </option>
+                                                                                    <option value="4" >
+                                                Inovação Digital
+                                            </option>
+                                                                                    <option value="7" >
+                                                Inovação Digital
+                                            </option>
+                                                                                    <option value="2" >
+                                                Minha Gráfica
+                                            </option>
+                                                                                    <option value="3" >
+                                                Tech Solutions
+                                            </option>
+                                                                                    <option value="6" >
+                                                Tech Solutions
+                                            </option>
+                                                                            </select>
+                                                                    </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="company_id" class="form-label">Empresa *</label>
+                                    <select class="form-select " id="company_id" name="company_id" required>
+                                        <option value="">Selecione uma empresa</option>
+                                                                                    <option value="2" >
+                                                Karaokê Clube
+                                            </option>
+                                                                                    <option value="3" >
+                                                Minha Empresa
+                                            </option>
+                                                                                    <option value="4" >
+                                                Tech Corp
+                                            </option>
+                                                                            </select>
+                                                                    </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="issue_date" class="form-label">Data do Orçamento *</label>
+                                    <input type="date" class="form-control " id="issue_date" name="issue_date" value="2025-08-21" required>
+                                                                    </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="observations" class="form-label">Observações</label>
+                                    <textarea class="form-control " id="observations" name="observations" rows="3"></textarea>
+                                                                    </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="total_discount" class="form-label">Desconto (R$)</label>
+                                    <input type="text" class="form-control money " id="total_discount" name="total_discount" value="0,00">
+                                                                    </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="observations" class="form-label">Observações</label>
+                            <textarea class="form-control " id="observations" name="observations" rows="3"></textarea>
+                                                    </div>
+                        
+                        <!-- Produtos -->
+                        <div class="card mt-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Produtos do Orçamento</h5>
+                                <button type="button" class="btn btn-success btn-sm" id="addProduct">
+                                    <i class="bi bi-plus-circle"></i> Adicionar Produto
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="productsContainer">
+                                    <!-- Produtos serão adicionados aqui dinamicamente -->
+                                </div>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-md-8"></div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Subtotal:</span>
+                                                    <span id="subtotal">R$ 0,00</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Desconto:</span>
+                                                    <span id="discountDisplay">R$ 0,00</span>
+                                                </div>
+                                                <hr>
+                                                <div class="d-flex justify-content-between">
+                                                    <strong>Total:</strong>
+                                                    <strong id="total">R$ 0,00</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salvar Orçamento
+                            </button>
+                            <a href="http://localhost:8000/budgets" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para linha de produto -->
+<template id="productRowTemplate">
+    <div class="product-row border rounded p-3 mb-3">
+        <div class="row">
+            <div class="col-md-4">
+                <label class="form-label">Produto *</label>
+                <select class="form-select product-select" name="products[INDEX][product_id]" required>
+                    <option value="">Selecione um produto</option>
+                                            <option value="5" data-price="35.00">
+                            Adesivo 50x50 com recorte eletrônico - Teste
+                        </option>
+                                            <option value="6" data-price="55.00">
+                            Cana verde - Teste
+                        </option>
+                                            <option value="12" data-price="450.00">
+                            Mesa de Escritório - Móveis
+                        </option>
+                                            <option value="9" data-price="89.90">
+                            Mouse Logitech - Informática
+                        </option>
+                                            <option value="8" data-price="2500.00">
+                            Notebook Dell Inspiron - Informática
+                        </option>
+                                            <option value="11" data-price="1200.00">
+                            Smartphone Samsung - Eletrônicos
+                        </option>
+                                            <option value="10" data-price="299.90">
+                            Teclado Mecânico - Informática
+                        </option>
+                                            <option value="7" data-price="55.00">
+                            Um outro produto - Teste
+                        </option>
+                                    </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Quantidade *</label>
+                <input type="number" class="form-control quantity-input" name="products[INDEX][quantity]" step="0.01" min="0.01" value="1" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Preço Unit. *</label>
+                <input type="text" class="form-control money unit-price-input" name="products[INDEX][unit_price]" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Total</label>
+                <input type="text" class="form-control total-price" readonly>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="button" class="btn btn-danger btn-sm remove-product">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-12">
+                <label class="form-label">Descrição Adicional</label>
+                <textarea class="form-control" name="products[INDEX][description]" rows="2"></textarea>
+            </div>
+        </div>
+    </div>
+</template>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p>&copy; 2025 Sistema de Orçamento. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- jQuery Mask Plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    
+    <script>
+$(document).ready(function() {
+    let productIndex = 0;
+    
+    // Máscara para valores monetários
+    $('.money').mask('000.000.000.000.000,00', {
+        reverse: true,
+        placeholder: '0,00'
+    });
+    
+    // Adicionar produto
+    $('#addProduct').click(function() {
+        let template = $('#productRowTemplate').html();
+        template = template.replace(/INDEX/g, productIndex);
+        $('#productsContainer').append(template);
+        
+        // Aplicar máscara nos novos campos
+        $('.money').mask('000.000.000.000.000,00', {
+            reverse: true,
+            placeholder: '0,00'
+        });
+        
+        productIndex++;
+        updateTotals();
+    });
+    
+    // Remover produto
+    $(document).on('click', '.remove-product', function() {
+        $(this).closest('.product-row').remove();
+        updateTotals();
+    });
+    
+    // Quando selecionar um produto, preencher o preço
+    $(document).on('change', '.product-select', function() {
+        let price = $(this).find(':selected').data('price');
+        if (price) {
+            let formattedPrice = parseFloat(price).toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            $(this).closest('.product-row').find('.unit-price-input').val(formattedPrice);
+            calculateRowTotal($(this).closest('.product-row'));
+        }
+    });
+    
+    // Calcular total da linha quando quantidade ou preço mudar
+    $(document).on('input', '.quantity-input, .unit-price-input', function() {
+        calculateRowTotal($(this).closest('.product-row'));
+    });
+    
+    // Calcular total quando desconto mudar
+    $('#total_discount').on('input', function() {
+        updateTotals();
+    });
+    
+    function calculateRowTotal(row) {
+        let quantity = parseFloat(row.find('.quantity-input').val()) || 0;
+        let unitPrice = parseFloat(row.find('.unit-price-input').val().replace(/\./g, '').replace(',', '.')) || 0;
+        let total = quantity * unitPrice;
+        
+        row.find('.total-price').val(total.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }));
+        
+        updateTotals();
+    }
+    
+    function updateTotals() {
+        let subtotal = 0;
+        
+        $('.product-row').each(function() {
+            let quantity = parseFloat($(this).find('.quantity-input').val()) || 0;
+            let unitPrice = parseFloat($(this).find('.unit-price-input').val().replace(/\./g, '').replace(',', '.')) || 0;
+            subtotal += quantity * unitPrice;
+        });
+        
+        let discount = parseFloat($('#total_discount').val().replace(/\./g, '').replace(',', '.')) || 0;
+        let total = subtotal - discount;
+        
+        $('#subtotal').text('R$ ' + subtotal.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }));
+        
+        $('#discountDisplay').text('R$ ' + discount.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }));
+        
+        $('#total').text('R$ ' + total.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }));
+    }
+    
+    // Adicionar primeiro produto automaticamente
+    $('#addProduct').click();
+    
+    // Debug: Capturar evento de submit do formulário
+    $('#budgetForm').on('submit', function(e) {
+        console.log('Formulário sendo submetido!');
+        console.log('Dados do formulário:', $(this).serialize());
+    });
+});
+</script>
+</body>
+</html>

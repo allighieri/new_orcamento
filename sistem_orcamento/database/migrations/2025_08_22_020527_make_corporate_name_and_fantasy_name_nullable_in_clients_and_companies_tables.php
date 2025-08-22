@@ -1,0 +1,44 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // Alterar tabela clients
+        Schema::table('clients', function (Blueprint $table) {
+            $table->string('corporate_name')->nullable()->change();
+            $table->string('fantasy_name')->nullable()->change();
+        });
+        
+        // Alterar tabela companies
+        Schema::table('companies', function (Blueprint $table) {
+            $table->string('corporate_name')->nullable()->change();
+            $table->string('fantasy_name')->nullable()->change();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // Reverter tabela clients
+        Schema::table('clients', function (Blueprint $table) {
+            $table->string('corporate_name')->nullable(false)->change();
+            $table->string('fantasy_name')->nullable(false)->change();
+        });
+        
+        // Reverter tabela companies
+        Schema::table('companies', function (Blueprint $table) {
+            $table->string('corporate_name')->nullable(false)->change();
+            $table->string('fantasy_name')->nullable(false)->change();
+        });
+    }
+};
