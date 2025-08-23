@@ -12,10 +12,10 @@
                         {{ $budget->client->corporate_name ?? $budget->client->fantasy_name }} {{ $budget->number }}
                     </h3>
                     <div>
-                        <a href="{{ route('budgets.pdf', $budget) }}" class="btn btn-secondary" target="_blank">
+                        <a href="{{ route('budgets.pdf', $budget) }}" class="btn btn-secondary mb-2 mb-lg-0" target="_blank">
                             <i class="bi bi-file-earmark-pdf"></i> PDF
                         </a>
-                        <a href="{{ route('budgets.edit', $budget) }}" class="btn btn-warning">
+                        <a href="{{ route('budgets.edit', $budget) }}" class="btn btn-warning mb-2 mb-lg-0">
                             <i class="bi bi-pencil"></i> Editar
                         </a>
                         <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este orçamento?')">
@@ -168,12 +168,8 @@
                                                     <td>
                                                         @if($item->product)
                                                             <strong>{{ $item->product->name }}</strong>
-                                                            <br>
-                                                            <small class="text-muted">{{ $item->product->category->name ?? 'Sem categoria' }}</small>
                                                         @else
                                                             <strong class="text-muted">Produto excluído</strong>
-                                                            <br>
-                                                            <small class="text-muted">{{ $item->description ?: 'Produto não disponível' }}</small>
                                                         @endif
                                                     </td>
                                                     <td>

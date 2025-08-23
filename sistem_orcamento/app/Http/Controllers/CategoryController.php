@@ -14,16 +14,27 @@ class CategoryController extends Controller
      */
     public function index(): View
     {
-        $companyId = session('tenant_company_id');
-        $categories = Category::where('company_id', $companyId)
-            ->with(['parent', 'allChildren'])
-            ->withCount('products')
-            ->get();
+        $user = auth()->guard('web')->user();
+        
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todas as categorias
+            $categories = Category::with(['parent', 'allChildren', 'company'])
+                ->withCount('products')
+                ->get();
+        } else {
+            // Admin e user veem apenas categorias da sua empresa
+            $companyId = session('tenant_company_id');
+            $categories = Category::where('company_id', $companyId)
+                ->with(['parent', 'allChildren'])
+                ->withCount('products')
+                ->get();
+        }
         
         // Organizar categorias em formato de árvore para exibição
         $categoriesTree = $this->buildCategoriesTree($categories);
+        $isSuperAdmin = $user->role === 'super_admin';
 
-        return view('categories.index', compact('categoriesTree'));
+        return view('categories.index', compact('categoriesTree', 'isSuperAdmin'));
     }
 
     /**
@@ -31,7 +42,20 @@ class CategoryController extends Controller
      */
     public function create(): View
     {
-        return view('categories.create');
+        $user = auth()->guard('web')->user();
+        
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todas as categorias e empresas
+            $categoriesTree = Category::getTreeForSelect(null, null, true);
+            $companies = \App\Models\Company::orderBy('fantasy_name')->get();
+        } else {
+            // Admin e user veem apenas categorias da sua empresa
+            $companyId = session('tenant_company_id');
+            $categoriesTree = Category::getTreeForSelect(null, $companyId, false);
+            $companies = collect();
+        }
+        
+        return view('categories.create', compact('categoriesTree', 'companies'));
     }
 
     /**
@@ -39,18 +63,35 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $user = auth()->guard('web')->user();
+        
+        $rules = [
             'name' => 'required|string|max:255|unique:categories',
             'description' => 'nullable|string|max:1000',
             'parent_id' => 'nullable|exists:categories,id',
-        ]);
+        ];
+        
+        // Super admin pode especificar a empresa
+        if ($user->role === 'super_admin') {
+            $rules['company_id'] = 'required|exists:companies,id';
+        }
+        
+        $validated = $request->validate($rules);
 
         // Validação adicional para evitar loops
         if ($validated['parent_id']) {
             $this->validateHierarchy(null, $validated['parent_id']);
         }
 
-        $validated['company_id'] = session('tenant_company_id');
+        // Definir company_id baseado na role do usuário
+        if ($user->role === 'super_admin') {
+            // Super admin usa o company_id do formulário
+            $validated['company_id'] = $validated['company_id'];
+        } else {
+            // Admin e user usam o tenant da sessão
+            $validated['company_id'] = session('tenant_company_id');
+        }
+        
         $category = Category::create($validated);
 
         // Se for uma requisição AJAX, retornar JSON
@@ -71,9 +112,14 @@ class CategoryController extends Controller
      */
     public function show(Category $category): View
     {
-        // Verificar se a categoria pertence à empresa do usuário
-        if ($category->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode ver qualquer categoria
+        if ($user->role !== 'super_admin') {
+            // Verificar se a categoria pertence à empresa do usuário
+            if ($category->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         $category->load('products');
@@ -85,9 +131,14 @@ class CategoryController extends Controller
      */
     public function products(Category $category): View
     {
-        // Verificar se a categoria pertence à empresa do usuário
-        if ($category->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode ver produtos de qualquer categoria
+        if ($user->role !== 'super_admin') {
+            // Verificar se a categoria pertence à empresa do usuário
+            if ($category->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         $products = $category->products()->paginate(10);
@@ -99,12 +150,26 @@ class CategoryController extends Controller
      */
     public function edit(Category $category): View
     {
-        // Verificar se a categoria pertence à empresa do usuário
-        if ($category->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode editar qualquer categoria
+        if ($user->role !== 'super_admin') {
+            // Verificar se a categoria pertence à empresa do usuário
+            if ($category->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
-        return view('categories.edit', compact('category'));
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todas as categorias
+            $categoriesTree = Category::getTreeForSelect($category->id, null, true);
+        } else {
+            // Admin e user veem apenas categorias da sua empresa
+            $companyId = session('tenant_company_id');
+            $categoriesTree = Category::getTreeForSelect($category->id, $companyId, false);
+        }
+        
+        return view('categories.edit', compact('category', 'categoriesTree'));
     }
 
     /**
@@ -112,9 +177,14 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category): RedirectResponse
     {
-        // Verificar se a categoria pertence à empresa do usuário
-        if ($category->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode atualizar qualquer categoria
+        if ($user->role !== 'super_admin') {
+            // Verificar se a categoria pertence à empresa do usuário
+            if ($category->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         $validated = $request->validate([
@@ -220,9 +290,14 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category): RedirectResponse
     {
-        // Verificar se a categoria pertence à empresa do usuário
-        if ($category->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode deletar qualquer categoria
+        if ($user->role !== 'super_admin') {
+            // Verificar se a categoria pertence à empresa do usuário
+            if ($category->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         try {
@@ -287,5 +362,43 @@ class CategoryController extends Controller
         }
         
         return $this->getCategoryLevel($parent, $level + 1);
+    }
+
+    /**
+     * Get categories by company for AJAX requests
+     */
+    public function getCategoriesByCompany(Request $request)
+    {
+        $user = auth()->guard('web')->user();
+        
+        // Apenas super_admin pode usar este endpoint
+        if ($user->role !== 'super_admin') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $companyId = $request->get('company_id');
+        
+        if (!$companyId) {
+            return response()->json([
+                'success' => true,
+                'categories' => []
+            ]);
+        }
+        
+        $categoriesTree = Category::getTreeForSelect(null, $companyId, false);
+        
+        // Converter para o formato esperado pelo JavaScript
+        $formattedCategories = [];
+        foreach ($categoriesTree as $id => $name) {
+            $formattedCategories[] = [
+                'id' => $id,
+                'name_with_indent' => $name
+            ];
+        }
+        
+        return response()->json([
+            'success' => true,
+            'categories' => $formattedCategories
+        ]);
     }
 }

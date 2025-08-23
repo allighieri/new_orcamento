@@ -37,6 +37,9 @@
                                     <th>CPF/CNPJ</th>
                                     <th>Telefone</th>
                                     <th>Email</th>
+                                    @if(auth()->guard('web')->user()->role === 'super_admin')
+                                        <th>Empresa</th>
+                                    @endif
                                     <th>Ações</th>
                                 </tr>
                             </thead>
@@ -49,6 +52,9 @@
                                     <td>{{ $client->document_number }}</td>
                                     <td>{{ $client->phone }}</td>
                                     <td>{{ $client->email }}</td>
+                                    @if(auth()->guard('web')->user()->role === 'super_admin')
+                                        <td>{{ $client->company->fantasy_name ?? 'N/A' }}</td>
+                                    @endif
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('clients.show', $client) }}" class="btn btn-sm btn-outline-info" title="Visualizar">

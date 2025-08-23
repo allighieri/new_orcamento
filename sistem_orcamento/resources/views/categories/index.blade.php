@@ -32,6 +32,9 @@
                                 <tr>
                                     <th>Hierarquia</th>
                                     <th>Descrição</th>
+                                    @if(auth()->guard('web')->user()->role === 'super_admin')
+                                        <th>Empresa</th>
+                                    @endif
                                     <th>Produtos</th>
                                     <th>Ações</th>
                                 </tr>
@@ -43,10 +46,17 @@
                                         {!! str_replace(' ', '&nbsp;', $item->prefix) !!}
                                         <a href="{{ route('categories.products', $item->category) }}" class="text-decoration-none fw-bold">
                                             {{ $item->category->name }}
+                                            @if($isSuperAdmin && !$item->category->parent_id && $item->category->company)
+                                                <small class="text-muted"> ({{ $item->category->company->fantasy_name }})</small>
+                                            @endif
                                         </a>
                                     </td>
                                     <td>{{ $item->category->description ? Str::limit($item->category->description, 50) : 'N/A' }}</td>
-                                   
+                                    @if(auth()->guard('web')->user()->role === 'super_admin')
+                                        <td>
+                                            <span class="badge bg-secondary">{{ $item->category->company->fantasy_name ?? 'N/A' }}</span>
+                                        </td>
+                                    @endif
                                     <td>
                                         <a href="{{ route('categories.products', $item->category) }}" class="text-decoration-none">
                                             <span class="badge bg-info">{{ $item->category->products_count ?? 0 }}</span>

@@ -17,63 +17,69 @@
                         @csrf
                         
                         <div class="row">
-                            <!-- Informações Básicas -->
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="client_id" class="form-label">Cliente @if(Auth::check() && Auth::user()->role === 'super_admin')*@endif</label>
-                                    <select class="form-select @error('client_id') is-invalid @enderror" id="client_id" name="client_id">
-                                        <option value="">Selecione um cliente</option>
-                                        @foreach($clients as $client)
-                                            <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
-                                                {{ $client->fantasy_name ?? $client->corporate_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('client_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="company_id" class="form-label">Empresa @if(Auth::check() && Auth::user()->role === 'super_admin')*@endif</label>
-                                    <select class="form-select @error('company_id') is-invalid @enderror" id="company_id" name="company_id">
-                                        <option value="">Selecione uma empresa</option>
-                                        @foreach($companies as $company)
-                                            <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
-                                                {{ $company->corporate_name ?? $company->fantasy_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('company_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    
-                                </div>
-                            </div>
-                             <div class="col-md-2">
+                        
+                        
+                        @if(auth()->guard('web')->user()->role === 'super_admin')
+                        <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="issue_date" class="form-label">Data*</label>
-                                <input type="date" class="form-control @error('issue_date') is-invalid @enderror" id="issue_date" name="issue_date" value="{{ old('issue_date', date('Y-m-d')) }}" required>
-                                @error('issue_date')
+                                <label for="company_id" class="form-label">Empresa*</label>
+                                <select class="form-select @error('company_id') is-invalid @enderror" id="company_id" name="company_id">
+                                    <option value="">Selecione uma empresa</option>
+                                    @foreach($companies as $company)
+                                        <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                                            {{ $company->fantasy_name ?? $company->corporate_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('company_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="mb-3">
-                                    <label for="valid_until" class="form-label">Validade*</label>
-                                    <input type="date" class="form-control @error('valid_until') is-invalid @enderror" 
-                                        id="valid_until" name="valid_until" 
-                                        value="{{ old('valid_until') }}" required>
-                                    @error('valid_until')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            
                         </div>
+                        @endif
+
+                        @if(Auth::check() && Auth::user()->role === 'super_admin')
+                            <div class="col-md-4">
+                        @else
+                            <div class="col-md-8">
+                        @endif
+                            <div class="mb-3">
+                                <label for="client_id" class="form-label">Cliente @if(Auth::check() && Auth::user()->role === 'super_admin')*@endif</label>
+                                <select class="form-select @error('client_id') is-invalid @enderror" id="client_id" name="client_id">
+                                    <option value="">Selecione um cliente</option>
+                                    @foreach($clients as $client)
+                                        <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
+                                            {{ $client->fantasy_name ?? $client->corporate_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('client_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2">
+                        <div class="mb-3">
+                            <label for="issue_date" class="form-label">Data*</label>
+                            <input type="date" class="form-control @error('issue_date') is-invalid @enderror" id="issue_date" name="issue_date" value="{{ old('issue_date', date('Y-m-d')) }}" required>
+                            @error('issue_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="mb-3">
+                                <label for="valid_until" class="form-label">Validade*</label>
+                                <input type="date" class="form-control @error('valid_until') is-invalid @enderror" 
+                                    id="valid_until" name="valid_until" 
+                                    value="{{ old('valid_until') }}" required>
+                                @error('valid_until')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
                       
                        
                         
@@ -97,7 +103,7 @@
                                                         <div class="col-md-3">
                                                             <label class="form-label">Produto*</label>
                                                             <div class="input-group">
-                                                                <select class="form-select product-select @error('products.'.$index.'.product_id') is-invalid @enderror" name="products[{{ $index }}][product_id]">
+                                                                <select class="form-select product-select @error('products.'.$index.'.product_id') is-invalid @enderror" name="products[{{ $index }}][product_id]" required>
                                                                     <option value="">Selecione um produto</option>
                                                                     @foreach($products as $product)
                                                                         <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-description="{{ $product->description }}" {{ old('products.'.$index.'.product_id') == $product->id ? 'selected' : '' }}>
@@ -121,7 +127,7 @@
                                                         
                                                         <div class="col-md-1">
                                                             <label class="form-label">Qtde*</label>
-                                                            <input type="text" class="form-control quantity-input @error('products.'.$index.'.quantity') is-invalid @enderror" name="products[{{ $index }}][quantity]" value="{{ old('products.'.$index.'.quantity', 1) }}">
+                                                            <input type="text" class="form-control quantity-input" name="products[{{ $index }}][quantity]" value="{{ old('products.'.$index.'.quantity', 1) }}" required min="1">
                                                             @error('products.'.$index.'.quantity')
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                             @enderror
@@ -166,7 +172,7 @@
                                                             <select class="form-select product-select" name="products[0][product_id]">
                                                                 <option value="">Selecione um produto</option>
                                                                 @foreach($products as $product)
-                                                                    <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-description="{{ $product->description }}">
+                                                                    <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-description="{{ $product->description }}" required>
                                                                         {{ $product->name }} - {{ $product->category->name ?? 'Sem categoria' }}
                                                                     </option>
                                                                 @endforeach
@@ -184,7 +190,7 @@
                                                     
                                                     <div class="col-md-1">
                                                         <label class="form-label">Qtde*</label>
-                                                        <input type="text" class="form-control quantity-input" name="products[0][quantity]" value="1">
+                                                        <input type="text" class="form-control quantity-input" name="products[0][quantity]" value="1" required min="1">
                                                     </div>
                                                     
                                                     <div class="col-md-2">
@@ -316,6 +322,34 @@
                         </div>
                     </div>
                     
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="modal_category_id" class="form-label">Categoria *</label>
+                                <div class="input-group">
+                                    <select class="form-select" id="modal_category_id" name="category_id" required>
+                                        <option value="">Selecione uma categoria</option>
+                                        @if(auth()->guard('web')->user()->role !== 'super_admin')
+                                            @php
+                                                $categoriesTree = App\Models\Category::getTreeForSelect(null, session('tenant_company_id'), false);
+                                            @endphp
+                                            @foreach($categoriesTree as $categoryId => $categoryName)
+                                                <option value="{{ $categoryId }}">
+                                                    {!! $categoryName !!}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    <button type="button" class="btn btn-outline-primary" id="openCategoryModalBtn" title="Adicionar nova categoria">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-12">
                             <div class="mb-3">
@@ -326,30 +360,6 @@
                         </div>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label for="modal_category_id" class="form-label">Categoria *</label>
-                                <div class="input-group">
-                                    <select class="form-select" id="modal_category_id" name="category_id" required>
-                                        <option value="">Selecione uma categoria</option>
-                                        @php
-                                            $categoriesTree = App\Models\Category::getTreeForSelect();
-                                        @endphp
-                                        @foreach($categoriesTree as $categoryId => $categoryName)
-                                            <option value="{{ $categoryId }}">
-                                                {!! $categoryName !!}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <button type="button" class="btn btn-outline-primary" id="openCategoryModalBtn" title="Adicionar nova categoria">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                                <div class="invalid-feedback"></div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -392,7 +402,8 @@
                                 <select class="form-select" id="category_parent_id" name="parent_id">
                                     <option value="">Categoria Principal</option>
                                     @php
-                                        $categoriesTree = App\Models\Category::getTreeForSelect();
+                                        $showCompanyName = auth()->guard('web')->user()->role === 'super_admin';
+                                        $categoriesTree = App\Models\Category::getTreeForSelect(null, null, $showCompanyName);
                                     @endphp
                                     @foreach($categoriesTree as $categoryId => $categoryName)
                                         <option value="{{ $categoryId }}">
@@ -434,13 +445,15 @@
             <div class="col-md-3">
                 <label class="form-label">Produto*</label>
                 <div class="input-group">
-                    <select class="form-select product-select" name="products[INDEX][product_id]">
+                    <select class="form-select product-select" name="products[INDEX][product_id]" id="product-select-INDEX" required>
                         <option value="">Selecione um produto</option>
-                        @foreach($products as $product)
-                            <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-description="{{ $product->description }}">
-                                {{ $product->name }} - {{ $product->category->name ?? 'Sem categoria' }}
-                            </option>
-                        @endforeach
+                        @if(auth()->user()->profile !== 'super_admin')
+                            @foreach($products as $product)
+                                <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-description="{{ $product->description }}">
+                                    {{ $product->name }}
+                                </option>
+                            @endforeach
+                        @endif
                     </select>
                     <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addProductModal" title="Adicionar novo produto">
                         <i class="bi bi-plus"></i>
@@ -455,7 +468,7 @@
             
             <div class="col-md-1">
                 <label class="form-label">Qtde*</label>
-                <input type="text" class="form-control quantity-input" name="products[INDEX][quantity]" value="1">
+                <input type="text" class="form-control quantity-input" name="products[INDEX][quantity]" value="1" required min="1">
             </div>
 
            
@@ -511,6 +524,12 @@ $(document).ready(function() {
         let template = $('#productRowTemplate').html();
         template = template.replace(/INDEX/g, productIndex);
         $('#productsContainer').append(template);
+        
+        // Se temos opções de produto armazenadas, aplicá-las ao novo select
+        if (window.currentProductOptions) {
+            $('#productsContainer .product-row:last .product-select').html(window.currentProductOptions);
+        }
+        
         productIndex++;
     }
     
@@ -528,6 +547,11 @@ $(document).ready(function() {
         
         // Adicionar nova linha após a atual
         currentRow.after(template);
+        
+        // Se temos opções de produto armazenadas, aplicá-las ao novo select
+        if (window.currentProductOptions) {
+            currentRow.next().find('.product-select').html(window.currentProductOptions);
+        }
         
         // Aplicar máscara nos novos campos com um pequeno delay
         setTimeout(function() {
@@ -564,6 +588,11 @@ $(document).ready(function() {
             let template = $('#productRowTemplate').html();
             template = template.replace(/INDEX/g, 0); // O primeiro índice é sempre 0
             $('#productsContainer').append(template);
+            
+            // Se temos opções de produto armazenadas, aplicá-las ao novo select
+            if (window.currentProductOptions) {
+                $('#productsContainer .product-row:last .product-select').html(window.currentProductOptions);
+            }
             
             setTimeout(function() {
                 $('.money').mask('000.000.000.000.000,00', {
@@ -658,9 +687,7 @@ $(document).ready(function() {
     $('#addProductForm').on('submit', function(e) {
         e.preventDefault();
         
-        // Limpar mensagens de erro anteriores
-        $('.is-invalid').removeClass('is-invalid');
-        $('.invalid-feedback').text('');
+        // Preparar para envio
         
         // Desabilitar botão de salvar
         $('#saveProductBtn').prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Salvando...');
@@ -673,6 +700,14 @@ $(document).ready(function() {
             category_id: $('#modal_category_id').val(),
             _token: $('input[name="_token"]').val()
         };
+        
+        // Adicionar company_id se usuário for super_admin
+        @if(Auth::check() && Auth::user()->role === 'super_admin')
+        let companyId = $('#company_id').val();
+        if (companyId) {
+            formData.company_id = companyId;
+        }
+        @endif
         
         // Enviar requisição AJAX
         $.ajax({
@@ -709,18 +744,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
-                if (xhr.status === 422) {
-                    // Erros de validação
-                    let errors = xhr.responseJSON.errors;
-                    
-                    $.each(errors, function(field, messages) {
-                        let input = $('#modal_' + field);
-                        input.addClass('is-invalid');
-                        input.siblings('.invalid-feedback').text(messages[0]);
-                    });
-                } else {
-                    alert('Erro interno do servidor. Tente novamente.');
-                }
+                alert('Erro ao criar produto. Verifique os dados e tente novamente.');
             },
             complete: function() {
                 // Reabilitar botão de salvar
@@ -732,8 +756,6 @@ $(document).ready(function() {
     // Limpar formulário quando modal for fechado
     $('#addProductModal').on('hidden.bs.modal', function() {
         $('#addProductForm')[0].reset();
-        $('.is-invalid').removeClass('is-invalid');
-        $('.invalid-feedback').text('');
         $('#saveProductBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Produto');
     });
     
@@ -741,9 +763,7 @@ $(document).ready(function() {
     $('#addCategoryForm').on('submit', function(e) {
         e.preventDefault();
         
-        // Limpar mensagens de erro anteriores
-        $('.is-invalid').removeClass('is-invalid');
-        $('.invalid-feedback').text('');
+        // Preparar para envio
         
         // Desabilitar botão de salvar
         $('#saveCategoryBtn').prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Salvando...');
@@ -755,6 +775,14 @@ $(document).ready(function() {
             parent_id: $('#category_parent_id').val(),
             _token: $('input[name="_token"]').val()
         };
+        
+        // Adicionar company_id se usuário for super_admin
+        @if(auth()->user()->role === 'super_admin')
+        let companyId = $('#company_id').val();
+        if (companyId) {
+            formData.company_id = companyId;
+        }
+        @endif
         
         // Enviar requisição AJAX
         $.ajax({
@@ -781,18 +809,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
-                if (xhr.status === 422) {
-                    // Erros de validação
-                    let errors = xhr.responseJSON.errors;
-                    
-                    $.each(errors, function(field, messages) {
-                        let input = $('#category_' + field);
-                        input.addClass('is-invalid');
-                        input.siblings('.invalid-feedback').text(messages[0]);
-                    });
-                } else {
-                    alert('Erro interno do servidor. Tente novamente.');
-                }
+                alert('Erro ao criar categoria. Verifique os dados e tente novamente.');
             },
             complete: function() {
                 // Reabilitar botão de salvar
@@ -809,8 +826,6 @@ $(document).ready(function() {
     // Limpar formulário quando modal de categoria for fechado
     $('#addCategoryModal').on('hidden.bs.modal', function() {
         $('#addCategoryForm')[0].reset();
-        $('.is-invalid').removeClass('is-invalid');
-        $('.invalid-feedback').text('');
         $('#saveCategoryBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Categoria');
     });
     
@@ -843,6 +858,137 @@ $(document).ready(function() {
             $('#issue_date').trigger('change');
         }
     });
+    
+    @if(auth()->guard('web')->user()->role === 'super_admin')
+    // Carregamento dinâmico de categorias baseado na empresa selecionada
+    function loadCategoriesByCompany(companyId) {
+        if (!companyId) {
+            // Se nenhuma empresa selecionada, limpar os selects de categoria
+            $('#modal_category_id').html('<option value="">Selecione uma categoria</option>');
+            $('#category_parent_id').html('<option value="">Categoria Principal</option>');
+            return;
+        }
+        
+        // Carregar categorias para o modal de produto
+        $.get({
+            url: '{{ route("categories.by-company") }}',
+            data: { company_id: companyId },
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                if (response.success) {
+                    let productCategoryOptions = '<option value="">Selecione uma categoria</option>';
+                    let parentCategoryOptions = '<option value="">Categoria Principal</option>';
+                    
+                    response.categories.forEach(function(category) {
+                        productCategoryOptions += `<option value="${category.id}">${category.name_with_indent}</option>`;
+                        parentCategoryOptions += `<option value="${category.id}">${category.name_with_indent}</option>`;
+                    });
+                    
+                    $('#modal_category_id').html(productCategoryOptions);
+                    $('#category_parent_id').html(parentCategoryOptions);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Erro ao carregar categorias:', error);
+            }
+        });
+    }
+    
+    // Monitorar mudanças no select de empresa
+    $('#company_id').on('change', function() {
+        const companyId = $(this).val();
+        loadCategoriesByCompany(companyId);
+    });
+    
+    // Carregamento dinâmico de produtos baseado na empresa selecionada
+    function loadProductsByCompany(companyId) {
+        if (!companyId) {
+            // Se nenhuma empresa selecionada, limpar os selects de produto
+            const emptyOptions = '<option value="">Selecione um produto</option>';
+            updateProductSelects(emptyOptions);
+            return;
+        }
+        
+        $.get({
+            url: '{{ route("products.by-company") }}',
+            data: { company_id: companyId },
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                let productOptions = '<option value="">Selecione um produto</option>';
+                
+                response.forEach(function(product) {
+                    productOptions += `<option value="${product.id}" data-price="${product.price}" data-description="${product.description}">${product.name} - ${product.category_name}</option>`;
+                });
+                
+                updateProductSelects(productOptions);
+            },
+            error: function(xhr, status, error) {
+                console.error('Erro ao carregar produtos:', error);
+            }
+        });
+    }
+    
+    // Função para atualizar os selects de produto existentes e futuros
+    function updateProductSelects(productOptions) {
+        // Atualizar todos os selects de produto existentes
+        $('.product-select').html(productOptions);
+        
+        // Armazenar as opções para uso em novos produtos
+        window.currentProductOptions = productOptions;
+    }
+    
+    // Carregamento dinâmico de clientes baseado na empresa selecionada
+    function loadClientsByCompany(companyId) {
+        if (!companyId) {
+            // Se nenhuma empresa selecionada, limpar o select de cliente
+            $('#client_id').html('<option value="">Selecione um cliente</option>');
+            return;
+        }
+        
+        $.get({
+            url: '{{ route("clients.by-company") }}',
+            data: { company_id: companyId },
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                let clientOptions = '<option value="">Selecione um cliente</option>';
+                
+                response.forEach(function(client) {
+                    clientOptions += `<option value="${client.id}">${client.display_name}</option>`;
+                });
+                
+                $('#client_id').html(clientOptions);
+            },
+            error: function(xhr, status, error) {
+                console.error('Erro ao carregar clientes:', error);
+            }
+        });
+    }
+    
+    // Monitorar mudanças no select de empresa para carregar produtos e clientes
+    $('#company_id').on('change', function() {
+        const companyId = $(this).val();
+        loadCategoriesByCompany(companyId);
+        loadProductsByCompany(companyId);
+        loadClientsByCompany(companyId);
+    });
+    
+    // Carregar dados inicialmente se já houver empresa selecionada
+    const initialCompanyId = $('#company_id').val();
+    if (initialCompanyId) {
+        loadCategoriesByCompany(initialCompanyId);
+        loadProductsByCompany(initialCompanyId);
+        loadClientsByCompany(initialCompanyId);
+    }
+      @endif
 });
 </script>
 @endpush

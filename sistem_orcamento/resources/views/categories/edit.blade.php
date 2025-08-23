@@ -40,9 +40,6 @@
                                 <label for="parent_id" class="form-label">Categoria Pai</label>
                                 <select class="form-select @error('parent_id') is-invalid @enderror" id="parent_id" name="parent_id">
                                     <option value="">Selecione uma categoria pai (opcional)</option>
-                                    @php
-                                        $categoriesTree = App\Models\Category::getTreeForSelect($category->id);
-                                    @endphp
                                     @foreach($categoriesTree as $categoryId => $categoryName)
                                         <option value="{{ $categoryId }}" {{ old('parent_id', $category->parent_id) == $categoryId ? 'selected' : '' }}>
                                             {!! $categoryName !!}

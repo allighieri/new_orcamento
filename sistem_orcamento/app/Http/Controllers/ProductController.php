@@ -16,10 +16,20 @@ class ProductController extends Controller
      */
     public function index(): View
     {
-        $companyId = session('tenant_company_id');
-        $products = Product::where('company_id', $companyId)
-            ->with('category')
-            ->paginate(10);
+        $user = auth()->guard('web')->user();
+        
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todos os produtos
+            $products = Product::with(['category', 'company'])
+                ->paginate(10);
+        } else {
+            // Admin e user veem apenas produtos da sua empresa
+            $companyId = session('tenant_company_id');
+            $products = Product::where('company_id', $companyId)
+                ->with('category')
+                ->paginate(10);
+        }
+        
         return view('products.index', compact('products'));
     }
 
@@ -28,9 +38,20 @@ class ProductController extends Controller
      */
     public function create(): View
     {
-        $companyId = session('tenant_company_id');
-        $categories = Category::where('company_id', $companyId)->get();
-        return view('products.create', compact('categories'));
+        $user = auth()->guard('web')->user();
+        
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todas as categorias e empresas
+            $categories = Category::with('company')->get();
+            $companies = \App\Models\Company::orderBy('fantasy_name')->get();
+        } else {
+            // Admin e user veem apenas categorias da sua empresa
+            $companyId = session('tenant_company_id');
+            $categories = Category::where('company_id', $companyId)->get();
+            $companies = collect();
+        }
+        
+        return view('products.create', compact('categories', 'companies'));
     }
 
     /**
@@ -38,12 +59,21 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $user = auth()->guard('web')->user();
+        
+        $rules = [
             'name' => 'required|string|max:255',
             'price' => 'required|string',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
-        ]);
+        ];
+        
+        // Super admin pode especificar a empresa
+        if ($user->role === 'super_admin') {
+            $rules['company_id'] = 'required|exists:companies,id';
+        }
+        
+        $validated = $request->validate($rules);
 
         // Converter preço do formato brasileiro para decimal
         $price = str_replace(['.', ','], ['', '.'], $validated['price']);
@@ -60,7 +90,15 @@ class ProductController extends Controller
             $counter++;
         }
 
-        $validated['company_id'] = session('tenant_company_id');
+        // Definir company_id baseado na role do usuário
+        if ($user->role === 'super_admin') {
+            // Super admin usa o company_id do formulário
+            $validated['company_id'] = $validated['company_id'];
+        } else {
+            // Admin e user usam o tenant da sessão
+            $validated['company_id'] = session('tenant_company_id');
+        }
+        
         $product = Product::create($validated);
         
         // Se for uma requisição AJAX, retornar JSON
@@ -88,9 +126,14 @@ class ProductController extends Controller
      */
     public function show(Product $product): View
     {
-        // Verificar se o produto pertence à empresa do usuário
-        if ($product->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode ver qualquer produto
+        if ($user->role !== 'super_admin') {
+            // Verificar se o produto pertence à empresa do usuário
+            if ($product->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         $product->load('category');
@@ -102,13 +145,24 @@ class ProductController extends Controller
      */
     public function edit(Product $product): View
     {
-        // Verificar se o produto pertence à empresa do usuário
-        if ($product->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode editar qualquer produto
+        if ($user->role !== 'super_admin') {
+            // Verificar se o produto pertence à empresa do usuário
+            if ($product->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
-        $companyId = session('tenant_company_id');
-        $categories = Category::where('company_id', $companyId)->get();
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todas as categorias
+            $categories = Category::with('company')->get();
+        } else {
+            // Admin e user veem apenas categorias da sua empresa
+            $companyId = session('tenant_company_id');
+            $categories = Category::where('company_id', $companyId)->get();
+        }
         return view('products.edit', compact('product', 'categories'));
     }
 
@@ -117,9 +171,14 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product): RedirectResponse
     {
-        // Verificar se o produto pertence à empresa do usuário
-        if ($product->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode atualizar qualquer produto
+        if ($user->role !== 'super_admin') {
+            // Verificar se o produto pertence à empresa do usuário
+            if ($product->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         $validated = $request->validate([
@@ -157,9 +216,14 @@ class ProductController extends Controller
      */
     public function destroy(Product $product): RedirectResponse
     {
-        // Verificar se o produto pertence à empresa do usuário
-        if ($product->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode deletar qualquer produto
+        if ($user->role !== 'super_admin') {
+            // Verificar se o produto pertence à empresa do usuário
+            if ($product->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         try {
@@ -170,5 +234,40 @@ class ProductController extends Controller
             return redirect()->route('products.index')
                 ->with('error', 'Erro ao excluir produto. Verifique se não há registros relacionados.');
         }
+    }
+
+    /**
+     * Get products by company for AJAX requests
+     */
+    public function getProductsByCompany(Request $request)
+    {
+        $user = auth()->guard('web')->user();
+        
+        // Apenas super_admin pode acessar este endpoint
+        if ($user->role !== 'super_admin') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $companyId = $request->get('company_id');
+        
+        if (!$companyId) {
+            return response()->json(['error' => 'Company ID is required'], 400);
+        }
+        
+        $products = Product::where('company_id', $companyId)
+            ->with('category')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->price,
+                    'description' => $product->description,
+                    'category_name' => $product->category ? $product->category->name : 'Sem categoria'
+                ];
+            });
+        
+        return response()->json($products);
     }
 }

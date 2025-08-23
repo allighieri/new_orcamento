@@ -35,6 +35,9 @@
                                     <th>Nome</th>
                                     <th>Descrição</th>
                                     <th>Categoria</th>
+                                    @if(auth()->guard('web')->user()->role === 'super_admin')
+                                        <th>Empresa</th>
+                                    @endif
                                     <th>Preço</th>
                                     <th>Estoque</th>
                                     <th>Ações</th>
@@ -53,6 +56,9 @@
                                             <span class="text-muted">Sem categoria</span>
                                         @endif
                                     </td>
+                                    @if(auth()->guard('web')->user()->role === 'super_admin')
+                                        <td>{{ $product->company->fantasy_name ?? 'N/A' }}</td>
+                                    @endif
                                     <td>R$ {{ number_format($product->price, 2, ',', '.') }}</td>
                                     <td>
                                         @if($product->stock)

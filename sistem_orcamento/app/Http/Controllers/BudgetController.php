@@ -143,39 +143,32 @@ class BudgetController extends Controller
             $rules['client_id'] = 'required|exists:clients,id';
             $rules['company_id'] = 'required|exists:companies,id';
         } else {
-            // Admin e user devem preencher pelo menos um campo
-            if (empty($request->client_id) && empty($request->company_id)) {
+            // Admin e user devem preencher cliente
+            if (empty($request->client_id)) {
                 return back()->withErrors([
-                    'client_id' => 'Você deve selecionar pelo menos um cliente ou uma empresa.',
-                    'company_id' => 'Você deve selecionar pelo menos um cliente ou uma empresa.'
+                    'client_id' => 'Selecione um cliente.'
                 ])->withInput();
             }
-            
-            if (!empty($request->client_id)) {
-                $rules['client_id'] = 'required|exists:clients,id';
-            }
-            
-            if (!empty($request->company_id)) {
-                $rules['company_id'] = 'required|exists:companies,id';
-            }
+            $rules['client_id'] = 'required|exists:clients,id';
         }
         
         $request->validate($rules);
         
         // Converter valores vazios para null
         $clientId = empty($request->client_id) ? null : $request->client_id;
+        // Definir empresa: super_admin usa a selecionada, outros usam automaticamente
         $companyId = ($user->role === 'super_admin') ? $request->company_id : session('tenant_company_id');
 
         DB::beginTransaction();
         try {
-            // Gerar número do orçamento no formato 0000/YYYY (individual por empresa)
+            // Gerar número do orçamento no formato 0000-0/YYYY (incluindo ID da empresa)
             $year = date('Y');
             $lastBudget = Budget::where('company_id', $companyId)
                                ->whereYear('created_at', $year)
                                ->orderBy('id', 'desc')
                                ->first();
             $nextNumber = $lastBudget ? (intval(substr($lastBudget->number, 0, 4)) + 1) : 1;
-            $budgetNumber = str_pad($nextNumber, 4, '0', STR_PAD_LEFT) . '/' . $year;
+            $budgetNumber = str_pad($nextNumber, 4, '0', STR_PAD_LEFT) . '-' . $companyId . '/' . $year;
 
             // Criar orçamento
             $budget = Budget::create([
@@ -266,8 +259,8 @@ class BudgetController extends Controller
         }
         
         if ($user->role === 'super_admin') {
-            // Super admin pode ver todos os clientes, empresas e produtos
-            $clients = Client::orderBy('fantasy_name')->get();
+            // Super admin vê apenas clientes da empresa do orçamento sendo editado
+            $clients = Client::where('company_id', $budget->company_id)->orderBy('fantasy_name')->get();
             $companies = Company::orderBy('fantasy_name')->get();
             $products = Product::with(['category'])->orderBy('name')->get();
         } else {
@@ -328,7 +321,7 @@ class BudgetController extends Controller
             'items.*.description' => 'nullable|string',
             'items.*.discount_percentage' => 'nullable|numeric|min:0|max:100'
         ];
-        
+
         // Aplicar validação condicional baseada no papel do usuário
         if ($user->role === 'super_admin') {
             // Super admin deve preencher ambos os campos
@@ -344,28 +337,22 @@ class BudgetController extends Controller
             }
             $rules['client_id'] = 'required|exists:clients,id';
             $rules['company_id'] = 'required|exists:companies,id';
+           
         } else {
-            // Admin e user devem preencher pelo menos um campo
-            if (empty($request->client_id) && empty($request->company_id)) {
+            // Admin e user devem preencher cliente
+            if (empty($request->client_id)) {
                 return back()->withErrors([
-                    'client_id' => 'Você deve selecionar pelo menos um cliente ou uma empresa.',
-                    'company_id' => 'Você deve selecionar pelo menos um cliente ou uma empresa.'
+                    'client_id' => 'Selecione um cliente.'
                 ])->withInput();
             }
-            
-            if (!empty($request->client_id)) {
-                $rules['client_id'] = 'required|exists:clients,id';
-            }
-            
-            if (!empty($request->company_id)) {
-                $rules['company_id'] = 'required|exists:companies,id';
-            }
+            $rules['client_id'] = 'required|exists:clients,id';
         }
         
         $request->validate($rules);
         
         // Converter valores vazios para null
         $clientId = empty($request->client_id) ? null : $request->client_id;
+        // Definir empresa: super_admin usa a selecionada, outros usam automaticamente
         $companyId = ($user->role === 'super_admin') ? $request->company_id : session('tenant_company_id');
 
         DB::beginTransaction();

@@ -14,10 +14,21 @@ class ClientController extends Controller
      */
     public function index(): View
     {
-        $companyId = session('tenant_company_id');
-        $clients = Client::where('company_id', $companyId)
-            ->orderBy('fantasy_name')
-            ->paginate(15);
+        $user = auth()->guard('web')->user();
+        
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todos os clientes
+            $clients = Client::with('company')
+                ->orderBy('fantasy_name')
+                ->paginate(15);
+        } else {
+            // Admin e user veem apenas clientes da sua empresa
+            $companyId = session('tenant_company_id');
+            $clients = Client::where('company_id', $companyId)
+                ->orderBy('fantasy_name')
+                ->paginate(15);
+        }
+        
         return view('clients.index', compact('clients'));
     }
 
@@ -66,9 +77,14 @@ class ClientController extends Controller
      */
     public function show(Client $client): View
     {
-        // Verificar se o cliente pertence à empresa do usuário
-        if ($client->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode ver qualquer cliente
+        if ($user->role !== 'super_admin') {
+            // Verificar se o cliente pertence à empresa do usuário
+            if ($client->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         $client->load('contacts', 'budgets');
@@ -80,9 +96,14 @@ class ClientController extends Controller
      */
     public function edit(Client $client): View
     {
-        // Verificar se o cliente pertence à empresa do usuário
-        if ($client->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode editar qualquer cliente
+        if ($user->role !== 'super_admin') {
+            // Verificar se o cliente pertence à empresa do usuário
+            if ($client->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         return view('clients.edit', compact('client'));
@@ -93,9 +114,14 @@ class ClientController extends Controller
      */
     public function update(Request $request, Client $client): RedirectResponse
     {
-        // Verificar se o cliente pertence à empresa do usuário
-        if ($client->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode atualizar qualquer cliente
+        if ($user->role !== 'super_admin') {
+            // Verificar se o cliente pertence à empresa do usuário
+            if ($client->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         $validated = $request->validate([
@@ -129,9 +155,14 @@ class ClientController extends Controller
      */
     public function destroy(Client $client): RedirectResponse
     {
-        // Verificar se o cliente pertence à empresa do usuário
-        if ($client->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode deletar qualquer cliente
+        if ($user->role !== 'super_admin') {
+            // Verificar se o cliente pertence à empresa do usuário
+            if ($client->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         try {
@@ -147,5 +178,39 @@ class ClientController extends Controller
             return redirect()->route('clients.index')
                 ->with('error', 'Erro ao excluir cliente. Verifique se não há registros relacionados.');
         }
+    }
+
+    /**
+     * Get clients by company for AJAX requests
+     */
+    public function getClientsByCompany(Request $request)
+    {
+        $user = auth()->guard('web')->user();
+        
+        // Apenas super_admin pode acessar este endpoint
+        if ($user->role !== 'super_admin') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $companyId = $request->get('company_id');
+        
+        if (!$companyId) {
+            return response()->json(['error' => 'Company ID is required'], 400);
+        }
+        
+        $clients = Client::where('company_id', $companyId)
+            ->orderBy('fantasy_name')
+            ->get()
+            ->map(function ($client) {
+                return [
+                    'id' => $client->id,
+                    'fantasy_name' => $client->fantasy_name,
+                    'corporate_name' => $client->corporate_name,
+                    'document_number' => $client->document_number,
+                    'display_name' => $client->fantasy_name ?: $client->corporate_name
+                ];
+            });
+        
+        return response()->json($clients);
     }
 }

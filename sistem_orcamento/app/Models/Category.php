@@ -48,7 +48,6 @@ class Category extends Model
     public function allChildren(): HasMany
     {
         return $this->hasMany(Category::class, 'parent_id')
-            ->where('company_id', $this->company_id)
             ->with('allChildren');
     }
 
@@ -57,25 +56,30 @@ class Category extends Model
      */
     public static function getTree($companyId = null)
     {
-        $companyId = $companyId ?? session('tenant_company_id');
-        
-        return static::where('company_id', $companyId)
-            ->whereNull('parent_id')
+        $query = static::whereNull('parent_id')
             ->with('allChildren')
-            ->orderBy('name')
-            ->get();
+            ->orderBy('name');
+        
+        // Se companyId for null e não houver na sessão, retorna todas (para super_admin)
+        if ($companyId !== null) {
+            $query->where('company_id', $companyId);
+        } elseif (session('tenant_company_id')) {
+            $query->where('company_id', session('tenant_company_id'));
+        }
+        
+        return $query->get();
     }
 
     /**
      * Obter todas as categorias em formato plano para select
      */
-    public static function getTreeForSelect($excludeId = null, $companyId = null)
+    public static function getTreeForSelect($excludeId = null, $companyId = null, $showCompanyName = false)
     {
         $categories = static::getTree($companyId);
         $result = [];
         
         foreach ($categories as $category) {
-            static::buildSelectOptions($category, $result, '', $excludeId);
+            static::buildSelectOptions($category, $result, '', $excludeId, $showCompanyName);
         }
         
         return $result;
@@ -84,16 +88,23 @@ class Category extends Model
     /**
      * Construir opções do select recursivamente
      */
-    private static function buildSelectOptions($category, &$result, $prefix = '', $excludeId = null)
+    private static function buildSelectOptions($category, &$result, $prefix = '', $excludeId = null, $showCompanyName = false)
     {
         if ($excludeId && $category->id == $excludeId) {
             return;
         }
         
-        $result[$category->id] = $prefix . $category->name;
+        $categoryName = $category->name;
+        
+        // Se for categoria pai (sem prefix) e showCompanyName for true, adicionar nome da empresa
+        if ($showCompanyName && empty($prefix) && $category->company) {
+            $categoryName .= ' (' . $category->company->fantasy_name . ')';
+        }
+        
+        $result[$category->id] = $prefix . $categoryName;
         
         foreach ($category->allChildren as $child) {
-            static::buildSelectOptions($child, $result, $prefix . '&nbsp;&nbsp;&nbsp;&nbsp;', $excludeId); // 4 &nbsp; por nível
+            static::buildSelectOptions($child, $result, $prefix . '&nbsp;&nbsp;&nbsp;&nbsp;', $excludeId, $showCompanyName); // 4 &nbsp; por nível
         }
     }
 

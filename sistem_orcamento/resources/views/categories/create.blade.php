@@ -34,27 +34,55 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-12">
+                        @if(auth()->guard('web')->user()->role === 'super_admin')
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="company_id" class="form-label">Empresa *</label>
+                                    <select class="form-select @error('company_id') is-invalid @enderror" id="company_id" name="company_id" required>
+                                        <option value="">Selecione uma empresa</option>
+                                        @foreach($companies as $company)
+                                            <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                                                {{ $company->fantasy_name ?: $company->corporate_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('company_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="parent_id" class="form-label">Categoria Pai</label>
-                                <select class="form-select @error('parent_id') is-invalid @enderror" id="parent_id" name="parent_id">
-                                    <option value="">Selecione uma categoria pai (opcional)</option>
-                                    @php
-                                        $categoriesTree = App\Models\Category::getTreeForSelect();
-                                    @endphp
-                                    @foreach($categoriesTree as $categoryId => $categoryName)
-                                        <option value="{{ $categoryId }}" {{ old('parent_id') == $categoryId ? 'selected' : '' }}>
-                                            {!! $categoryName !!}
-                                        </option>
-                                    @endforeach
+                                <select class="form-select @error('parent_id') is-invalid @enderror" id="parent_id" name="parent_id" @if(auth()->guard('web')->user()->role === 'super_admin') disabled @endif>
+                                    @if(auth()->guard('web')->user()->role === 'super_admin')
+                                        <option value="">Selecione uma empresa primeiro</option>
+                                    @else
+                                        <option value="">Sem categoria</option>
+                                        @foreach($categoriesTree as $categoryId => $categoryName)
+                                            <option value="{{ $categoryId }}" {{ old('parent_id') == $categoryId ? 'selected' : '' }}>
+                                                {!! $categoryName !!}
+                                            </option>
+                                        @endforeach
+                                    @endif
                                 </select>
                                 @error('parent_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <div class="form-text">Deixe em branco para criar uma categoria principal. Subcategorias são indicadas por indentação.</div>
+                                @if(auth()->guard('web')->user()->role === 'super_admin')
+                                    <div class="form-text">Selecione a empresa para exibir categorias</div>
+                                @else
+                                    <div class="form-text">Escolha sem categoria para categorias principais.</div>
+                                @endif
                             </div>
                         </div>
+
+
                     </div>
+                    
+                   
                     
                     <div class="row">
                         <div class="col-md-12">
@@ -84,3 +112,47 @@
     </div>
 </div>
 @endsection
+
+@if(auth()->guard('web')->user()->role === 'super_admin')
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Carregamento dinâmico de categorias pai baseado na empresa selecionada
+    $('#company_id').on('change', function() {
+        const companyId = $(this).val();
+        const parentSelect = $('#parent_id');
+        
+        // Limpar opções atuais
+        parentSelect.empty().append('<option value="">Carregando...</option>');
+        parentSelect.prop('disabled', true);
+        
+        if (companyId) {
+            // Fazer requisição AJAX para carregar categorias
+            $.ajax({
+                url: '{{ route("categories.by-company") }}',
+                type: 'GET',
+                data: { company_id: companyId },
+                success: function(response) {
+                    parentSelect.empty().append('<option value="">Sem categoria</option>');
+                    
+                    // Adicionar categorias da empresa
+                    $.each(response.categories, function(categoryId, categoryName) {
+                        parentSelect.append('<option value="' + categoryId + '">' + categoryName + '</option>');
+                    });
+                    
+                    parentSelect.prop('disabled', false);
+                },
+                error: function() {
+                    parentSelect.empty().append('<option value="">Erro ao carregar categorias</option>');
+                    parentSelect.prop('disabled', false);
+                }
+            });
+        } else {
+            parentSelect.empty().append('<option value="">Selecione uma empresa primeiro</option>');
+            parentSelect.prop('disabled', true);
+        }
+    });
+});
+</script>
+@endpush
+@endif

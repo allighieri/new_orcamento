@@ -58,7 +58,8 @@
                                     <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id" required>
                                         <option value="">Selecione uma categoria</option>
                                         @php
-                                            $categoriesTree = App\Models\Category::getTreeForSelect();
+                                            $showCompanyName = auth()->guard('web')->user()->role === 'super_admin';
+                                            $categoriesTree = App\Models\Category::getTreeForSelect(null, null, $showCompanyName);
                                         @endphp
                                         @foreach($categoriesTree as $categoryId => $categoryName)
                                             <option value="{{ $categoryId }}" {{ (old('category_id', $product->category_id) == $categoryId) ? 'selected' : '' }}>

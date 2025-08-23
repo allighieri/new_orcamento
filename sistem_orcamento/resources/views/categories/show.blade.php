@@ -24,21 +24,18 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-1">
                             <label class="form-label fw-bold">Nome:</label>
-                            <p class="form-control-plaintext">{{ $category->name }}</p>
+                            {{ $category->name }}
                         </div>
                         
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Slug:</label>
-                            <p class="form-control-plaintext">{{ $category->slug }}</p>
-                        </div>
+                      
                     </div>
                     
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-1">
                             <label class="form-label fw-bold">Categoria Pai:</label>
-                            <p class="form-control-plaintext">
+                            
                                 @if($category->parent)
                                     <a href="{{ route('categories.show', $category->parent) }}" class="text-decoration-none">
                                         {{ $category->parent->name }}
@@ -46,42 +43,68 @@
                                 @else
                                     <span class="text-muted">Categoria Principal</span>
                                 @endif
-                            </p>
+                            
                         </div>
                         
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Nível:</label>
-                            <p class="form-control-plaintext">
-                                <span class="badge bg-info">{{ $category->level ?? 0 }}</span>
-                            </p>
-                        </div>
+                        
                     </div>
                     
                     @if($category->description)
                     <div class="row">
-                        <div class="col-12 mb-3">
+                        <div class="col-12 mb-1">
                             <label class="form-label fw-bold">Descrição:</label>
-                            <p class="form-control-plaintext">{{ $category->description }}</p>
+                            {{ $category->description }}
                         </div>
                     </div>
                     @endif
                     
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Data de Criação:</label>
-                            <p class="form-control-plaintext">{{ $category->created_at->format('d/m/Y H:i') }}</p>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Última Atualização:</label>
-                            <p class="form-control-plaintext">{{ $category->updated_at->format('d/m/Y H:i') }}</p>
-                        </div>
+                    
+                    <div class="col-md-6 mb-1">
+                        <label class="form-label fw-bold">Data de Criação:</label>
+                        {{ $category->created_at->format('d/m/Y H:i') }}
                     </div>
+                    
+                    <div class="col-md-6 mb-1">
+                        <label class="form-label fw-bold">Última Atualização:</label>
+                        {{ $category->updated_at->format('d/m/Y H:i') }}
+                    </div>
+                    
                 </div>
             </div>
         </div>
         
         <div class="col-md-4">
+
+        
+            
+            <div class="card mb-3 mt-3 mt-lg-0">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-gear"></i> Ações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ route('categories.edit', $category) }}" class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> Editar
+                        </a>
+                        
+                        <form action="{{ route('categories.destroy', $category) }}" method="POST" 
+                            onsubmit="return confirm('Tem certeza que deseja excluir esta categoria? Todos os produtos desta categoria também serão excluídos. Esta ação não pode ser desfeita.')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="bi bi-trash"></i> Excluir
+                            </button>
+                        </form>
+                        
+                        <a href="{{ route('categories.index') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar à Lista
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <!-- Subcategorias -->
             @if($category->children->count() > 0)
             <div class="card mb-4">
@@ -148,30 +171,6 @@
         </div>
     </div>
     
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="d-flex gap-2">
-                <a href="{{ route('categories.edit', $category) }}" class="btn btn-warning">
-                    <i class="fas fa-edit me-1"></i>
-                    Editar
-                </a>
-                
-                <form action="{{ route('categories.destroy', $category) }}" method="POST" class="d-inline" 
-                      onsubmit="return confirm('Tem certeza que deseja excluir esta categoria? Todos os produtos desta categoria também serão excluídos. Esta ação não pode ser desfeita.')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash me-1"></i>
-                        Excluir
-                    </button>
-                </form>
-                
-                <a href="{{ route('categories.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left me-1"></i>
-                    Voltar à Lista
-                </a>
-            </div>
-        </div>
-    </div>
+    
 </div>
 @endsection

@@ -43,12 +43,15 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     // Rotas para Categorias - todos os usuários autenticados podem criar, editar e excluir
     Route::resource('categories', CategoryController::class);
     Route::get('categories/{category}/products', [CategoryController::class, 'products'])->name('categories.products');
+    Route::get('api/categories/by-company', [CategoryController::class, 'getCategoriesByCompany'])->name('categories.by-company');
 
     // Rotas para Produtos - todos os usuários autenticados podem criar, editar e excluir
     Route::resource('products', ProductController::class);
+    Route::get('api/products/by-company', [ProductController::class, 'getProductsByCompany'])->name('products.by-company');
 
     // Rotas para Clientes (todos os usuários autenticados)
     Route::resource('clients', ClientController::class);
+    Route::get('api/clients/by-company', [ClientController::class, 'getClientsByCompany'])->name('clients.by-company');
 
     // Rotas para Contatos (todos os usuários autenticados)
     Route::resource('contacts', ContactController::class);
