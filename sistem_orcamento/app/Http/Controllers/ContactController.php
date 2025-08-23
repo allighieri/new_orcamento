@@ -16,7 +16,7 @@ class ContactController extends Controller
      */
     public function index(): View
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         if ($user->role === 'super_admin') {
             // Super admin pode ver todos os contatos
@@ -45,7 +45,7 @@ class ContactController extends Controller
      */
     public function create(): View
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         if ($user->role === 'super_admin') {
             // Super admin pode ver todas as empresas e clientes
@@ -66,7 +66,7 @@ class ContactController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Definir regras de validação baseadas na role do usuário
         $rules = [
@@ -124,7 +124,7 @@ class ContactController extends Controller
      */
     public function show(Contact $contact): View
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Super admin pode ver qualquer contato
         if ($user->role !== 'super_admin') {
@@ -148,7 +148,7 @@ class ContactController extends Controller
      */
     public function edit(Contact $contact): View
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Super admin pode editar qualquer contato
         if ($user->role !== 'super_admin') {
@@ -182,7 +182,7 @@ class ContactController extends Controller
      */
     public function update(Request $request, Contact $contact): RedirectResponse
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Super admin pode atualizar qualquer contato
         if ($user->role !== 'super_admin') {
@@ -197,7 +197,7 @@ class ContactController extends Controller
             }
         }
         
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Definir regras de validação baseadas na role do usuário
         $rules = [
@@ -245,7 +245,7 @@ class ContactController extends Controller
      */
     public function destroy(Contact $contact): RedirectResponse
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Super admin pode excluir qualquer contato
         if ($user->role !== 'super_admin') {

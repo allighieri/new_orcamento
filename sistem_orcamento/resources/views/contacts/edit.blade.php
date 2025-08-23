@@ -60,7 +60,7 @@
                         </div>
                         
                         <div class="row">
-                            @if(auth()->user()->role === 'super_admin')
+                            @if(auth()->guard('web')->user()->role === 'super_admin')
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="company_id" class="form-label">Empresa</label>
@@ -80,7 +80,7 @@
                                 </div>
                             </div>
                             @endif
-                            <div class="{{ auth()->user()->role === 'super_admin' ? 'col-md-6' : 'col-md-12' }}">
+                            <div class="{{ auth()->guard('web')->user()->role === 'super_admin' ? 'col-md-6' : 'col-md-12' }}">
                                 <div class="mb-3">
                                     <label for="client_id" class="form-label">Cliente</label>
                                     <select class="form-select @error('client_id') is-invalid @enderror" 
@@ -95,7 +95,7 @@
                                     @error('client_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                    <small class="form-text text-muted">Selecione um cliente{{ auth()->user()->role === 'super_admin' ? ' OU uma empresa' : '' }}</small>
+                                    <small class="form-text text-muted">Selecione um cliente{{ auth()->guard('web')->user()->role === 'super_admin' ? ' OU uma empresa' : '' }}</small>
                                 </div>
                             </div>
                         </div>

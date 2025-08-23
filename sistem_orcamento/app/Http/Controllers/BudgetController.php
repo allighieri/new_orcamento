@@ -60,7 +60,8 @@ class BudgetController extends Controller
      */
     public function create()
     {
-        $user = auth()->user();
+        // $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         if ($user->role === 'super_admin') {
             // Super admin pode ver todos os clientes, empresas e produtos
@@ -124,7 +125,7 @@ class BudgetController extends Controller
             'products.*.discount_percentage' => 'nullable|numeric|min:0|max:100'
         ];
         
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Aplicar validação condicional baseada no papel do usuário
         if ($user->role === 'super_admin') {
@@ -235,7 +236,7 @@ class BudgetController extends Controller
      */
     public function show(Budget $budget)
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Super admin pode ver qualquer orçamento
         if ($user->role !== 'super_admin') {
@@ -254,7 +255,7 @@ class BudgetController extends Controller
      */
     public function edit(Budget $budget)
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Super admin pode editar qualquer orçamento
         if ($user->role !== 'super_admin') {
@@ -287,7 +288,7 @@ class BudgetController extends Controller
      */
     public function update(Request $request, Budget $budget)
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Super admin pode atualizar qualquer orçamento
         if ($user->role !== 'super_admin') {
@@ -424,7 +425,7 @@ class BudgetController extends Controller
      */
     public function destroy(Budget $budget)
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Super admin pode excluir qualquer orçamento
         if ($user->role !== 'super_admin') {
@@ -478,7 +479,7 @@ class BudgetController extends Controller
      */
     public function generatePdf(Budget $budget)
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Super admin pode gerar PDF de qualquer orçamento
         if ($user->role !== 'super_admin') {

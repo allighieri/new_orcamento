@@ -81,7 +81,7 @@
                                         <option value="">Selecione uma função</option>
                                         <option value="user" {{ old('role') === 'user' ? 'selected' : '' }}>Usuário</option>
                                         <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-                                        @if(auth()->user()->role === 'super_admin')
+                                        @if(auth()->guard('web')->user()->role === 'super_admin')
                                             <option value="super_admin" {{ old('role') === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                                         @endif
                                     </select>
@@ -90,7 +90,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            @if(auth()->user()->role === 'super_admin')
+                            @if(auth()->guard('web')->user()->role === 'super_admin')
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="company_id" class="form-label">Empresa <span id="company-required" style="display: none;">*</span></label>
@@ -109,7 +109,7 @@
                                 </div>
                             @else
                                 {{-- Campo oculto para admins enviarem o company_id automaticamente --}}
-                                <input type="hidden" name="company_id" value="{{ auth()->user()->company_id }}">
+                                <input type="hidden" name="company_id" value="{{ auth()->guard('web')->user()->company_id }}">
                             @endif
                         </div>
                         

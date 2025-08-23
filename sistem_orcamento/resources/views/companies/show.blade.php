@@ -133,7 +133,7 @@
         </div>
         
         <!-- Contatos (apenas para super_admin) -->
-        @if(auth()->user()->role === 'super_admin')
+        @if(auth()->guard('web')->user()->role === 'super_admin')
         <div class="card mt-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">

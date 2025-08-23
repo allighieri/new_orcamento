@@ -35,7 +35,7 @@
                                     <th>CPF</th>
                                     <th>Telefone</th>
                                     <th>Email</th>
-                                    @if(auth()->user()->role === 'super_admin')
+                                    @if(auth()->guard('web')->user()->role === 'super_admin')
                                     <th>Empresa</th>
                                     @endif
                                     <th>Cliente</th>
@@ -50,7 +50,7 @@
                                     <td>{{ $contact->cpf }}</td>
                                     <td>{{ $contact->phone }}</td>
                                     <td>{{ $contact->email }}</td>
-                                    @if(auth()->user()->role === 'super_admin')
+                                    @if(auth()->guard('web')->user()->role === 'super_admin')
                                     <td>{{ $contact->company ? $contact->company->fantasy_name : 'N/A' }}</td>
                                     @endif
                                     <td>

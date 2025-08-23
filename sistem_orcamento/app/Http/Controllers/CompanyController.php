@@ -15,7 +15,7 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $user = auth()->user();
+        $user = auth()->guard('web')->user();
         
         // Se for admin, redireciona para a visualização da sua própria empresa
         if ($user->role === 'admin' && $user->company_id) {

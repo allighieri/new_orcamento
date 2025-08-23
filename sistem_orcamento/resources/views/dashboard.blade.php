@@ -221,7 +221,7 @@
                                 <tr>
                                     <th>Número</th>
                                     <th>Cliente</th>
-                                    @if(auth()->user()->role === 'super_admin')
+                                    @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <th>Empresa</th>
                                     @endif
                                     <th>Status</th>
@@ -235,7 +235,7 @@
                                 <tr>
                                     <td><strong>#{{ $budget->number }}</strong></td>
                                     <td>{{ $budget->client->corporate_name ?? $budget->client->fantasy_name }}</td>
-                                    @if(auth()->user()->role === 'super_admin')
+                                    @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <td>{{ $budget->company->fantasy_name ?? 'N/A' }}</td>
                                     @endif
                                     <td>
