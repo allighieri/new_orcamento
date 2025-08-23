@@ -64,8 +64,9 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'role' => ['required', Rule::in(['user', 'admin', 'super_admin'])],
             'company_id' => [
-                Rule::requiredIf(function () use ($request) {
-                    return in_array($request->role, ['user', 'admin']);
+                Rule::requiredIf(function () use ($request, $user) {
+                    // Só é obrigatório se for super_admin criando user/admin
+                    return $user->role === 'super_admin' && in_array($request->role, ['user', 'admin']);
                 }),
                 'nullable',
                 'exists:companies,id'
@@ -118,6 +119,74 @@ class UserController extends Controller
     }
 
     /**
+     * Display the profile of the authenticated user.
+     */
+    public function profile(): View
+    {
+        $user = Auth::user();
+        $user->load('company');
+        return view('users.profile', compact('user'));
+    }
+
+    /**
+     * Show the form for editing the authenticated user's profile.
+     */
+    public function editProfile(): View
+    {
+        $user = Auth::user();
+        $user->load('company');
+        return view('users.edit-profile', compact('user'));
+    }
+
+    /**
+     * Update the authenticated user's profile.
+     */
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+        
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($user->id),
+            ],
+            'password' => 'nullable|string|min:8|confirmed',
+        ];
+        
+        // Apenas super_admin pode alterar o status de qualquer usuário
+        // Admin não pode alterar o próprio status
+        // User não pode alterar status
+        if ($user->role === 'super_admin') {
+            $rules['active'] = 'boolean';
+        }
+        
+        $validated = $request->validate($rules);
+        
+        // Hash da senha apenas se foi fornecida
+        if (!empty($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
+        } else {
+            unset($validated['password']);
+        }
+        
+        // Definir status ativo apenas para super_admin
+        if ($user->role !== 'super_admin') {
+            unset($validated['active']);
+        } else {
+            $validated['active'] = $validated['active'] ?? $user->active;
+        }
+        
+        $user->update($validated);
+        
+        return redirect()->route('profile')
+            ->with('success', 'Perfil atualizado com sucesso!');
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(User $user): View
@@ -158,8 +227,9 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'role' => ['required', Rule::in(['user', 'admin', 'super_admin'])],
             'company_id' => [
-                Rule::requiredIf(function () use ($request) {
-                    return in_array($request->role, ['user', 'admin']);
+                Rule::requiredIf(function () use ($request, $currentUser) {
+                    // Só é obrigatório se for super_admin editando user/admin
+                    return $currentUser->role === 'super_admin' && in_array($request->role, ['user', 'admin']);
                 }),
                 'nullable',
                 'exists:companies,id'
@@ -174,6 +244,13 @@ class UserController extends Controller
         if ($currentUser->role !== 'super_admin' && $validated['role'] === 'super_admin') {
             return back()->withErrors([
                 'role' => 'Você não tem permissão para definir super administradores.'
+            ])->withInput();
+        }
+        
+        // Admin não pode alterar sua própria função
+        if ($currentUser->role === 'admin' && $currentUser->id === $user->id && $validated['role'] !== $user->role) {
+            return back()->withErrors([
+                'role' => 'Você não pode alterar sua própria função.'
             ])->withInput();
         }
 

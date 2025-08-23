@@ -19,10 +19,19 @@ class BudgetController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->guard('web')->user();
         $companyId = session('tenant_company_id');
-        $query = Budget::where('company_id', $companyId)
-            ->with(['client', 'company'])
-            ->orderBy('created_at', 'desc');
+        
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todos os orçamentos
+            $query = Budget::with(['client', 'company'])
+                ->orderBy('created_at', 'desc');
+        } else {
+            // Admin e user veem apenas orçamentos da sua empresa
+            $query = Budget::where('company_id', $companyId)
+                ->with(['client', 'company'])
+                ->orderBy('created_at', 'desc');
+        }
         
         // Filtrar por cliente se especificado
         if ($request->has('client') && $request->client) {
@@ -34,9 +43,13 @@ class BudgetController extends Controller
         // Buscar dados do cliente para exibir no título se filtrado
         $client = null;
         if ($request->has('client') && $request->client) {
-            $client = Client::where('id', $request->client)
-                ->where('company_id', $companyId)
-                ->first();
+            if ($user->role === 'super_admin') {
+                $client = Client::find($request->client);
+            } else {
+                $client = Client::where('id', $request->client)
+                    ->where('company_id', $companyId)
+                    ->first();
+            }
         }
         
         return view('budgets.index', compact('budgets', 'client'));
@@ -47,10 +60,20 @@ class BudgetController extends Controller
      */
     public function create()
     {
-        $companyId = session('tenant_company_id');
-        $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
-        $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
-        $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
+        $user = auth()->user();
+        
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todos os clientes, empresas e produtos
+            $clients = Client::orderBy('fantasy_name')->get();
+            $companies = Company::orderBy('fantasy_name')->get();
+            $products = Product::with(['category'])->orderBy('name')->get();
+        } else {
+            // Admin e user veem apenas da sua empresa
+            $companyId = session('tenant_company_id');
+            $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
+            $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
+            $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
+        }
         
         return view('budgets.create', compact('clients', 'companies', 'products'));
     }
@@ -87,9 +110,8 @@ class BudgetController extends Controller
         
 \Illuminate\Support\Facades\Log::info('Before validation', ['processed_data' => $request->all()]);
         
-        $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'company_id' => 'required|exists:companies,id',
+        // Validação condicional: empresa obrigatória se não tiver cliente, cliente obrigatório se não tiver empresa
+        $rules = [
             'issue_date' => 'required|date',
             'valid_until' => 'required|date|after_or_equal:issue_date',
             'total_discount' => 'nullable|numeric|min:0',
@@ -100,21 +122,65 @@ class BudgetController extends Controller
             'products.*.unit_price' => 'required|numeric|min:0',
             'products.*.description' => 'nullable|string',
             'products.*.discount_percentage' => 'nullable|numeric|min:0|max:100'
-        ]);
+        ];
+        
+        $user = auth()->user();
+        
+        // Aplicar validação condicional baseada no papel do usuário
+        if ($user->role === 'super_admin') {
+            // Super admin deve preencher ambos os campos
+            if (empty($request->client_id) || empty($request->company_id)) {
+                $errors = [];
+                if (empty($request->client_id)) {
+                    $errors['client_id'] = 'Selecione um cliente';
+                }
+                if (empty($request->company_id)) {
+                    $errors['company_id'] = 'Selecione uma empresa';
+                }
+                return back()->withErrors($errors)->withInput();
+            }
+            $rules['client_id'] = 'required|exists:clients,id';
+            $rules['company_id'] = 'required|exists:companies,id';
+        } else {
+            // Admin e user devem preencher pelo menos um campo
+            if (empty($request->client_id) && empty($request->company_id)) {
+                return back()->withErrors([
+                    'client_id' => 'Você deve selecionar pelo menos um cliente ou uma empresa.',
+                    'company_id' => 'Você deve selecionar pelo menos um cliente ou uma empresa.'
+                ])->withInput();
+            }
+            
+            if (!empty($request->client_id)) {
+                $rules['client_id'] = 'required|exists:clients,id';
+            }
+            
+            if (!empty($request->company_id)) {
+                $rules['company_id'] = 'required|exists:companies,id';
+            }
+        }
+        
+        $request->validate($rules);
+        
+        // Converter valores vazios para null
+        $clientId = empty($request->client_id) ? null : $request->client_id;
+        $companyId = ($user->role === 'super_admin') ? $request->company_id : session('tenant_company_id');
 
         DB::beginTransaction();
         try {
-            // Gerar número do orçamento no formato 0000/YYYY
+            // Gerar número do orçamento no formato 0000/YYYY (individual por empresa)
             $year = date('Y');
-            $lastBudget = Budget::whereYear('created_at', $year)->orderBy('id', 'desc')->first();
+            $lastBudget = Budget::where('company_id', $companyId)
+                               ->whereYear('created_at', $year)
+                               ->orderBy('id', 'desc')
+                               ->first();
             $nextNumber = $lastBudget ? (intval(substr($lastBudget->number, 0, 4)) + 1) : 1;
             $budgetNumber = str_pad($nextNumber, 4, '0', STR_PAD_LEFT) . '/' . $year;
 
             // Criar orçamento
             $budget = Budget::create([
                 'number' => $budgetNumber,
-                'client_id' => $request->client_id,
-                'company_id' => session('tenant_company_id'),
+                'client_id' => $clientId,
+                'company_id' => $companyId,
                 'issue_date' => $request->issue_date,
                 'valid_until' => $request->valid_until,
                 'status' => 'Pendente',
@@ -169,9 +235,14 @@ class BudgetController extends Controller
      */
     public function show(Budget $budget)
     {
-        // Verificar se o orçamento pertence à empresa do usuário
-        if ($budget->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->user();
+        
+        // Super admin pode ver qualquer orçamento
+        if ($user->role !== 'super_admin') {
+            // Verificar se o orçamento pertence à empresa do usuário
+            if ($budget->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         $budget->load(['client', 'company', 'items.product']);
@@ -183,15 +254,29 @@ class BudgetController extends Controller
      */
     public function edit(Budget $budget)
     {
-        // Verificar se o orçamento pertence à empresa do usuário
-        if ($budget->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->user();
+        
+        // Super admin pode editar qualquer orçamento
+        if ($user->role !== 'super_admin') {
+            // Verificar se o orçamento pertence à empresa do usuário
+            if ($budget->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
-        $companyId = session('tenant_company_id');
-        $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
-        $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
-        $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todos os clientes, empresas e produtos
+            $clients = Client::orderBy('fantasy_name')->get();
+            $companies = Company::orderBy('fantasy_name')->get();
+            $products = Product::with(['category'])->orderBy('name')->get();
+        } else {
+            // Admin e user veem apenas da sua empresa
+            $companyId = session('tenant_company_id');
+            $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
+            $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
+            $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
+        }
+        
         $budget->load(['items.product']);
         
         return view('budgets.edit', compact('budget', 'clients', 'companies', 'products'));
@@ -202,9 +287,14 @@ class BudgetController extends Controller
      */
     public function update(Request $request, Budget $budget)
     {
-        // Verificar se o orçamento pertence à empresa do usuário
-        if ($budget->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->user();
+        
+        // Super admin pode atualizar qualquer orçamento
+        if ($user->role !== 'super_admin') {
+            // Verificar se o orçamento pertence à empresa do usuário
+            if ($budget->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         // Processar dados monetários antes da validação
@@ -224,9 +314,8 @@ class BudgetController extends Controller
             $request->merge(['items' => $items]);
         }
         
-        $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'company_id' => 'required|exists:companies,id',
+        // Validação condicional: empresa obrigatória se não tiver cliente, cliente obrigatório se não tiver empresa
+        $rules = [
             'issue_date' => 'required|date',
             'valid_until' => 'required|date|after_or_equal:issue_date',
             'total_discount' => 'nullable|numeric|min:0',
@@ -237,14 +326,53 @@ class BudgetController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.description' => 'nullable|string',
             'items.*.discount_percentage' => 'nullable|numeric|min:0|max:100'
-        ]);
+        ];
+        
+        // Aplicar validação condicional baseada no papel do usuário
+        if ($user->role === 'super_admin') {
+            // Super admin deve preencher ambos os campos
+            if (empty($request->client_id) || empty($request->company_id)) {
+                $errors = [];
+                if (empty($request->client_id)) {
+                    $errors['client_id'] = 'Selecione um cliente';
+                }
+                if (empty($request->company_id)) {
+                    $errors['company_id'] = 'Selecione uma empresa';
+                }
+                return back()->withErrors($errors)->withInput();
+            }
+            $rules['client_id'] = 'required|exists:clients,id';
+            $rules['company_id'] = 'required|exists:companies,id';
+        } else {
+            // Admin e user devem preencher pelo menos um campo
+            if (empty($request->client_id) && empty($request->company_id)) {
+                return back()->withErrors([
+                    'client_id' => 'Você deve selecionar pelo menos um cliente ou uma empresa.',
+                    'company_id' => 'Você deve selecionar pelo menos um cliente ou uma empresa.'
+                ])->withInput();
+            }
+            
+            if (!empty($request->client_id)) {
+                $rules['client_id'] = 'required|exists:clients,id';
+            }
+            
+            if (!empty($request->company_id)) {
+                $rules['company_id'] = 'required|exists:companies,id';
+            }
+        }
+        
+        $request->validate($rules);
+        
+        // Converter valores vazios para null
+        $clientId = empty($request->client_id) ? null : $request->client_id;
+        $companyId = ($user->role === 'super_admin') ? $request->company_id : session('tenant_company_id');
 
         DB::beginTransaction();
         try {
             // Atualizar orçamento
             $budget->update([
-                'client_id' => $request->client_id,
-                'company_id' => session('tenant_company_id'),
+                'client_id' => $clientId,
+                'company_id' => $companyId,
                 'issue_date' => $request->issue_date,
                 'valid_until' => $request->valid_until,
                 'status' => 'Pendente',
@@ -296,9 +424,14 @@ class BudgetController extends Controller
      */
     public function destroy(Budget $budget)
     {
-        // Verificar se o orçamento pertence à empresa do usuário
-        if ($budget->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->user();
+        
+        // Super admin pode excluir qualquer orçamento
+        if ($user->role !== 'super_admin') {
+            // Verificar se o orçamento pertence à empresa do usuário
+            if ($budget->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         try {
@@ -345,9 +478,14 @@ class BudgetController extends Controller
      */
     public function generatePdf(Budget $budget)
     {
-        // Verificar se o orçamento pertence à empresa do usuário
-        if ($budget->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->user();
+        
+        // Super admin pode gerar PDF de qualquer orçamento
+        if ($user->role !== 'super_admin') {
+            // Verificar se o orçamento pertence à empresa do usuário
+            if ($budget->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
         }
         
         $budget->load(['client', 'items.product']);

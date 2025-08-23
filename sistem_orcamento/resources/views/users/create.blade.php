@@ -90,22 +90,27 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="company_id" class="form-label">Empresa <span id="company-required" style="display: none;">*</span></label>
-                                    <select class="form-select @error('company_id') is-invalid @enderror" id="company_id" name="company_id">
-                                        <option value="">Selecione uma empresa</option>
-                                        @foreach($companies as $company)
-                                            <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
-                                                {{ $company->fantasy_name ?? $company->corporate_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('company_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                            @if(auth()->user()->role === 'super_admin')
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="company_id" class="form-label">Empresa <span id="company-required" style="display: none;">*</span></label>
+                                        <select class="form-select @error('company_id') is-invalid @enderror" id="company_id" name="company_id">
+                                            <option value="">Selecione uma empresa</option>
+                                            @foreach($companies as $company)
+                                                <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                                                    {{ $company->fantasy_name ?? $company->corporate_name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('company_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
-                            </div>
+                            @else
+                                {{-- Campo oculto para admins enviarem o company_id automaticamente --}}
+                                <input type="hidden" name="company_id" value="{{ auth()->user()->company_id }}">
+                            @endif
                         </div>
                         
                         <div class="row">
@@ -181,24 +186,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Controlar obrigatoriedade do campo empresa baseado na função
+    // Controlar obrigatoriedade do campo empresa baseado na função (apenas para super_admin)
     const roleSelect = document.getElementById('role');
     const companySelect = document.getElementById('company_id');
     const companyRequired = document.getElementById('company-required');
     
-    function toggleCompanyRequired() {
-        const selectedRole = roleSelect.value;
-        if (selectedRole === 'user' || selectedRole === 'admin') {
-            companyRequired.style.display = 'inline';
-        } else {
-            companyRequired.style.display = 'none';
+    // Verificar se os elementos existem (campo empresa só aparece para super_admin)
+    if (companySelect && companyRequired) {
+        function toggleCompanyRequired() {
+            const selectedRole = roleSelect.value;
+            if (selectedRole === 'user' || selectedRole === 'admin') {
+                companyRequired.style.display = 'inline';
+            } else {
+                companyRequired.style.display = 'none';
+            }
         }
+        
+        roleSelect.addEventListener('change', toggleCompanyRequired);
+        
+        // Verificar estado inicial
+        toggleCompanyRequired();
     }
-    
-    roleSelect.addEventListener('change', toggleCompanyRequired);
-    
-    // Verificar estado inicial
-    toggleCompanyRequired();
 });
 </script>
 @endsection

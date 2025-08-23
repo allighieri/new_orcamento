@@ -13,8 +13,19 @@ class CompanyController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
+    public function index()
     {
+        $user = auth()->user();
+        
+        // Se for admin, redireciona para a visualização da sua própria empresa
+        if ($user->role === 'admin' && $user->company_id) {
+            $company = Company::find($user->company_id);
+            if ($company) {
+                return redirect()->route('companies.show', $company);
+            }
+        }
+        
+        // Super admin vê a listagem completa
         $companies = Company::paginate(10);
         return view('companies.index', compact('companies'));
     }

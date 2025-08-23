@@ -20,8 +20,8 @@
                             <!-- Informações Básicas -->
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label for="client_id" class="form-label">Cliente*</label>
-                                    <select class="form-select @error('client_id') is-invalid @enderror" id="client_id" name="client_id" required>
+                                    <label for="client_id" class="form-label">Cliente @if(Auth::check() && Auth::user()->role === 'super_admin')*@endif</label>
+                                    <select class="form-select @error('client_id') is-invalid @enderror" id="client_id" name="client_id">
                                         <option value="">Selecione um cliente</option>
                                         @foreach($clients as $client)
                                             <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
@@ -37,8 +37,8 @@
                             
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label for="company_id" class="form-label">Empresa*</label>
-                                    <select class="form-select @error('company_id') is-invalid @enderror" id="company_id" name="company_id" required>
+                                    <label for="company_id" class="form-label">Empresa @if(Auth::check() && Auth::user()->role === 'super_admin')*@endif</label>
+                                    <select class="form-select @error('company_id') is-invalid @enderror" id="company_id" name="company_id">
                                         <option value="">Selecione uma empresa</option>
                                         @foreach($companies as $company)
                                             <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
@@ -49,6 +49,7 @@
                                     @error('company_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                    
                                 </div>
                             </div>
                              <div class="col-md-2">
@@ -62,7 +63,7 @@
                             </div>
                             <div class="col-md-2">
                                 <div class="mb-3">
-                                    <label for="valid_until" class="form-label">Válido até *</label>
+                                    <label for="valid_until" class="form-label">Validade*</label>
                                     <input type="date" class="form-control @error('valid_until') is-invalid @enderror" 
                                         id="valid_until" name="valid_until" 
                                         value="{{ old('valid_until') }}" required>
@@ -72,21 +73,151 @@
                                 </div>
                             </div>
                             
-            </div>
+                        </div>
                       
                        
                         
                         <!-- Produtos -->
-                        <div class="mt-4">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Produtos do Orçamento</h5>
-                            </div>
+                       
 
 
                             
                             
-                                <div id="productsContainer">
-                                    <!-- Produtos serão adicionados aqui dinamicamente -->
+                        <div id="productsContainer">
+                                <div class="mt-4">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Produtos do Orçamento</h5>
+                                    </div>
+
+                                    <div id="productsContainer">
+                                        @if(old('products'))
+                                            @foreach(old('products') as $index => $productData)
+                                                <div class="product-row mb-3 mt-3">
+                                                    <div class="row">
+                                                        <div class="col-md-3">
+                                                            <label class="form-label">Produto*</label>
+                                                            <div class="input-group">
+                                                                <select class="form-select product-select @error('products.'.$index.'.product_id') is-invalid @enderror" name="products[{{ $index }}][product_id]">
+                                                                    <option value="">Selecione um produto</option>
+                                                                    @foreach($products as $product)
+                                                                        <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-description="{{ $product->description }}" {{ old('products.'.$index.'.product_id') == $product->id ? 'selected' : '' }}>
+                                                                            {{ $product->name }} - {{ $product->category->name ?? 'Sem categoria' }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                                <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addProductModal" title="Adicionar novo produto">
+                                                                    <i class="bi bi-plus"></i>
+                                                                </button>
+                                                                @error('products.'.$index.'.product_id')
+                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                @enderror
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="col-md-3">
+                                                            <label class="form-label">Desc.:</label>
+                                                            <textarea class="form-control" name="products[{{ $index }}][description]" rows="1">{{ old('products.'.$index.'.description') }}</textarea>
+                                                        </div>
+                                                        
+                                                        <div class="col-md-1">
+                                                            <label class="form-label">Qtde*</label>
+                                                            <input type="text" class="form-control quantity-input @error('products.'.$index.'.quantity') is-invalid @enderror" name="products[{{ $index }}][quantity]" value="{{ old('products.'.$index.'.quantity', 1) }}">
+                                                            @error('products.'.$index.'.quantity')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                        
+                                                        <div class="col-md-2">
+                                                            <label class="form-label">Pç. Unit.</label>
+                                                            <div class="input-group">
+                                                                <div class="input-group-text">R$</div>
+                                                                <input type="text" class="form-control money unit-price-input" name="products[{{ $index }}][unit_price]" value="{{ old('products.'.$index.'.unit_price') ? number_format(old('products.'.$index.'.unit_price'), 2, ',', '.') : '' }}">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-2">
+                                                            <label class="form-label">Total</label>
+                                                            <div class="input-group">
+                                                                <div class="input-group-text">R$</div>
+                                                                <input type="text" class="form-control total-price" placeholder="0,00" readonly>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-1">
+                                                            <label class="form-label">&nbsp;</label>
+                                                            <div class="d-flex gap-1">
+                                                                <button type="button" class="btn btn-danger btn-sm remove-product">
+                                                                    <i class="bi bi-trash3"></i>
+                                                                </button>
+                                                                <button type="button" class="btn btn-success btn-sm add-product">
+                                                                    <i class="bi bi-plus-circle"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        @else
+                                            <div class="product-row mb-3 mt-3">
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">Produto*</label>
+                                                        <div class="input-group">
+                                                            <select class="form-select product-select" name="products[0][product_id]">
+                                                                <option value="">Selecione um produto</option>
+                                                                @foreach($products as $product)
+                                                                    <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-description="{{ $product->description }}">
+                                                                        {{ $product->name }} - {{ $product->category->name ?? 'Sem categoria' }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addProductModal" title="Adicionar novo produto">
+                                                                <i class="bi bi-plus"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">Desc.:</label>
+                                                        <textarea class="form-control" name="products[0][description]" rows="1"></textarea>
+                                                    </div>
+                                                    
+                                                    <div class="col-md-1">
+                                                        <label class="form-label">Qtde*</label>
+                                                        <input type="text" class="form-control quantity-input" name="products[0][quantity]" value="1">
+                                                    </div>
+                                                    
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">Pç. Unit.</label>
+                                                        <div class="input-group">
+                                                            <div class="input-group-text">R$</div>
+                                                            <input type="text" class="form-control money unit-price-input" name="products[0][unit_price]">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">Total</label>
+                                                        <div class="input-group">
+                                                            <div class="input-group-text">R$</div>
+                                                            <input type="text" class="form-control total-price" placeholder="0,00" readonly>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-1">
+                                                        <label class="form-label">&nbsp;</label>
+                                                        <div class="d-flex gap-1">
+                                                            <button type="button" class="btn btn-danger btn-sm remove-product">
+                                                                <i class="bi bi-trash3"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-success btn-sm add-product">
+                                                                <i class="bi bi-plus-circle"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 <div class="my-5">
@@ -99,13 +230,16 @@
                                 
                                 <div class="row mt-3">
                                     <div class="col-md-8 d-flex justify-content-end">
-                                         <div class="col-md-3">
+                                         <div class="col-md-2">
                                             <div class="mb-3">
-                                                <label for="total_discount" class="form-label">Desconto (R$)</label>
-                                                <input type="text" class="form-control money @error('total_discount') is-invalid @enderror" id="total_discount" name="total_discount" value="{{ old('total_discount', '0,00') }}">
-                                                @error('total_discount')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
+                                                <label for="total_discount" class="form-label">Desconto</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-text">R$</div>
+                                                    <input type="text" class="form-control money" id="total_discount" name="total_discount" value="{{ old('total_discount') ? number_format(old('total_discount'), 2, ',', '.') : '' }}">
+                                                    @error('total_discount')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -300,7 +434,7 @@
             <div class="col-md-3">
                 <label class="form-label">Produto*</label>
                 <div class="input-group">
-                    <select class="form-select product-select" name="products[INDEX][product_id]" required>
+                    <select class="form-select product-select" name="products[INDEX][product_id]">
                         <option value="">Selecione um produto</option>
                         @foreach($products as $product)
                             <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-description="{{ $product->description }}">
@@ -321,7 +455,7 @@
             
             <div class="col-md-1">
                 <label class="form-label">Qtde*</label>
-                <input type="text" class="form-control quantity-input" name="products[INDEX][quantity]" value="1" required>
+                <input type="text" class="form-control quantity-input" name="products[INDEX][quantity]" value="1">
             </div>
 
            
@@ -330,7 +464,7 @@
                 <label class="form-label" for="autoSizingInputGroup">Pç. Unit.</label>
                 <div class="input-group">
                     <div class="input-group-text">R$</div>
-                    <input type="text" class="form-control money unit-price-input" name="products[INDEX][unit_price]" required>
+                    <input type="text" class="form-control money unit-price-input" name="products[INDEX][unit_price]">
                 </div>
             </div>
 
@@ -362,7 +496,23 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    let productIndex = 0;
+    // Definir o índice inicial para o próximo produto a ser adicionado
+    let productIndex = $('#productsContainer .product-row').length;
+    
+    // Calcular totais iniciais se a página for recarregada com dados
+    if (productIndex > 0) {
+        // Recalcular os totais das linhas existentes
+        $('#productsContainer .product-row').each(function() {
+            calculateRowTotal($(this));
+        });
+        updateTotals();
+    } else {
+        // Se não houver produtos, adicionar a primeira linha
+        let template = $('#productRowTemplate').html();
+        template = template.replace(/INDEX/g, productIndex);
+        $('#productsContainer').append(template);
+        productIndex++;
+    }
     
     // Máscara para valores monetários
     $('.money').mask('000.000.000.000.000,00', {
@@ -379,11 +529,13 @@ $(document).ready(function() {
         // Adicionar nova linha após a atual
         currentRow.after(template);
         
-        // Aplicar máscara nos novos campos
-        $('.money').mask('000.000.000.000.000,00', {
-            reverse: true,
-            placeholder: '0,00'
-        });
+        // Aplicar máscara nos novos campos com um pequeno delay
+        setTimeout(function() {
+            $('.money').mask('000.000.000.000.000,00', {
+                reverse: true,
+                placeholder: '0,00'
+            });
+        }, 10);
         
         // Atualizar visibilidade dos botões '+'
         updateAddButtons();
@@ -391,21 +543,6 @@ $(document).ready(function() {
         productIndex++;
         updateTotals();
     });
-    
-    // Adicionar primeira linha de produto automaticamente
-    if ($('#productsContainer .product-row').length === 0) {
-        let template = $('#productRowTemplate').html();
-        template = template.replace(/INDEX/g, productIndex);
-        $('#productsContainer').append(template);
-        
-        // Aplicar máscara nos novos campos
-        $('.money').mask('000.000.000.000.000,00', {
-            reverse: true,
-            placeholder: '0,00'
-        });
-        
-        productIndex++;
-    }
     
     // Função para mostrar apenas o botão '+' da última linha
     function updateAddButtons() {
@@ -425,15 +562,16 @@ $(document).ready(function() {
         // Se não sobrou nenhuma linha, adicionar uma nova
         if ($('#productsContainer .product-row').length === 0) {
             let template = $('#productRowTemplate').html();
-            template = template.replace(/INDEX/g, productIndex);
+            template = template.replace(/INDEX/g, 0); // O primeiro índice é sempre 0
             $('#productsContainer').append(template);
             
-            $('.money').mask('000.000.000.000.000,00', {
-                reverse: true,
-                placeholder: '0,00'
-            });
-            
-            productIndex++;
+            setTimeout(function() {
+                $('.money').mask('000.000.000.000.000,00', {
+                    reverse: true,
+                    placeholder: '0,00'
+                });
+            }, 10);
+            productIndex = 1; // Resetar o índice
         }
         
         // Atualizar visibilidade dos botões '+'
@@ -514,34 +652,7 @@ $(document).ready(function() {
         }));
     }
     
-    // Adicionar primeiro produto automaticamente
-    $('#addProduct').click();
-    
-    // Debug: Capturar evento de submit do formulário
-    $('#budgetForm').on('submit', function(e) {
-        console.log('Formulário sendo submetido!');
-        console.log('Dados do formulário:', $(this).serialize());
-        
-        // Verificar se há produtos
-        if ($('.product-row').length === 0) {
-            e.preventDefault();
-            alert('Adicione pelo menos um produto ao orçamento!');
-            return false;
-        }
-        
-        // Verificar campos obrigatórios
-        let clientId = $('#client_id').val();
-        let companyId = $('#company_id').val();
-        let issueDate = $('#issue_date').val();
-        
-        if (!clientId || !companyId || !issueDate) {
-            e.preventDefault();
-            alert('Preencha todos os campos obrigatórios!');
-            return false;
-        }
-        
-        console.log('Validação passou, enviando formulário...');
-    });
+    // Permitir que as validações do Laravel funcionem naturalmente
     
     // Funcionalidade do modal de adicionar produto
     $('#addProductForm').on('submit', function(e) {
@@ -617,7 +728,7 @@ $(document).ready(function() {
             }
         });
     });
-    
+
     // Limpar formulário quando modal for fechado
     $('#addProductModal').on('hidden.bs.modal', function() {
         $('#addProductForm')[0].reset();

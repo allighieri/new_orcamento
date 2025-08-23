@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Editar Usuário - Sistema de Orçamento')
+@section('title', 'Editar Perfil - Sistema de Orçamento')
 
 @section('content')
 <div class="container">
@@ -8,13 +8,13 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4><i class="bi bi-pencil"></i> Editar Usuário</h4>
-                    <a href="{{ route('users.index') }}" class="btn btn-outline-secondary btn-sm">
+                    <h4><i class="bi bi-person-gear"></i> Editar Meu Perfil</h4>
+                    <a href="{{ route('profile') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-arrow-left"></i> Voltar
                     </a>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('users.update', $user) }}">
+                    <form method="POST" action="{{ route('profile.update') }}">
                         @csrf
                         @method('PUT')
                         
@@ -77,87 +77,87 @@
                             </div>
                         </div>
                         
+                        <!-- Informações não editáveis -->
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="role" class="form-label">Função *</label>
-                                    @if(auth()->user()->role === 'admin' && auth()->user()->id === $user->id)
-                                        <!-- Admin não pode alterar sua própria função -->
-                                        <select class="form-select" id="role" name="role" disabled>
-                                            <option value="{{ $user->role }}" selected>
-                                                @if($user->role === 'admin')
-                                                    Admin
-                                                @elseif($user->role === 'user')
-                                                    Usuário
-                                                @elseif($user->role === 'super_admin')
-                                                    Super Admin
-                                                @endif
-                                            </option>
-                                        </select>
-                                        <input type="hidden" name="role" value="{{ $user->role }}">
-                                        <small class="form-text text-muted">Você não pode alterar sua própria função.</small>
-                                    @else
-                                        <select class="form-select @error('role') is-invalid @enderror" id="role" name="role">
-                                            <option value="">Selecione uma função</option>
-                                            <option value="user" {{ old('role', $user->role) === 'user' ? 'selected' : '' }}>Usuário</option>
-                                            <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Admin</option>
-                                            @if(auth()->user()->role === 'super_admin')
-                                                <option value="super_admin" {{ old('role', $user->role) === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
-                                            @endif
-                                        </select>
-                                    @endif
-                                    @error('role')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                    <label class="form-label">Função Atual</label>
+                                    <div class="form-control-plaintext">
+                                        @if($user->role === 'super_admin')
+                                            <span class="badge bg-danger fs-6">Super Administrador</span>
+                                        @elseif($user->role === 'admin')
+                                            <span class="badge bg-warning fs-6">Administrador</span>
+                                        @else
+                                            <span class="badge bg-info fs-6">Usuário</span>
+                                        @endif
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Sua função não pode ser alterada por você mesmo
+                                    </small>
                                 </div>
                             </div>
-                            @if(auth()->user()->role === 'super_admin')
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="company_id" class="form-label">Empresa <span id="company-required" style="display: none;">*</span></label>
-                                        <select class="form-select @error('company_id') is-invalid @enderror" id="company_id" name="company_id">
-                                            <option value="">Selecione uma empresa</option>
-                                            @foreach($companies as $company)
-                                                <option value="{{ $company->id }}" {{ old('company_id', $user->company_id) == $company->id ? 'selected' : '' }}>
-                                                    {{ $company->fantasy_name ?? $company->corporate_name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('company_id')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Empresa Associada</label>
+                                    <div class="form-control-plaintext">
+                                        @if($user->company)
+                                            {{ $user->company->fantasy_name ?? $user->company->corporate_name }}
+                                        @else
+                                            <span class="text-muted">Nenhuma empresa associada</span>
+                                        @endif
                                     </div>
+                                    <small class="form-text text-muted">
+                                        Sua empresa não pode ser alterada por você mesmo
+                                    </small>
                                 </div>
-                            @else
-                                {{-- Campo oculto para admins enviarem o company_id automaticamente --}}
-                                <input type="hidden" name="company_id" value="{{ auth()->user()->company_id }}">
-                            @endif
+                            </div>
                         </div>
                         
+                        <!-- Campo de status apenas para super_admin -->
+                        @if($user->role === 'super_admin')
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="active" name="active" value="1" {{ old('active', $user->active) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="active">
-                                            Usuário ativo
+                                            Conta ativa
                                         </label>
                                     </div>
                                     <small class="form-text text-muted">
-                                        Usuários inativos não conseguem fazer login no sistema
+                                        Contas inativas não conseguem fazer login no sistema
                                     </small>
                                 </div>
                             </div>
                         </div>
+                        @else
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Status da Conta</label>
+                                    <div class="form-control-plaintext">
+                                        @if($user->active)
+                                            <span class="badge bg-success fs-6">Ativa</span>
+                                        @else
+                                            <span class="badge bg-secondary fs-6">Inativa</span>
+                                        @endif
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        O status da sua conta não pode ser alterado por você mesmo
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                         
                         <hr>
                         
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('users.index') }}" class="btn btn-secondary">
+                            <a href="{{ route('profile') }}" class="btn btn-secondary">
                                 <i class="bi bi-x-circle"></i> Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle"></i> Atualizar Usuário
+                                <i class="bi bi-check-circle"></i> Atualizar Perfil
                             </button>
                         </div>
                     </form>
@@ -208,28 +208,6 @@ document.addEventListener('DOMContentLoaded', function() {
             togglePasswordConfirmationIcon.classList.add('bi-eye');
         }
     });
-    
-    // Controlar obrigatoriedade do campo empresa baseado na função (apenas para super_admin)
-    const roleSelect = document.getElementById('role');
-    const companySelect = document.getElementById('company_id');
-    const companyRequired = document.getElementById('company-required');
-    
-    // Verificar se os elementos existem (campo empresa só aparece para super_admin)
-    if (companySelect && companyRequired) {
-        function toggleCompanyRequired() {
-            const selectedRole = roleSelect.value;
-            if (selectedRole === 'user' || selectedRole === 'admin') {
-                companyRequired.style.display = 'inline';
-            } else {
-                companyRequired.style.display = 'none';
-            }
-        }
-        
-        roleSelect.addEventListener('change', toggleCompanyRequired);
-        
-        // Verificar estado inicial
-        toggleCompanyRequired();
-    }
 });
 </script>
 @endsection

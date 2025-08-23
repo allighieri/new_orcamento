@@ -9,6 +9,8 @@ use App\Models\Budget;
 use App\Models\Client;
 use App\Models\Product;
 use App\Models\Company;
+use App\Models\Category;
+use App\Models\Contact;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
@@ -22,14 +24,40 @@ class DashboardController extends Controller implements HasMiddleware
         $user = Auth::user();
         $companyId = session('tenant_company_id');
         
-        // Estatísticas básicas filtradas por empresa
-        $stats = [
-            'budgets_count' => Budget::where('company_id', $companyId)->count(),
-            'clients_count' => Client::where('company_id', $companyId)->count(),
-            'products_count' => Product::where('company_id', $companyId)->count(),
-        ];
+        // Estatísticas básicas filtradas por empresa (ou todas para super_admin)
+        if ($companyId) {
+            $stats = [
+                'budgets_count' => Budget::where('company_id', $companyId)->count(),
+                'clients_count' => Client::where('company_id', $companyId)->count(),
+                'products_count' => Product::where('company_id', $companyId)->count(),
+                'categories_count' => Category::where('company_id', $companyId)->count(),
+                'contacts_count' => Contact::where('company_id', $companyId)->count(),
+            ];
+            
+            // Últimos orçamentos filtrados por empresa
+            $recentBudgets = Budget::with(['client', 'company'])
+                ->where('company_id', $companyId)
+                ->latest()
+                ->take(10)
+                ->get();
+        } else {
+            // Super admin vê dados de todas as empresas
+            $stats = [
+                'budgets_count' => Budget::count(),
+                'clients_count' => Client::count(),
+                'products_count' => Product::count(),
+                'categories_count' => Category::count(),
+                'contacts_count' => Contact::count(),
+            ];
+            
+            // Últimos orçamentos de todas as empresas
+            $recentBudgets = Budget::with(['client', 'company'])
+                ->latest()
+                ->take(10)
+                ->get();
+        }
         
-        return view('dashboard', compact('user', 'stats'));
+        return view('dashboard', compact('user', 'stats', 'recentBudgets'));
     }
 
     /**
@@ -39,6 +67,7 @@ class DashboardController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth'),
+            new Middleware('tenant'),
         ];
     }
 }

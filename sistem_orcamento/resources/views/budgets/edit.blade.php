@@ -16,9 +16,9 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label for="client_id" class="form-label">Cliente *</label>
+                                    <label for="client_id" class="form-label">Cliente @if(Auth::check() && Auth::user()->role === 'super_admin')*@endif</label>
                                     <select class="form-select @error('client_id') is-invalid @enderror" 
-                                            id="client_id" name="client_id" required>
+                                            id="client_id" name="client_id">
                                         <option value="">Selecione um cliente</option>
                                         @foreach($clients as $client)
                             <option value="{{ $client->id }}" 
@@ -30,13 +30,14 @@
                                     @error('client_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                   
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label for="company_id" class="form-label">Empresa *</label>
+                                    <label for="company_id" class="form-label">Empresa @if(Auth::check() && Auth::user()->role === 'super_admin')*@endif</label>
                                     <select class="form-select @error('company_id') is-invalid @enderror" 
-                                            id="company_id" name="company_id" required>
+                                            id="company_id" name="company_id">
                                         <option value="">Selecione uma empresa</option>
                                         @foreach($companies as $company)
                                             <option value="{{ $company->id }}" 
@@ -48,6 +49,7 @@
                                     @error('company_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                    
                                 </div>
                             </div>
 
@@ -252,11 +254,14 @@
                                 <div class="col-md-8 d-flex justify-content-end">
                                      <div class="col-md-3">
                                         <div class="mb-3">
-                                            <label for="total_discount" class="form-label">Desconto (R$)</label>
-                                            <input type="text" class="form-control money @error('total_discount') is-invalid @enderror" id="total_discount" name="total_discount" value="{{ old('total_discount', number_format($budget->total_discount, 2, ',', '.')) }}">
-                                            @error('total_discount')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                            <label for="total_discount" class="form-label">Desconto</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-text">R$</div>
+                                                    <input type="text" placeholder="0,00" class="form-control money @error('total_discount') is-invalid @enderror" id="total_discount" name="total_discount" value="{{ old('total_discount', number_format($budget->total_discount, 2, ',', '.')) }}">
+                                                    @error('total_discount')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
                                         </div>
                                     </div>
                                 </div>

@@ -37,6 +37,7 @@ class RoleMiddleware
         }
 
         // Se chegou até aqui, o usuário não tem permissão
-        abort(403, 'Você não tem permissão para acessar esta página.');
+        return redirect()->route('dashboard')
+            ->with('error', 'Você não tem permissão para acessar essa página.');
     }
 }

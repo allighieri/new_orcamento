@@ -10,7 +10,7 @@
                 <i class="bi bi-person-lines-fill"></i> Contatos
             </h1>
             <div>    
-                <a href="http://localhost/orcamento/sistem_orcamento/public" class="btn btn-outline-secondary me-2">
+                <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary me-2">
                     <i class="bi bi-arrow-left"></i> Voltar
                 </a>
                 <a href="{{ route('contacts.create') }}" class="btn btn-primary">
@@ -35,7 +35,9 @@
                                     <th>CPF</th>
                                     <th>Telefone</th>
                                     <th>Email</th>
+                                    @if(auth()->user()->role === 'super_admin')
                                     <th>Empresa</th>
+                                    @endif
                                     <th>Cliente</th>
                                     <th>Ações</th>
                                 </tr>
@@ -48,8 +50,18 @@
                                     <td>{{ $contact->cpf }}</td>
                                     <td>{{ $contact->phone }}</td>
                                     <td>{{ $contact->email }}</td>
+                                    @if(auth()->user()->role === 'super_admin')
                                     <td>{{ $contact->company ? $contact->company->fantasy_name : 'N/A' }}</td>
-                                    <td>{{ $contact->client ? $contact->client->fantasy_name : 'N/A' }}</td>
+                                    @endif
+                                    <td>
+                                        @if($contact->client)
+                                            <a href="{{ route('clients.show', $contact->client) }}" class="text-decoration-none">
+                                                {{ $contact->client->fantasy_name }}
+                                            </a>
+                                        @else
+                                            N/A
+                                        @endif
+                                    </td>
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('contacts.show', $contact) }}" class="btn btn-sm btn-outline-info" title="Visualizar">

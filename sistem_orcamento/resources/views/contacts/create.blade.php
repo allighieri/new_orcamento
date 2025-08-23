@@ -17,7 +17,7 @@
                                 <div class="mb-3">
                                     <label for="name" class="form-label">Nome *</label>
                                     <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                           id="name" name="name" value="{{ old('name') }}" required>
+                                           id="name" name="name" value="{{ old('name') }}">
                                     @error('name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -59,6 +59,7 @@
                         </div>
                         
                         <div class="row">
+                            @if(auth()->user()->role === 'super_admin')
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="company_id" class="form-label">Empresa</label>
@@ -74,13 +75,15 @@
                                     @error('company_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                    <small class="form-text text-muted">Selecione uma empresa OU um cliente</small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            @endif
+                            <div class="{{ auth()->user()->role === 'super_admin' ? 'col-md-6' : 'col-md-12' }}">
                                 <div class="mb-3">
                                     <label for="client_id" class="form-label">Cliente</label>
                                     <select class="form-select @error('client_id') is-invalid @enderror" 
-                                            id="client_id" name="client_id">
+                                            id="client_id" name="client_id" >
                                         <option value="">Selecione um cliente</option>
                                         @foreach($clients as $client)
                                             <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
@@ -91,6 +94,7 @@
                                     @error('client_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                    <small class="form-text text-muted">Selecione um cliente{{ auth()->user()->role === 'super_admin' ? ' OU uma empresa' : '' }}</small>
                                 </div>
                             </div>
                         </div>

@@ -51,9 +51,13 @@
                         <label class="form-label fw-bold">Empresa:</label>
                         <p class="form-control-plaintext">
                             @if($contact->company)
-                                <a href="{{ route('companies.show', $contact->company) }}" class="text-decoration-none">
+                                @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin')
+                                    <a href="{{ route('companies.show', $contact->company) }}" class="text-decoration-none">
+                                        {{ $contact->company->fantasy_name }}
+                                    </a>
+                                @else
                                     {{ $contact->company->fantasy_name }}
-                                </a>
+                                @endif
                             @else
                                 Não informado
                             @endif

@@ -16,11 +16,26 @@ class ContactController extends Controller
      */
     public function index(): View
     {
-        $companyId = session('tenant_company_id');
-        $contacts = Contact::where('company_id', $companyId)
+        $user = auth()->user();
+        
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todos os contatos
+            $contacts = Contact::with(['company', 'client'])
+                ->orderBy('name')
+                ->paginate(10);
+        } else {
+            // Admin e user veem contatos da sua empresa ou de clientes da sua empresa
+            $companyId = session('tenant_company_id');
+            $contacts = Contact::where(function($query) use ($companyId) {
+                $query->where('company_id', $companyId)
+                      ->orWhereHas('client', function($q) use ($companyId) {
+                          $q->where('company_id', $companyId);
+                      });
+            })
             ->with(['company', 'client'])
             ->orderBy('name')
             ->paginate(10);
+        }
             
         return view('contacts.index', compact('contacts'));
     }
@@ -30,9 +45,18 @@ class ContactController extends Controller
      */
     public function create(): View
     {
-        $companyId = session('tenant_company_id');
-        $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
-        $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
+        $user = auth()->user();
+        
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todas as empresas e clientes
+            $companies = Company::orderBy('fantasy_name')->get();
+            $clients = Client::with('company')->orderBy('fantasy_name')->get();
+        } else {
+            // Admin e user veem apenas da sua empresa
+            $companyId = session('tenant_company_id');
+            $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
+            $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
+        }
         
         return view('contacts.create', compact('companies', 'clients'));
     }
@@ -42,17 +66,53 @@ class ContactController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $user = auth()->user();
+        
+        // Definir regras de validação baseadas na role do usuário
+        $rules = [
             'name' => 'required|string|max:255',
             'cpf' => 'nullable|string|max:14',
             'phone' => 'required|string|max:20',
             'email' => 'required|email|max:255',
-            'company_id' => 'nullable|exists:companies,id',
-            'client_id' => 'nullable|exists:clients,id',
-        ]);
+        ];
+        
+        // Validação condicional: empresa obrigatória se não tiver cliente, cliente obrigatório se não tiver empresa
+        if (empty($request->client_id) && empty($request->company_id)) {
+            return back()->withErrors([
+                'client_id' => 'Você deve selecionar pelo menos um cliente ou uma empresa.',
+                'company_id' => 'Você deve selecionar pelo menos um cliente ou uma empresa.'
+            ])->withInput();
+        }
+        
+        if (!empty($request->client_id)) {
+            $rules['client_id'] = 'required|exists:clients,id';
+        }
+        
+        // Apenas super_admin pode definir company_id
+        if ($user->role === 'super_admin' && !empty($request->company_id)) {
+            $rules['company_id'] = 'required|exists:companies,id';
+        }
+        
+        $validated = $request->validate($rules);
+        
+        // Converter valores vazios para null
+        if (empty($validated['client_id'])) {
+            $validated['client_id'] = null;
+        }
+        if (empty($validated['company_id'])) {
+            $validated['company_id'] = null;
+        }
 
-        // Garantir que o contato seja criado para a empresa do usuário
-        $validated['company_id'] = session('tenant_company_id');
+        // Para admin e user, sempre usar a empresa da sessão
+        if ($user->role !== 'super_admin') {
+            $validated['company_id'] = session('tenant_company_id');
+        } else {
+            // Para super_admin, se não informou company_id, usar da sessão
+            if (empty($validated['company_id'])) {
+                $validated['company_id'] = session('tenant_company_id');
+            }
+        }
+        
         Contact::create($validated);
 
         return redirect()->route('contacts.index')
@@ -64,9 +124,19 @@ class ContactController extends Controller
      */
     public function show(Contact $contact): View
     {
-        // Verificar se o contato pertence à empresa do usuário
-        if ($contact->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->user();
+        
+        // Super admin pode ver qualquer contato
+        if ($user->role !== 'super_admin') {
+            $companyId = session('tenant_company_id');
+            
+            // Verificar se o contato pertence à empresa do usuário ou a um cliente da empresa
+            $hasAccess = $contact->company_id === $companyId || 
+                        ($contact->client && $contact->client->company_id === $companyId);
+            
+            if (!$hasAccess) {
+                abort(404);
+            }
         }
         
         $contact->load(['company', 'client']);
@@ -78,14 +148,31 @@ class ContactController extends Controller
      */
     public function edit(Contact $contact): View
     {
-        // Verificar se o contato pertence à empresa do usuário
-        if ($contact->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->user();
+        
+        // Super admin pode editar qualquer contato
+        if ($user->role !== 'super_admin') {
+            $companyId = session('tenant_company_id');
+            
+            // Verificar se o contato pertence à empresa do usuário ou a um cliente da empresa
+            $hasAccess = $contact->company_id === $companyId || 
+                        ($contact->client && $contact->client->company_id === $companyId);
+            
+            if (!$hasAccess) {
+                abort(404);
+            }
         }
         
-        $companyId = session('tenant_company_id');
-        $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
-        $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
+        if ($user->role === 'super_admin') {
+            // Super admin pode ver todas as empresas e clientes
+            $companies = Company::orderBy('fantasy_name')->get();
+            $clients = Client::with('company')->orderBy('fantasy_name')->get();
+        } else {
+            // Admin e user veem apenas da sua empresa
+            $companyId = session('tenant_company_id');
+            $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
+            $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
+        }
         
         return view('contacts.edit', compact('contact', 'companies', 'clients'));
     }
@@ -95,19 +182,57 @@ class ContactController extends Controller
      */
     public function update(Request $request, Contact $contact): RedirectResponse
     {
-        // Verificar se o contato pertence à empresa do usuário
-        if ($contact->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->user();
+        
+        // Super admin pode atualizar qualquer contato
+        if ($user->role !== 'super_admin') {
+            $companyId = session('tenant_company_id');
+            
+            // Verificar se o contato pertence à empresa do usuário ou a um cliente da empresa
+            $hasAccess = $contact->company_id === $companyId || 
+                        ($contact->client && $contact->client->company_id === $companyId);
+            
+            if (!$hasAccess) {
+                abort(404);
+            }
         }
         
-        $validated = $request->validate([
+        $user = auth()->user();
+        
+        // Definir regras de validação baseadas na role do usuário
+        $rules = [
             'name' => 'required|string|max:255',
             'cpf' => 'nullable|string|max:14',
             'phone' => 'required|string|max:20',
             'email' => 'required|email|max:255',
-            'company_id' => 'nullable|exists:companies,id',
-            'client_id' => 'nullable|exists:clients,id',
-        ]);
+        ];
+        
+        // Validação condicional: empresa obrigatória se não tiver cliente, cliente obrigatório se não tiver empresa
+        if (empty($request->client_id) && empty($request->company_id)) {
+            return back()->withErrors([
+                'client_id' => 'Você deve selecionar pelo menos um cliente ou uma empresa.',
+                'company_id' => 'Você deve selecionar pelo menos um cliente ou uma empresa.'
+            ])->withInput();
+        }
+        
+        if (!empty($request->client_id)) {
+            $rules['client_id'] = 'required|exists:clients,id';
+        }
+        
+        // Apenas super_admin pode definir company_id
+        if ($user->role === 'super_admin' && !empty($request->company_id)) {
+            $rules['company_id'] = 'required|exists:companies,id';
+        }
+        
+        $validated = $request->validate($rules);
+        
+        // Converter valores vazios para null
+        if (empty($validated['client_id'])) {
+            $validated['client_id'] = null;
+        }
+        if (empty($validated['company_id'])) {
+            $validated['company_id'] = null;
+        }
 
         $contact->update($validated);
 
@@ -120,9 +245,19 @@ class ContactController extends Controller
      */
     public function destroy(Contact $contact): RedirectResponse
     {
-        // Verificar se o contato pertence à empresa do usuário
-        if ($contact->company_id !== session('tenant_company_id')) {
-            abort(404);
+        $user = auth()->user();
+        
+        // Super admin pode excluir qualquer contato
+        if ($user->role !== 'super_admin') {
+            $companyId = session('tenant_company_id');
+            
+            // Verificar se o contato pertence à empresa do usuário ou a um cliente da empresa
+            $hasAccess = $contact->company_id === $companyId || 
+                        ($contact->client && $contact->client->company_id === $companyId);
+            
+            if (!$hasAccess) {
+                abort(404);
+            }
         }
         
         try {

@@ -18,7 +18,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="card-title">{{ App\Models\Client::count() }}</h4>
+                        <h4 class="card-title">{{ $stats['clients_count'] }}</h4>
                         <p class="card-text">Clientes</p>
                     </div>
                     <div class="align-self-center">
@@ -39,7 +39,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="card-title">{{ App\Models\Product::count() }}</h4>
+                        <h4 class="card-title">{{ $stats['products_count'] }}</h4>
                         <p class="card-text">Produtos</p>
                     </div>
                     <div class="align-self-center">
@@ -60,7 +60,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="card-title">{{ App\Models\Budget::count() }}</h4>
+                        <h4 class="card-title">{{ $stats['budgets_count'] }}</h4>
                         <p class="card-text">Orçamentos</p>
                     </div>
                     <div class="align-self-center">
@@ -81,7 +81,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="card-title">{{ App\Models\Category::count() }}</h4>
+                        <h4 class="card-title">{{ $stats['categories_count'] }}</h4>
                         <p class="card-text">Categorias</p>
                     </div>
                     <div class="align-self-center">
@@ -124,7 +124,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="card-title">{{ App\Models\Contact::count() }}</h4>
+                        <h4 class="card-title">{{ $stats['contacts_count'] }}</h4>
                         <p class="card-text">Contatos</p>
                     </div>
                     <div class="align-self-center">
@@ -212,9 +212,7 @@
             </div>
             <div class="card-body">
                 
-                @php
-                    $recentBudgets = App\Models\Budget::with('client')->latest()->take(10)->get();
-                @endphp
+                {{-- Os orçamentos recentes já vêm filtrados do controller --}}
                 
                 @if($recentBudgets->count() > 0)
                     <div class="table-responsive">
@@ -223,6 +221,9 @@
                                 <tr>
                                     <th>Número</th>
                                     <th>Cliente</th>
+                                    @if(auth()->user()->role === 'super_admin')
+                                        <th>Empresa</th>
+                                    @endif
                                     <th>Status</th>
                                     <th>Valor Final</th>
                                     <th>Data</th>
@@ -234,6 +235,9 @@
                                 <tr>
                                     <td><strong>#{{ $budget->number }}</strong></td>
                                     <td>{{ $budget->client->corporate_name ?? $budget->client->fantasy_name }}</td>
+                                    @if(auth()->user()->role === 'super_admin')
+                                        <td>{{ $budget->company->fantasy_name ?? 'N/A' }}</td>
+                                    @endif
                                     <td>
                                         <span class="badge 
                                             @if($budget->status == 'Pendente') bg-warning
