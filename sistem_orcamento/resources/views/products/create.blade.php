@@ -142,15 +142,16 @@
                         <label for="parent_category_id" class="form-label">Categoria Pai</label>
                         <select class="form-select" id="parent_category_id" name="parent_id">
                             <option value="">Categoria Principal</option>
-                            @php
-                                $showCompanyName = auth()->guard('web')->user()->role === 'super_admin';
-                                $categoriesTree = App\Models\Category::getTreeForSelect(null, null, $showCompanyName);
-                            @endphp
-                            @foreach($categoriesTree as $categoryId => $categoryName)
-                                <option value="{{ $categoryId }}">
-                                    {!! $categoryName !!}
-                                </option>
-                            @endforeach
+                            @if(auth()->guard('web')->user()->role !== 'super_admin')
+                                @php
+                                    $categoriesTree = App\Models\Category::getTreeForSelect(null, null, false);
+                                @endphp
+                                @foreach($categoriesTree as $categoryId => $categoryName)
+                                    <option value="{{ $categoryId }}">
+                                        {!! $categoryName !!}
+                                    </option>
+                                @endforeach
+                            @endif
                         </select>
                         <div class="form-text">Deixe em branco para criar uma categoria principal</div>
                         <div class="invalid-feedback" id="parent_id_error"></div>
@@ -206,10 +207,25 @@ $(document).ready(function() {
         $('.is-invalid').removeClass('is-invalid');
         $('.invalid-feedback').text('');
         
+        let formData = $(this).serialize();
+        
+        @if(auth()->guard('web')->user()->role === 'super_admin')
+        // Adicionar company_id para super_admin
+        const companyId = $('#company_id').val();
+        if (companyId) {
+            formData += '&company_id=' + companyId;
+        } else {
+            alert('Selecione uma empresa primeiro.');
+            submitBtn.prop('disabled', false);
+            spinner.addClass('d-none');
+            return;
+        }
+        @endif
+        
         $.ajax({
             url: '{{ route("categories.store") }}',
             method: 'POST',
-            data: $(this).serialize(),
+            data: formData,
             success: function(response) {
                 if (response.success) {
                     // Adicionar nova categoria ao select
@@ -218,6 +234,14 @@ $(document).ready(function() {
                     
                     // Fechar modal
                     $('#categoryModal').modal('hide');
+                    
+                    @if(auth()->guard('web')->user()->role === 'super_admin')
+                    // Recarregar categorias pai no modal
+                    const currentCompanyId = $('#company_id').val();
+                    if (currentCompanyId) {
+                        loadCategoriesByCompany(currentCompanyId);
+                    }
+                    @endif
                     
                     // Mostrar mensagem de sucesso
                     //alert('Categoria criada com sucesso!');
@@ -254,40 +278,49 @@ $(document).ready(function() {
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Carregamento dinâmico de categorias baseado na empresa selecionada
+    // Função para carregar categorias por empresa
+    function loadCategoriesByCompany(companyId) {
+        const categorySelect = $('#category_id');
+        const parentCategorySelect = $('#parent_category_id');
+        
+        if (!companyId) {
+            categorySelect.empty().append('<option value="">Selecione uma categoria</option>').prop('disabled', true);
+            parentCategorySelect.empty().append('<option value="">Categoria Principal</option>');
+            return;
+        }
+        
+        $.ajax({
+            url: '{{ route("categories.by-company") }}',
+            method: 'GET',
+            data: { company_id: companyId },
+            success: function(response) {
+                // Atualizar select principal de categoria
+                categorySelect.empty().append('<option value="">Selecione uma categoria</option>');
+                
+                // Atualizar select de categoria pai no modal
+                parentCategorySelect.empty().append('<option value="">Categoria Principal</option>');
+                
+                // Adicionar novas opções
+                if (response.success && response.categories) {
+                    response.categories.forEach(function(category) {
+                        categorySelect.append('<option value="' + category.id + '">' + category.name_with_indent + '</option>');
+                        parentCategorySelect.append('<option value="' + category.id + '">' + category.name_with_indent + '</option>');
+                    });
+                }
+                
+                // Habilitar o seletor
+                categorySelect.prop('disabled', false);
+            },
+            error: function() {
+                alert('Erro ao carregar categorias');
+            }
+        });
+    }
+    
+    // Monitorar mudanças no select de empresa
     $('#company_id').on('change', function() {
         const companyId = $(this).val();
-        const categorySelect = $('#category_id');
-        
-        if (companyId) {
-            // Fazer requisição AJAX para buscar categorias da empresa
-            $.ajax({
-                url: '{{ route("categories.by-company") }}',
-                type: 'GET',
-                data: { company_id: companyId },
-                success: function(response) {
-                    // Limpar opções existentes
-                    categorySelect.empty();
-                    categorySelect.append('<option value="">Selecione uma categoria</option>');
-                    
-                    // Adicionar novas opções
-                    $.each(response.categories, function(categoryId, categoryName) {
-                        categorySelect.append('<option value="' + categoryId + '">' + categoryName + '</option>');
-                    });
-                    
-                    // Habilitar o seletor
-                    categorySelect.prop('disabled', false);
-                },
-                error: function() {
-                    alert('Erro ao carregar categorias. Tente novamente.');
-                }
-            });
-        } else {
-            // Se nenhuma empresa selecionada, desabilitar e limpar categorias
-            categorySelect.empty();
-            categorySelect.append('<option value="">Selecione uma empresa primeiro</option>');
-            categorySelect.prop('disabled', true);
-        }
+        loadCategoriesByCompany(companyId);
     });
 });
 </script>

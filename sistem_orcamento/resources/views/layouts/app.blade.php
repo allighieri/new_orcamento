@@ -124,9 +124,11 @@
     <!-- Main Content -->
     <main class="container-fluid mt-4 flex-grow-1">
         @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="row">
+                    <div class="alert alert-success alert-dismissible fade show container mx-auto" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
             </div>
         @endif
 
