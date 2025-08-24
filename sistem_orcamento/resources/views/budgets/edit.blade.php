@@ -256,12 +256,19 @@
 
                             <div class="row mt-3">
                                 <div class="col-md-8 d-flex justify-content-end">
-                                     <div class="col-md-3">
+                                     <div class="col-md-2">
                                         <div class="mb-3">
                                             <label for="total_discount" class="form-label">Desconto</label>
                                                 <div class="input-group">
                                                     <div class="input-group-text">R$</div>
                                                     <input type="text" placeholder="0,00" class="form-control money" id="total_discount" name="total_discount" value="{{ old('total_discount', number_format($budget->total_discount, 2, ',', '.')) }}">
+                                                </div>
+                                                <div class="input-group mt-2">
+                                                    <div class="input-group-text">&nbsp;%</div>
+                                                    <input type="text" class="form-control perc" placeholder="0" id="total_discount_perc" name="total_discount_perc" value="{{ old('total_discount_perc') }}">
+                                                    @error('total_discount_perc')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
                                                 </div>
                                         </div>
                                     </div>
@@ -294,13 +301,13 @@
 
                         
 
-                        <div class="mt-4">
+                        <hr class="my-4" />
+
+                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                            <a href="{{ route('budgets.index') }}" class="btn btn-secondary">Cancelar</a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Atualizar Orçamento
+                                <i class="fas fa-save"></i> Atualizar
                             </button>
-                            <a href="{{ route('budgets.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Voltar
-                            </a>
                         </div>
                     </form>
                 </div>
@@ -497,14 +504,21 @@ $(document).ready(function() {
         calculateTotals();
     }
     
-    // Função para calcular totais gerais
-    function calculateTotals() {
+    // Função para calcular subtotal
+    function calculateSubtotal() {
         let subtotal = 0;
         
         $('.product-row').each(function() {
             const total = parseFloat($(this).find('.total-input').val().replace(/\./g, '').replace(',', '.')) || 0;
             subtotal += total;
         });
+        
+        return subtotal;
+    }
+    
+    // Função para calcular totais gerais
+    function calculateTotals() {
+        let subtotal = calculateSubtotal();
         
         const discount = parseFloat($('#total_discount').val().replace(/\./g, '').replace(',', '.')) || 0;
         const finalTotal = subtotal - discount;
@@ -655,6 +669,55 @@ $(document).ready(function() {
      });
      
      $(document).on('input', '#total_discount', function() {
+         // Limpar campo de porcentagem quando digitar valor em reais
+         $('#total_discount_perc').val('');
+         calculateTotals();
+     });
+     
+     // Função para calcular e preencher a porcentagem de desconto automaticamente
+     function calculateAndFillDiscountPercentage() {
+         const discountValue = parseFloat($('#total_discount').val().replace(/\./g, '').replace(',', '.')) || 0;
+         
+         if (discountValue > 0) {
+             const subtotal = calculateSubtotal();
+             
+             if (subtotal > 0) {
+                 const percentage = (discountValue / subtotal) * 100;
+                 $('#total_discount_perc').val(percentage.toFixed(2));
+             }
+         }
+     }
+     
+     // Chamar a função quando a página carregar e após calcular os totais
+     $(document).ready(function() {
+         // Aguardar um pouco para garantir que todos os cálculos foram feitos
+         setTimeout(function() {
+             calculateAndFillDiscountPercentage();
+         }, 500);
+     });
+     
+     // Também chamar após mudanças nos produtos para recalcular a porcentagem
+     $(document).on('input change', '.quantity-input, .unit-price-input, .product-select', function() {
+         setTimeout(function() {
+             calculateAndFillDiscountPercentage();
+         }, 100);
+     });
+     
+     // Calcular desconto em reais quando porcentagem mudar
+     $(document).on('input', '#total_discount_perc', function() {
+         let percentage = parseFloat($(this).val()) || 0;
+         if (percentage > 0) {
+             let subtotal = calculateSubtotal();
+             let discountAmount = (subtotal * percentage) / 100;
+             
+             // Atualizar campo de desconto em reais
+             $('#total_discount').val(discountAmount.toLocaleString('pt-BR', {
+                 minimumFractionDigits: 2,
+                 maximumFractionDigits: 2
+             }));
+         } else {
+             $('#total_discount').val('');
+         }
          calculateTotals();
      });
     

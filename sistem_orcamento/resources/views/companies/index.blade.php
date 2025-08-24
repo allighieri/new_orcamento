@@ -99,7 +99,7 @@
 function confirmDeleteCompany(companyId) {
     Swal.fire({
         title: 'Confirmação',
-        text: 'Tem certeza de que deseja excluir esta empresa?',
+        html: 'Esta ação é irreversível. Todos os registros referente a sua empresa, incluindo orçamentos serão permanentemente perdidos.<br><br>Tem certeza de que deseja excluir a empresa esta empresa?',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',

@@ -30,7 +30,6 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Nome</th>
                                     <th>Email</th>
                                     <th>Função</th>
@@ -42,7 +41,6 @@
                             <tbody>
                                 @foreach($users as $user)
                                 <tr>
-                                    <td>{{ $user->id }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-circle me-2">

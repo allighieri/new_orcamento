@@ -26,7 +26,7 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="company_id" class="form-label">Empresa*</label>
-                                <select class="form-select @error('company_id') is-invalid @enderror" id="company_id" name="company_id">
+                                <select class="form-select" id="company_id" name="company_id" required>
                                     <option value="">Selecione uma empresa</option>
                                     @foreach($companies as $company)
                                         <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
@@ -34,9 +34,6 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('company_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
                             </div>
                         </div>
                         @endif
@@ -48,7 +45,7 @@
                         @endif
                             <div class="mb-3">
                                 <label for="client_id" class="form-label">Cliente @if(Auth::check() && Auth::user()->role === 'super_admin')*@endif</label>
-                                <select class="form-select @error('client_id') is-invalid @enderror" id="client_id" name="client_id">
+                                <select class="form-select" id="client_id" name="client_id" required>
                                     <option value="">Selecione um cliente</option>
                                     @foreach($clients as $client)
                                         <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
@@ -56,30 +53,21 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('client_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
                             </div>
                         </div>
                         
                         <div class="col-md-2">
                         <div class="mb-3">
                             <label for="issue_date" class="form-label">Data*</label>
-                            <input type="date" class="form-control @error('issue_date') is-invalid @enderror" id="issue_date" name="issue_date" value="{{ old('issue_date', date('Y-m-d')) }}" required>
-                            @error('issue_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <input type="date" class="form-control" id="issue_date" name="issue_date" value="{{ old('issue_date', date('Y-m-d')) }}" required>
                         </div>
                         </div>
                         <div class="col-md-2">
                             <div class="mb-3">
                                 <label for="valid_until" class="form-label">Validade*</label>
-                                <input type="date" class="form-control @error('valid_until') is-invalid @enderror" 
-                                    id="valid_until" name="valid_until" 
-                                    value="{{ old('valid_until') }}" required>
-                                @error('valid_until')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <input type="date" class="form-control" 
+                    id="valid_until" name="valid_until" 
+                    value="{{ old('valid_until') }}" required>
                             </div>
                         </div>
                     </div>
@@ -106,20 +94,17 @@
                                                         <div class="col-md-3">
                                                             <label class="form-label">Produto*</label>
                                                             <div class="input-group">
-                                                                <select class="form-select product-select @error('products.'.$index.'.product_id') is-invalid @enderror" name="products[{{ $index }}][product_id]" required>
-                                                                    <option value="">Selecione um produto</option>
-                                                                    @foreach($products as $product)
-                                                                        <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-description="{{ $product->description }}" {{ old('products.'.$index.'.product_id') == $product->id ? 'selected' : '' }}>
-                                                                            {{ $product->name }} - {{ $product->category->name ?? 'Sem categoria' }}
-                                                                        </option>
-                                                                    @endforeach
-                                                                </select>
-                                                                <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addProductModal" title="Adicionar novo produto">
-                                                                    <i class="bi bi-plus"></i>
-                                                                </button>
-                                                                @error('products.'.$index.'.product_id')
-                                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                                @enderror
+                                                                <select class="form-select product-select" name="products[{{ $index }}][product_id]" required>
+                                                                <option value="">Selecione um produto</option>
+                                                                @foreach($products as $product)
+                                                                    <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-description="{{ $product->description }}" {{ old('products.'.$index.'.product_id') == $product->id ? 'selected' : '' }}>
+                                                                        {{ $product->name }} - {{ $product->category->name ?? 'Sem categoria' }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addProductModal" title="Adicionar novo produto">
+                                                                <i class="bi bi-plus"></i>
+                                                            </button>
                                                             </div>
                                                         </div>
                                                         
@@ -130,10 +115,7 @@
                                                         
                                                         <div class="col-md-1">
                                                             <label class="form-label">Qtde*</label>
-                                                            <input type="text" class="form-control quantity-input" name="products[{{ $index }}][quantity]" value="{{ old('products.'.$index.'.quantity', 1) }}" required min="1">
-                                                            @error('products.'.$index.'.quantity')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
+                                                            <input type="number" class="form-control quantity-input" name="products[{{ $index }}][quantity]" value="{{ old('products.'.$index.'.quantity', 1) }}" required min="1" step="0.01">
                                                         </div>
                                                         
                                                         <div class="col-md-2">
@@ -172,10 +154,10 @@
                                                     <div class="col-md-3">
                                                         <label class="form-label">Produto*</label>
                                                         <div class="input-group">
-                                                            <select class="form-select product-select" name="products[0][product_id]">
+                                                            <select class="form-select product-select" name="products[0][product_id]" required>
                                                                 <option value="">Selecione um produto</option>
                                                                 @foreach($products as $product)
-                                                                    <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-description="{{ $product->description }}" required>
+                                                                    <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-description="{{ $product->description }}">
                                                                         {{ $product->name }} - {{ $product->category->name ?? 'Sem categoria' }}
                                                                     </option>
                                                                 @endforeach
@@ -193,7 +175,7 @@
                                                     
                                                     <div class="col-md-1">
                                                         <label class="form-label">Qtde*</label>
-                                                        <input type="text" class="form-control quantity-input" name="products[0][quantity]" value="1" required min="1">
+                                                        <input type="number" class="form-control quantity-input" name="products[0][quantity]" value="1" required min="1" step="0.01">
                                                     </div>
                                                     
                                                     <div class="col-md-2">
@@ -231,10 +213,7 @@
 
                                 <div class="my-5">
                                     <label for="observations" class="form-label">Obs.:</label>
-                                    <textarea class="form-control @error('observations') is-invalid @enderror" id="observations" name="observations" rows="3">{{ old('observations') }}</textarea>
-                                    @error('observations')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                    <textarea class="form-control" id="observations" name="observations" rows="3" maxlength="1000">{{ old('observations') }}</textarea>
                                 </div>
                                 
                                 <div class="row mt-3">
@@ -244,14 +223,16 @@
                                                 <label for="total_discount" class="form-label">Desconto</label>
                                                 <div class="input-group">
                                                     <div class="input-group-text">R$</div>
-                                                    <input type="text" class="form-control money" id="total_discount" name="total_discount" value="{{ old('total_discount') ? number_format(old('total_discount'), 2, ',', '.') : '' }}">
-                                                    @error('total_discount')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
+                                                    <input type="text" class="form-control money" id="total_discount" name="total_discount" value="{{ old('total_discount') ? number_format(old('total_discount'), 2, ',', '.') : '' }}" min="0">
+                                                </div>
+                                                <div class="input-group mt-2">
+                                                    <div class="input-group-text">&nbsp;%</div>
+                                                    <input type="text" class="form-control perc" placeholder="0" id="total_discount_perc" name="total_discount_perc" value="{{ old('total_discount_perc') }}" min="0" max="100" step="0.01">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    
                                     <div class="col-md-4">
                                         <div class="card bg-light">
                                             <div class="card-body">
@@ -282,7 +263,7 @@
                          <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
                             <a href="{{ route('budgets.index') }}" class="btn btn-secondary">Cancelar</a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Salvar Orçamento
+                                <i class="fas fa-save"></i> Salvar
                             </button>
                         </div>
 
@@ -312,7 +293,7 @@
                             <div class="mb-3">
                                 <label for="modal_name" class="form-label">Nome *</label>
                                 <input type="text" class="form-control" id="modal_name" name="name" required>
-                                <div class="invalid-feedback"></div>
+
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -322,7 +303,6 @@
                                     <span class="input-group-text">R$</span>
                                     <input type="text" class="form-control money" id="modal_price" name="price" placeholder="0,00" required>
                                 </div>
-                                <div class="invalid-feedback"></div>
                             </div>
                         </div>
                     </div>
@@ -350,7 +330,6 @@
                                         <i class="bi bi-plus"></i>
                                     </button>
                                 </div>
-                                <div class="invalid-feedback"></div>
                             </div>
                         </div>
                     </div>
@@ -360,7 +339,6 @@
                             <div class="mb-3">
                                 <label for="modal_description" class="form-label">Descrição</label>
                                 <textarea class="form-control" id="modal_description" name="description" rows="3" placeholder="Descrição detalhada do produto"></textarea>
-                                <div class="invalid-feedback"></div>
                             </div>
                         </div>
                     </div>
@@ -395,7 +373,6 @@
                             <div class="mb-3">
                                 <label for="category_name" class="form-label">Nome *</label>
                                 <input type="text" class="form-control" id="category_name" name="name" placeholder="Digite o nome da categoria" required>
-                                <div class="invalid-feedback"></div>
                             </div>
                         </div>
                     </div>
@@ -416,7 +393,6 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <div class="invalid-feedback"></div>
                                 <div class="form-text">Deixe em branco para criar uma categoria principal. Subcategorias são indicadas por indentação.</div>
                             </div>
                         </div>
@@ -427,7 +403,6 @@
                             <div class="mb-3">
                                 <label for="category_description" class="form-label">Descrição</label>
                                 <textarea class="form-control" id="category_description" name="description" rows="3" placeholder="Descreva a categoria..."></textarea>
-                                <div class="invalid-feedback"></div>
                             </div>
                         </div>
                     </div>
@@ -473,7 +448,7 @@
             
             <div class="col-md-1">
                 <label class="form-label">Qtde*</label>
-                <input type="text" class="form-control quantity-input" name="products[INDEX][quantity]" value="1" required min="1">
+                <input type="number" class="form-control quantity-input" name="products[INDEX][quantity]" value="1" required min="1" step="0.01">
             </div>
 
            
@@ -642,6 +617,26 @@ $(document).ready(function() {
     
     // Calcular total quando desconto mudar
     $('#total_discount').on('input', function() {
+        // Limpar campo de porcentagem quando digitar valor em reais
+        $('#total_discount_perc').val('');
+        updateTotals();
+    });
+    
+    // Calcular desconto em reais quando porcentagem mudar
+    $('#total_discount_perc').on('input', function() {
+        let percentage = parseFloat($(this).val()) || 0;
+        if (percentage > 0) {
+            let subtotal = calculateSubtotal();
+            let discountAmount = (subtotal * percentage) / 100;
+            
+            // Atualizar campo de desconto em reais
+            $('#total_discount').val(discountAmount.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }));
+        } else {
+            $('#total_discount').val('');
+        }
         updateTotals();
     });
     
@@ -658,7 +653,7 @@ $(document).ready(function() {
         updateTotals();
     }
     
-    function updateTotals() {
+    function calculateSubtotal() {
         let subtotal = 0;
         
         $('.product-row').each(function() {
@@ -666,6 +661,12 @@ $(document).ready(function() {
             let unitPrice = parseFloat($(this).find('.unit-price-input').val().replace(/\./g, '').replace(',', '.')) || 0;
             subtotal += quantity * unitPrice;
         });
+        
+        return subtotal;
+    }
+    
+    function updateTotals() {
+        let subtotal = calculateSubtotal();
         
         let discount = parseFloat($('#total_discount').val().replace(/\./g, '').replace(',', '.')) || 0;
         let total = subtotal - discount;
