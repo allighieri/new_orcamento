@@ -63,7 +63,7 @@
                             <tbody>
                                 @foreach($budgets as $budget)
                                 <tr>
-                                    <td><strong>#{{ $budget->number }}</strong></td>
+                                    <td><strong>{{ $budget->number }}</strong></td>
                                     <td>
                                         <a href="{{ route('clients.show', $budget->client) }}" class="text-decoration-none">
                                             {{ $budget->client->corporate_name ?? $budget->client->fantasy_name }}

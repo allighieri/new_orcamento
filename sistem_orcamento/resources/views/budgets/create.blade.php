@@ -5,13 +5,16 @@
 @section('content')
 
 
-<div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+    <div class="container mx-auto row">
+        <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title mb-0">Novo Orçamento</h3>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Novo Orçamento</h5>
+                    <a href="{{ route('budgets.index') }}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
                 </div>
+                
                 <div class="card-body">
                     <form action="{{ route('budgets.store') }}" method="POST" id="budgetForm">
                         @csrf
@@ -274,20 +277,22 @@
 
                          
                         
-                        <div class="mt-4">
+                        <hr class="my-4" />
+
+                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                            <a href="{{ route('budgets.index') }}" class="btn btn-secondary">Cancelar</a>
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i> Salvar Orçamento
                             </button>
-                            <a href="{{ route('budgets.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Voltar
-                            </a>
                         </div>
+
+                        
                     </form>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
 
 <!-- Modal para adicionar produto -->
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">

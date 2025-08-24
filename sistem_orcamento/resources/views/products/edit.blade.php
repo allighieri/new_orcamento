@@ -2,8 +2,8 @@
 
 @section('content')
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+    <div class="container mx-auto row">
+        <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
                     <h4>Editar Produto</h4>
@@ -38,22 +38,11 @@
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="description" class="form-label">Descrição</label>
-                                    <textarea class="form-control @error('description') is-invalid @enderror" 
-                                              id="description" name="description" rows="3" placeholder="Descrição detalhada do produto">{{ old('description', $product->description) }}</textarea>
-                                    @error('description')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
+                        
                         
                         @if(auth()->guard('web')->user()->role === 'super_admin')
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="company_id" class="form-label">Empresa *</label>
                                     <select class="form-select @error('company_id') is-invalid @enderror" id="company_id" name="company_id" required>
@@ -69,11 +58,7 @@
                                     @enderror
                                 </div>
                             </div>
-                        </div>
-                        @endif
-                        
-                        <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="category_id" class="form-label">Categoria *</label>
                                     <div class="input-group">
@@ -105,6 +90,22 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Descrição</label>
+                                    <textarea class="form-control @error('description') is-invalid @enderror" 
+                                              id="description" name="description" rows="3" placeholder="Descrição detalhada do produto">{{ old('description', $product->description) }}</textarea>
+                                    @error('description')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        
+                     
                         
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <a href="{{ route('products.index') }}" class="btn btn-secondary">Cancelar</a>

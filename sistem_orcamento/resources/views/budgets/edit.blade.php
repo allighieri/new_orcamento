@@ -1,13 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
+    <div class="container mx-auto row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <h4>Editar Orçamento #{{ $budget->number }}</h4>
+
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Editar Orçamento {{ $budget->number }}</h5>
+                    <a href="{{ route('budgets.index') }}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
                 </div>
+            
+               
                 <div class="card-body">
                     <form method="POST" action="{{ route('budgets.update', $budget) }}">
                         @csrf
@@ -302,7 +307,8 @@
             </div>
         </div>
     </div>
-</div>
+
+    
 <!-- Modal para adicionar produto -->
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

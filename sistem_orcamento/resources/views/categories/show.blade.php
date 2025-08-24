@@ -6,7 +6,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1>
-                    <i class="fas fa-tags me-2"></i>
+                    <i class="bi bi-tags"></i>
                     Detalhes da Categoria
                 </h1>
             </div>

@@ -31,7 +31,6 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Nome</th>
                                     <th>Descrição</th>
                                     <th>Categoria</th>
@@ -39,36 +38,28 @@
                                         <th>Empresa</th>
                                     @endif
                                     <th>Preço</th>
-                                    <th>Estoque</th>
+                                    
                                     <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($products as $product)
                                 <tr>
-                                    <td>{{ $product->id }}</td>
+                                    
                                     <td>{{ $product->name }}</td>
                                     <td>{{ $product->description ? Str::limit($product->description, 50) : 'N/A' }}</td>
                                     <td>
                                         @if($product->category)
-                                            <span class="badge bg-secondary">{{ $product->category->name }}</span>
+                                           {{ $product->category->name }}
                                         @else
-                                            <span class="text-muted">Sem categoria</span>
+                                            Sem categoria
                                         @endif
                                     </td>
                                     @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <td>{{ $product->company->fantasy_name ?? 'N/A' }}</td>
                                     @endif
                                     <td>R$ {{ number_format($product->price, 2, ',', '.') }}</td>
-                                    <td>
-                                        @if($product->stock)
-                                            <span class="badge {{ $product->stock->quantity > 10 ? 'bg-success' : ($product->stock->quantity > 0 ? 'bg-warning' : 'bg-danger') }}">
-                                                {{ $product->stock->quantity }}
-                                            </span>
-                                        @else
-                                            <span class="badge bg-secondary">N/A</span>
-                                        @endif
-                                    </td>
+                                    
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
