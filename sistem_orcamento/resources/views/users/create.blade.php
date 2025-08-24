@@ -3,14 +3,13 @@
 @section('title', 'Novo Usuário - Sistema de Orçamento')
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4><i class="bi bi-person-plus"></i> Novo Usuário</h4>
-                    <a href="{{ route('users.index') }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-arrow-left"></i> Voltar
+<div class="container mx-auto row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4><i class="bi bi-person-plus"></i> Novo Usuário</h4>
+                <a href="{{ route('users.index') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Voltar
                     </a>
                 </div>
                 <div class="card-body">
@@ -117,7 +116,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="active" name="active" value="1" {{ old('active') ? 'checked' : '' }}>
+                                        <input class="form-check-input" type="checkbox" id="active" checked name="active" value="1" {{ old('active') ? 'checked' : '' }}>
                                         <label class="form-check-label" for="active">
                                             Usuário ativo
                                         </label>
@@ -129,14 +128,13 @@
                             </div>
                         </div>
                         
-                        <hr>
-                        
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ route('users.index') }}" class="btn btn-secondary">
-                                <i class="bi bi-x-circle"></i> Cancelar
-                            </a>
+                       
+                        <hr class="my-3" />
+
+                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                            <a href="{{ route('users.index') }}" class="btn btn-secondary">Cancelar</a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle"></i> Salvar Usuário
+                                <i class="fas fa-save"></i> Salvar
                             </button>
                         </div>
                     </form>

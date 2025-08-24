@@ -102,6 +102,21 @@ class ContactController extends Controller
         if (empty($validated['company_id'])) {
             $validated['company_id'] = null;
         }
+        
+        // Validação customizada: CPF único por empresa quando preenchido
+        if (!empty($validated['cpf'])) {
+            $companyId = $user->role === 'super_admin' && !empty($validated['company_id']) ? $validated['company_id'] : session('tenant_company_id');
+            
+            $existingContact = Contact::where('cpf', $validated['cpf'])
+                                    ->where('company_id', $companyId)
+                                    ->first();
+            
+            if ($existingContact) {
+                return back()->withErrors([
+                    'cpf' => 'Este CPF já está cadastrado nesta empresa.'
+                ])->withInput();
+            }
+        }
 
         // Para admin e user, sempre usar a empresa da sessão
         if ($user->role !== 'super_admin') {
@@ -232,6 +247,22 @@ class ContactController extends Controller
         }
         if (empty($validated['company_id'])) {
             $validated['company_id'] = null;
+        }
+        
+        // Validação customizada: CPF único por empresa quando preenchido (exceto o próprio contato)
+        if (!empty($validated['cpf'])) {
+            $companyId = $user->role === 'super_admin' && !empty($validated['company_id']) ? $validated['company_id'] : $contact->company_id;
+            
+            $existingContact = Contact::where('cpf', $validated['cpf'])
+                                    ->where('company_id', $companyId)
+                                    ->where('id', '!=', $contact->id)
+                                    ->first();
+            
+            if ($existingContact) {
+                return back()->withErrors([
+                    'cpf' => 'Este CPF já está cadastrado nesta empresa.'
+                ])->withInput();
+            }
         }
 
         $contact->update($validated);

@@ -57,7 +57,7 @@ class ClientController extends Controller
         $rules = [
             'fantasy_name' => 'nullable|string|max:255',
             'corporate_name' => 'nullable|string|max:255',
-            'document_number' => 'required|string|max:18|unique:clients,document_number',
+            'document_number' => 'required|string|max:18',
             'state_registration' => 'nullable|string|max:20',
             'phone' => 'required|string|max:20',
             'email' => 'required|email|max:255',
@@ -72,6 +72,20 @@ class ClientController extends Controller
         }
         
         $validated = $request->validate($rules);
+        
+        // Definir company_id para validação de unicidade
+        $companyId = $user->role === 'super_admin' ? $validated['company_id'] : session('tenant_company_id');
+        
+        // Validação customizada: document_number único por empresa
+        $existingClient = Client::where('document_number', $validated['document_number'])
+                               ->where('company_id', $companyId)
+                               ->first();
+        
+        if ($existingClient) {
+            return back()->withErrors([
+                'document_number' => 'Este CPF/CNPJ já está cadastrado nesta empresa.'
+            ])->withInput();
+        }
 
         // Validação customizada: pelo menos um dos campos deve estar preenchido
         if (empty($validated['fantasy_name']) && empty($validated['corporate_name'])) {
@@ -156,7 +170,7 @@ class ClientController extends Controller
         $rules = [
             'fantasy_name' => 'nullable|string|max:255',
             'corporate_name' => 'nullable|string|max:255',
-            'document_number' => 'required|string|max:18|unique:clients,document_number,' . $client->id,
+            'document_number' => 'required|string|max:18',
             'state_registration' => 'nullable|string|max:20',
             'phone' => 'required|string|max:20',
             'email' => 'required|email|max:255',
@@ -171,6 +185,21 @@ class ClientController extends Controller
         }
         
         $validated = $request->validate($rules);
+        
+        // Definir company_id para validação de unicidade
+        $companyId = $user->role === 'super_admin' && isset($validated['company_id']) ? $validated['company_id'] : $client->company_id;
+        
+        // Validação customizada: document_number único por empresa (exceto o próprio cliente)
+        $existingClient = Client::where('document_number', $validated['document_number'])
+                               ->where('company_id', $companyId)
+                               ->where('id', '!=', $client->id)
+                               ->first();
+        
+        if ($existingClient) {
+            return back()->withErrors([
+                'document_number' => 'Este CPF/CNPJ já está cadastrado nesta empresa.'
+            ])->withInput();
+        }
 
         // Validação customizada: pelo menos um dos campos deve estar preenchido
         if (empty($validated['fantasy_name']) && empty($validated['corporate_name'])) {
