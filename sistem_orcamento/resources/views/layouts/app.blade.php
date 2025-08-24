@@ -10,6 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- CSS Customizado -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
@@ -124,26 +126,45 @@
     <!-- Main Content -->
     <main class="container-fluid mt-4 flex-grow-1">
         @if(session('success'))
-            <div class="row">
-                    <div class="alert alert-success alert-dismissible fade show container mx-auto" role="alert">
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-            </div>
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso!',
+                    text: '{{ session('success') }}',
+                    timer: 5000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            </script>
         @endif
 
         @if(session('warning'))
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                {{ session('warning') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <script>
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Atenção!',
+                    text: '{{ session('warning') }}',
+                    timer: 5000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            </script>
         @endif
 
         @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro!',
+                    text: '{{ session('error') }}',
+                    timer: 6000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            </script>
         @endif
 
         @yield('content')
