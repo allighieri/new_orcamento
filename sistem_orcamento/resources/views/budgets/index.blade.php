@@ -3,7 +3,7 @@
 @section('title', 'Orçamentos - Sistema de Orçamento')
 
 @section('content')
-<div class="row">
+<div class="container mx-auto row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -42,7 +42,7 @@
     </div>
 </div>
 
-<div class="row">
+<div class="container mx-auto row">
     <div class="col-12">
         <div class="card">
             <div class="card-body">

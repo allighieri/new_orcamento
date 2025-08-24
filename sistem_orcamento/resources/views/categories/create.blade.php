@@ -3,8 +3,8 @@
 @section('title', 'Nova Categoria - Sistema de Orçamento')
 
 @section('content')
-<div class="container d-flex justify-content-center">
-    <div class="col-md-8">
+<div class="container mx-auto row">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">

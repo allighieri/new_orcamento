@@ -3,7 +3,7 @@
 @section('title', 'Orçamento #' . $budget->number)
 
 @section('content')
-<div class="container-fluid">
+<div class="container mx-auto row">
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -109,7 +109,7 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <p class="mb-2"><strong>Nome:</strong> 
+                                            <p class="mb-1"><strong>Nome:</strong> 
                                                 @if($budget->client->corporate_name)
                                                     {{ $budget->client->corporate_name }}
                                                 @elseif($budget->client->fantasy_name)
@@ -119,18 +119,18 @@
                                                 @endif
                                             </p>
                                             @if($budget->client->document_number)
-                                            <p class="mb-2"><strong>CPF/CNPJ:</strong> {{ $budget->client->document_number }}</p>
+                                            <p class="mb-1"><strong>CPF/CNPJ:</strong> {{ $budget->client->document_number }}</p>
                                             @endif
                                             @if($budget->client->phone)
-                                            <p class="mb-2"><strong>Telefone:</strong> {{ $budget->client->phone }}</p>
+                                            <p class="mb-1"><strong>Telefone:</strong> {{ $budget->client->phone }}</p>
                                             @endif
                                         </div>
                                         <div class="col-md-6">
                                             @if($budget->client->email)
-                                            <p class="mb-2"><strong>Email:</strong> {{ $budget->client->email }}</p>
+                                            <p class="mb-1"><strong>Email:</strong> {{ $budget->client->email }}</p>
                                             @endif
                                             @if($budget->client->address || $budget->client->city || $budget->client->state)
-                                            <p class="mb-2"><strong>Endereço:</strong><br>
+                                            <p class="mb-1"><strong>Endereço:</strong><br>
                                                 {{ $budget->client->address }}@if($budget->client->address && ($budget->client->city || $budget->client->state)), @endif{{ $budget->client->city }}@if($budget->client->city && $budget->client->state) - @endif{{ $budget->client->state }}
                                             </p>
                                             @endif
@@ -150,8 +150,8 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive">
-                                        <table class="table table-striped">
-                                            <thead class="table-dark">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
                                                 <tr>
                                                     <th>Item</th>
                                                     <th>Produto</th>
@@ -167,9 +167,9 @@
                                                     <td>{{ $loop->iteration }}</td>
                                                     <td>
                                                         @if($item->product)
-                                                            <strong>{{ $item->product->name }}</strong>
+                                                            {{ $item->product->name }}
                                                         @else
-                                                            <strong class="text-muted">Produto excluído</strong>
+                                                            Produto excluído
                                                         @endif
                                                     </td>
                                                     <td>

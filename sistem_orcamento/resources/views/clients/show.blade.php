@@ -3,7 +3,7 @@
 @section('title', 'Visualizar Cliente - Sistema de Orçamento')
 
 @section('content')
-<div class="row">
+<div class="container mx-auto row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>
@@ -13,7 +13,7 @@
     </div>
 </div>
 
-<div class="row">
+<div class="container mx-auto row">
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
@@ -23,31 +23,31 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-1">
                         <label class="form-label fw-bold">Nome Fantasia:</label>
                         <p class="form-control-plaintext">{{ $client->fantasy_name }}</p>
                     </div>
                     
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-1">
                         <label class="form-label fw-bold">Razão Social:</label>
                         <p class="form-control-plaintext">{{ $client->corporate_name ?: 'Não informado' }}</p>
                     </div>
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-1">
                         <label class="form-label fw-bold">CPF/CNPJ:</label>
                         <p class="form-control-plaintext">{{ $client->document_number }}</p>
                     </div>
                     
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-1">
                         <label class="form-label fw-bold">Inscrição Estadual:</label>
                         <p class="form-control-plaintext">{{ $client->state_registration ?: 'Não informado' }}</p>
                     </div>
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-1">
                         <label class="form-label fw-bold">Telefone:</label>
                         <p class="form-control-plaintext">
                             @if($client->phone)
@@ -60,7 +60,7 @@
                         </p>
                     </div>
                     
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-1">
                         <label class="form-label fw-bold">Email:</label>
                         <p class="form-control-plaintext">
                             @if($client->email)
@@ -74,22 +74,18 @@
                     </div>
                 </div>
                 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Endereço:</label>
-                    <p class="form-control-plaintext">{{ $client->address ?: 'Não informado' }}</p>
-                </div>
-                
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Cidade:</label>
-                        <p class="form-control-plaintext">{{ $client->city ?: 'Não informado' }}</p>
+                    <div class="col-md-4 mb-1">
+                        <label class="form-label fw-bold">Endereço:</label>
+                        <p class="my-0">
+                            {{ $client->address ?: 'Não informado' }}, 
+                            {{ $client->city ?: 'Não informado' }} - 
+                            {{ $client->state ?: 'Não informado' }}
+                        </p>
                     </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Estado:</label>
-                        <p class="form-control-plaintext">{{ $client->state ?: 'Não informado' }}</p>
-                    </div>
+
                 </div>
+            
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -146,7 +142,7 @@
                 @if($client->contacts->count() > 0)
                     <div class="row">
                         @foreach($client->contacts as $contact)
-                            <div class="col-md-12 mb-12">
+                            <div class="col-md-12 mb-3">
                                 <div class="card h-100">
                                     <div class="card-body">
                                         <table class="table table-borderless mb-0">

@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+<div class="container mx-auto row">
+    
+        <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
                     <h4>Editar Empresa</h4>
@@ -144,14 +144,14 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('dashboard') }}" class="btn btn-secondary">Cancelar</a>
+                            <a href="{{ route('companies.index') }}" class="btn btn-secondary">Cancelar</a>
                             <button type="submit" class="btn btn-primary">Atualizar Empresa</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-    </div>
+    
 </div>
 @endsection
 

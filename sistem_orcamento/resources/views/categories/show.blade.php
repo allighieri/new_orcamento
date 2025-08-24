@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
+<div class="container mx-auto row">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -28,8 +28,6 @@
                             <label class="form-label fw-bold">Nome:</label>
                             {{ $category->name }}
                         </div>
-                        
-                      
                     </div>
                     
                     <div class="row">
