@@ -67,9 +67,17 @@
                                 <div class="mb-3">
                                     <label for="category_id" class="form-label">Categoria *</label>
                                     <div class="input-group">
-                                        <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id" required disabled>
-                                            <option value="">Selecione uma empresa primeiro</option>
-                                        </select>
+                                        <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id" required>
+                            <option value="">Selecione uma categoria</option>
+                            @php
+                                $categoriesTree = App\Models\Category::getTreeForSelect(null, $product->company_id, false);
+                            @endphp
+                            @foreach($categoriesTree as $categoryId => $categoryName)
+                                <option value="{{ $categoryId }}" {{ (old('category_id', $product->category_id) == $categoryId) ? 'selected' : '' }}>
+                                    {!! $categoryName !!}
+                                </option>
+                            @endforeach
+                        </select>
                                         <button type="button" class="btn btn-outline-primary" id="openCategoryModalBtn" title="Nova Categoria">
                                             <i class="bi bi-plus"></i>
                                         </button>
@@ -311,10 +319,10 @@ $(document).ready(function() {
                 parentCategorySelect.empty().append('<option value="">Categoria Principal</option>');
                 
                 if (response.success && response.categories) {
-                    response.categories.forEach(function(category) {
-                        const isSelected = category.id == {{ $product->category_id ?? 'null' }} ? 'selected' : '';
-                        categorySelect.append('<option value="' + category.id + '" ' + isSelected + '>' + category.name_with_indent + '</option>');
-                        parentCategorySelect.append('<option value="' + category.id + '">' + category.name_with_indent + '</option>');
+                    $.each(response.categories, function(categoryId, categoryName) {
+                        const isSelected = categoryId == {{ $product->category_id ?? 'null' }} ? 'selected' : '';
+                        categorySelect.append('<option value="' + categoryId + '" ' + isSelected + '>' + categoryName + '</option>');
+                        parentCategorySelect.append('<option value="' + categoryId + '">' + categoryName + '</option>');
                     });
                 }
                 

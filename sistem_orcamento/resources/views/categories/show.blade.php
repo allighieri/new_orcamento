@@ -90,11 +90,10 @@
                             <i class="bi bi-pencil"></i> Editar
                         </a>
                         
-                        <form action="{{ route('categories.destroy', $category) }}" method="POST" 
-                            onsubmit="return confirm('Tem certeza que deseja excluir esta categoria? Todos os produtos desta categoria também serão excluídos. Esta ação não pode ser desfeita.')">
+                        <form action="{{ route('categories.destroy', $category) }}" method="POST" id="delete-form-category-{{ $category->id }}">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger w-100">
+                            <button type="button" class="btn btn-danger w-100" onclick="confirmDeleteCategory({{ $category->id }})">
                                 <i class="bi bi-trash"></i> Excluir
                             </button>
                         </form>
@@ -174,4 +173,24 @@
     
     
 </div>
+
+<script>
+function confirmDeleteCategory(categoryId) {
+    Swal.fire({
+        title: 'Atenção!',
+        text: 'Atenção, excluir uma Categoria excluirá também todos os produtos relacionados. Tem certeza de que deseja excluir esta Categoria?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-category-' + categoryId).submit();
+        }
+    });
+}
+</script>
+
 @endsection

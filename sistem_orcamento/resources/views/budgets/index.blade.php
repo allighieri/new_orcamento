@@ -100,10 +100,10 @@
                                             <a href="{{ route('budgets.pdf', $budget) }}" class="btn btn-sm btn-outline-secondary" title="Gerar PDF" target="_blank">
                                                 <i class="bi bi-file-earmark-pdf"></i>
                                             </a>
-                                            <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este orçamento?')">
+                                            <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" id="delete-form-budget-{{ $budget->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteBudget({{ $budget->id }})">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -130,4 +130,24 @@
         </div>
     </div>
 </div>
+
+<script>
+function confirmDeleteBudget(budgetId) {
+    Swal.fire({
+        title: 'Confirmação',
+        text: 'Tem certeza de que deseja excluir este orçamento?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-budget-' + budgetId).submit();
+        }
+    });
+}
+</script>
+
 @endsection

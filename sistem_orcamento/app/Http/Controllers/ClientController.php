@@ -37,7 +37,14 @@ class ClientController extends Controller
      */
     public function create(): View
     {
-        return view('clients.create');
+        $user = auth()->guard('web')->user();
+        $companies = collect();
+        
+        if ($user->role === 'super_admin') {
+            $companies = \App\Models\Company::orderBy('fantasy_name')->get();
+        }
+        
+        return view('clients.create', compact('companies'));
     }
 
     /**
@@ -45,7 +52,9 @@ class ClientController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $user = auth()->guard('web')->user();
+        
+        $rules = [
             'fantasy_name' => 'nullable|string|max:255',
             'corporate_name' => 'nullable|string|max:255',
             'document_number' => 'required|string|max:18|unique:clients,document_number',
@@ -55,7 +64,14 @@ class ClientController extends Controller
             'address' => 'required|string|max:500',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
-        ]);
+        ];
+        
+        // Super admin deve selecionar uma empresa
+        if ($user->role === 'super_admin') {
+            $rules['company_id'] = 'required|exists:companies,id';
+        }
+        
+        $validated = $request->validate($rules);
 
         // Validação customizada: pelo menos um dos campos deve estar preenchido
         if (empty($validated['fantasy_name']) && empty($validated['corporate_name'])) {
@@ -65,7 +81,15 @@ class ClientController extends Controller
             ])->withInput();
         }
 
-        $validated['company_id'] = session('tenant_company_id');
+        // Definir company_id baseado no tipo de usuário
+        if ($user->role === 'super_admin') {
+            // Super admin usa o company_id selecionado no formulário
+            $validated['company_id'] = $validated['company_id'];
+        } else {
+            // Outros usuários usam o company_id da sessão
+            $validated['company_id'] = session('tenant_company_id');
+        }
+        
         Client::create($validated);
 
         return redirect()->route('clients.index')
@@ -106,7 +130,12 @@ class ClientController extends Controller
             }
         }
         
-        return view('clients.edit', compact('client'));
+        $companies = collect();
+        if ($user->role === 'super_admin') {
+            $companies = \App\Models\Company::orderBy('fantasy_name')->get();
+        }
+        
+        return view('clients.edit', compact('client', 'companies'));
     }
 
     /**
@@ -124,7 +153,7 @@ class ClientController extends Controller
             }
         }
         
-        $validated = $request->validate([
+        $rules = [
             'fantasy_name' => 'nullable|string|max:255',
             'corporate_name' => 'nullable|string|max:255',
             'document_number' => 'required|string|max:18|unique:clients,document_number,' . $client->id,
@@ -134,7 +163,14 @@ class ClientController extends Controller
             'address' => 'required|string|max:500',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
-        ]);
+        ];
+        
+        // Super admin pode alterar a empresa
+        if ($user->role === 'super_admin') {
+            $rules['company_id'] = 'required|exists:companies,id';
+        }
+        
+        $validated = $request->validate($rules);
 
         // Validação customizada: pelo menos um dos campos deve estar preenchido
         if (empty($validated['fantasy_name']) && empty($validated['corporate_name'])) {
@@ -166,14 +202,11 @@ class ClientController extends Controller
         }
         
         try {
-            // Desassocia os contatos do cliente (define client_id como null)
-            $client->contacts()->update(['client_id' => null]);
-            
-            // Exclui o cliente
+            // Exclui o cliente (orçamentos e contatos serão excluídos em cascata)
             $client->delete();
             
             return redirect()->route('clients.index')
-                ->with('success', 'Cliente excluído com sucesso! Os contatos foram preservados.');
+                ->with('success', 'Cliente excluído com sucesso! Todos os registros relacionados foram removidos.');
         } catch (\Exception $e) {
             return redirect()->route('clients.index')
                 ->with('error', 'Erro ao excluir cliente. Verifique se não há registros relacionados.');

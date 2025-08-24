@@ -63,10 +63,10 @@
                                             <a href="{{ route('clients.edit', $client) }}" class="btn btn-sm btn-outline-warning" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form action="{{ route('clients.destroy', $client) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este cliente?')">
+                                            <form action="{{ route('clients.destroy', $client) }}" method="POST" class="d-inline" id="delete-form-{{ $client->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDelete({{ $client->id }})">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -93,4 +93,24 @@
         </div>
     </div>
 </div>
+
+<script>
+function confirmDelete(clientId) {
+    Swal.fire({
+        title: 'Atenção!',
+        html: 'Excluir um Cliente excluirá todos os registros relacionados, inclusive orçamentos e contatos.<br><br>Tem certeza que deseja excluir este cliente?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-' + clientId).submit();
+        }
+    });
+}
+</script>
+
 @endsection

@@ -136,9 +136,11 @@ $(document).ready(function() {
                     parentSelect.empty().append('<option value="">Sem categoria</option>');
                     
                     // Adicionar categorias da empresa
-                    $.each(response.categories, function(categoryId, categoryName) {
-                        parentSelect.append('<option value="' + categoryId + '">' + categoryName + '</option>');
-                    });
+                    if (response.success && response.categories) {
+                        $.each(response.categories, function(categoryId, categoryName) {
+                            parentSelect.append('<option value="' + categoryId + '">' + categoryName + '</option>');
+                        });
+                    }
                     
                     parentSelect.prop('disabled', false);
                 },

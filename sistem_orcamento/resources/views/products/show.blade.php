@@ -80,11 +80,10 @@
                         <i class="bi bi-pencil"></i> Editar Produto
                     </a>
                     
-                    <form action="{{ route('products.destroy', $product) }}" method="POST" 
-                          onsubmit="return confirm('Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.')">
+                    <form action="{{ route('products.destroy', $product) }}" method="POST" id="delete-form-product-{{ $product->id }}">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger w-100">
+                        <button type="button" class="btn btn-danger w-100" onclick="confirmDeleteProduct({{ $product->id }})">
                             <i class="bi bi-trash"></i> Excluir Produto
                         </button>
                     </form>
@@ -120,4 +119,24 @@
         @endif
     </div>
 </div>
+
+<script>
+function confirmDeleteProduct(productId) {
+    Swal.fire({
+        title: 'Confirmação',
+        text: 'Tem certeza de que quer excluir este produto?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-product-' + productId).submit();
+        }
+    });
+}
+</script>
+
 @endsection

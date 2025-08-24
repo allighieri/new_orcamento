@@ -5,8 +5,11 @@
     
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <h4>Editar Empresa</h4>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-building-add"></i> Editar Empresa</h4>
+                    <a href="{{ route('companies.index') }}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ route('companies.update', $company) }}" enctype="multipart/form-data">

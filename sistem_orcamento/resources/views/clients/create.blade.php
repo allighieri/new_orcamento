@@ -5,8 +5,11 @@
     <div class="container mx-auto row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <h4>Novo Cliente</h4>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-people"></i> Novo Cliente</h4>
+                    <a href="{{ route('clients.index') }}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ route('clients.store') }}">
@@ -34,6 +37,27 @@
                                 </div>
                             </div>
                         </div>
+
+                        @if(auth()->guard('web')->user()->role === 'super_admin')
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="company_id" class="form-label">Empresa *</label>
+                                    <select class="form-select @error('company_id') is-invalid @enderror" id="company_id" name="company_id" required>
+                                        <option value="">Selecione uma empresa</option>
+                                        @foreach($companies as $company)
+                                            <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                                                {{ $company->fantasy_name ?? $company->corporate_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('company_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        @endif
 
                         <div class="row">
                             <div class="col-md-6">
@@ -114,9 +138,13 @@
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ route('clients.index') }}" class="btn btn-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-primary">Salvar Cliente</button>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ route('clients.index') }}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Salvar
+                            </button>
                         </div>
                     </form>
                 </div>

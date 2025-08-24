@@ -247,6 +247,12 @@ class ContactController extends Controller
     {
         $user = auth()->guard('web')->user();
         
+        // Verificar se o usuário tem permissão para excluir (apenas admin e super_admin)
+        if ($user->role === 'user') {
+            return redirect()->route('contacts.index')
+                ->with('error', 'Você precisa de privilégios de Admin para excluir um Cliente!');
+        }
+        
         // Super admin pode excluir qualquer contato
         if ($user->role !== 'super_admin') {
             $companyId = session('tenant_company_id');
@@ -266,7 +272,7 @@ class ContactController extends Controller
                 ->with('success', 'Contato excluído com sucesso!');
         } catch (\Exception $e) {
             return redirect()->route('contacts.index')
-                ->with('error', 'Erro ao excluir contato.');
+                ->with('error', 'Erro ao excluir contato. Verifique se não há registros relacionados.');
         }
     }
 }

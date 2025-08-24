@@ -70,13 +70,15 @@
                                             <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-sm btn-outline-warning" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form action="{{ route('contacts.destroy', $contact) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este contato?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            @if(auth()->guard('web')->user()->role === 'admin' || auth()->guard('web')->user()->role === 'super_admin')
+                                                <form action="{{ route('contacts.destroy', $contact) }}" method="POST" class="d-inline" id="delete-form-contact-{{ $contact->id }}">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteContact({{ $contact->id }})">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -100,4 +102,24 @@
         </div>
     </div>
 </div>
+
+<script>
+function confirmDeleteContact(contactId) {
+    Swal.fire({
+        title: 'Confirmação',
+        text: 'Tem certeza de que deseja excluir este contato?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-contact-' + contactId).submit();
+        }
+    });
+}
+</script>
+
 @endsection

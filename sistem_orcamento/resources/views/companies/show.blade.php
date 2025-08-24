@@ -120,11 +120,10 @@
                         <i class="bi bi-pencil"></i> Editar Empresa
                     </a>
                     
-                    <form action="{{ route('companies.destroy', $company) }}" method="POST" 
-                          onsubmit="return confirm('Tem certeza que deseja excluir esta empresa? Esta ação não pode ser desfeita.')">
+                    <form action="{{ route('companies.destroy', $company) }}" method="POST" id="delete-form-company-{{ $company->id }}">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger w-100">
+                        <button type="button" class="btn btn-danger w-100" onclick="confirmDeleteCompany({{ $company->id }})">
                             <i class="bi bi-trash"></i> Excluir Empresa
                         </button>
                     </form>
@@ -206,4 +205,24 @@
         @endif
     </div>
 </div>
+
+<script>
+function confirmDeleteCompany(companyId) {
+    Swal.fire({
+        title: 'Confirmação',
+        text: 'Tem certeza de que deseja excluir esta empresa?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-company-' + companyId).submit();
+        }
+    });
+}
+</script>
+
 @endsection

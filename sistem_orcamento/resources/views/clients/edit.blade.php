@@ -40,6 +40,27 @@
                             </div>
                         </div>
 
+                        @if(auth()->guard('web')->user()->role === 'super_admin')
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="company_id" class="form-label">Empresa *</label>
+                                    <select class="form-select @error('company_id') is-invalid @enderror" id="company_id" name="company_id" required>
+                                        <option value="">Selecione uma empresa</option>
+                                        @foreach($companies as $company)
+                                            <option value="{{ $company->id }}" {{ old('company_id', $client->company_id) == $company->id ? 'selected' : '' }}>
+                                                {{ $company->fantasy_name ?? $company->corporate_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('company_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">

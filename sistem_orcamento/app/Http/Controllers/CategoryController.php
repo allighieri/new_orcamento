@@ -387,18 +387,9 @@ class CategoryController extends Controller
         
         $categoriesTree = Category::getTreeForSelect(null, $companyId, false);
         
-        // Converter para o formato esperado pelo JavaScript
-        $formattedCategories = [];
-        foreach ($categoriesTree as $id => $name) {
-            $formattedCategories[] = [
-                'id' => $id,
-                'name_with_indent' => $name
-            ];
-        }
-        
         return response()->json([
             'success' => true,
-            'categories' => $formattedCategories
+            'categories' => $categoriesTree
         ]);
     }
 }

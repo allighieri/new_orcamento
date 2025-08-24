@@ -122,11 +122,10 @@
                         <i class="bi bi-pencil"></i> Editar Cliente
                     </a>
                     
-                    <form action="{{ route('clients.destroy', $client) }}" method="POST" 
-                          onsubmit="return confirm('Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.')">
+                    <form action="{{ route('clients.destroy', $client) }}" method="POST" id="delete-form-{{ $client->id }}">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger w-100">
+                        <button type="button" class="btn btn-danger w-100" onclick="confirmDelete({{ $client->id }})">
                             <i class="bi bi-trash"></i> Excluir Cliente
                         </button>
                     </form>
@@ -233,4 +232,24 @@
         </div>
     </div>
 </div>
+
+<script>
+function confirmDelete(clientId) {
+    Swal.fire({
+        title: 'Atenção!',
+        html: 'Excluir um Cliente excluirá todos os registros relacionados, inclusive orçamentos e contatos.<br><br>Tem certeza que deseja excluir este cliente?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-' + clientId).submit();
+        }
+    });
+}
+</script>
+
 @endsection

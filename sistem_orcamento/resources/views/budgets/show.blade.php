@@ -18,10 +18,10 @@
                         <a href="{{ route('budgets.edit', $budget) }}" class="btn btn-warning mb-2 mb-lg-0">
                             <i class="bi bi-pencil"></i> Editar
                         </a>
-                        <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este orçamento?')">
+                        <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" id="delete-form-budget-{{ $budget->id }}">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger">
+                            <button type="button" class="btn btn-danger" onclick="confirmDeleteBudget({{ $budget->id }})">
                                 <i class="bi bi-trash"></i> Excluir
                             </button>
                         </form>
@@ -268,5 +268,23 @@
     </div>
 </div>
 
+<script>
+function confirmDeleteBudget(budgetId) {
+    Swal.fire({
+        title: 'Confirmação',
+        text: 'Tem certeza de que deseja excluir este orçamento?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-budget-' + budgetId).submit();
+        }
+    });
+}
+</script>
 
 @endsection

@@ -64,10 +64,10 @@
                                             <a href="{{ route('companies.edit', $company) }}" class="btn btn-sm btn-outline-warning" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form action="{{ route('companies.destroy', $company) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir esta empresa?')">
+                                            <form action="{{ route('companies.destroy', $company) }}" method="POST" class="d-inline" id="delete-form-company-{{ $company->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteCompany({{ $company->id }})">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -94,4 +94,24 @@
         </div>
     </div>
 </div>
+
+<script>
+function confirmDeleteCompany(companyId) {
+    Swal.fire({
+        title: 'Confirmação',
+        text: 'Tem certeza de que deseja excluir esta empresa?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-company-' + companyId).submit();
+        }
+    });
+}
+</script>
+
 @endsection

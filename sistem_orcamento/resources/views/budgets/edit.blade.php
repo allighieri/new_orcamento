@@ -782,13 +782,15 @@ $(document).ready(function() {
             data: { company_id: companyId },
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
             success: function(response) {
-                if (response.success) {
+                if (response.success && response.categories) {
                     let productCategoryOptions = '<option value="">Selecione uma categoria</option>';
                     let parentCategoryOptions = '<option value="">Categoria Principal</option>';
-                    response.categories.forEach(function(category) {
-                        productCategoryOptions += `<option value="${category.id}">${category.name_with_indent}</option>`;
-                        parentCategoryOptions += `<option value="${category.id}">${category.name_with_indent}</option>`;
+                    
+                    $.each(response.categories, function(categoryId, categoryName) {
+                        productCategoryOptions += `<option value="${categoryId}">${categoryName}</option>`;
+                        parentCategoryOptions += `<option value="${categoryId}">${categoryName}</option>`;
                     });
+                    
                     $('#modal_category_id').html(productCategoryOptions);
                     $('#category_parent_id').html(parentCategoryOptions);
                 }
@@ -958,6 +960,14 @@ $(document).ready(function() {
         });
     });
 
+    // Carregar categorias quando a modal de produto for aberta
+    $('#addProductModal').on('show.bs.modal', function() {
+        const companyId = getCompanyId();
+        if (companyId) {
+            loadCategoriesByCompany(companyId);
+        }
+    });
+    
     // Limpar formulário quando modal for fechado
     $('#addProductModal').on('hidden.bs.modal', function() {
         $('#addProductForm')[0].reset();

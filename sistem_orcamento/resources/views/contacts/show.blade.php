@@ -113,14 +113,15 @@
                         <i class="bi bi-pencil"></i> Editar Contato
                     </a>
                     
-                    <form action="{{ route('contacts.destroy', $contact) }}" method="POST" 
-                          onsubmit="return confirm('Tem certeza que deseja excluir este contato? Esta ação não pode ser desfeita.')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger w-100">
-                            <i class="bi bi-trash"></i> Excluir Contato
-                        </button>
-                    </form>
+                    @if(auth()->guard('web')->user()->role === 'admin' || auth()->guard('web')->user()->role === 'super_admin')
+                        <form action="{{ route('contacts.destroy', $contact) }}" method="POST" id="delete-form-contact-{{ $contact->id }}">
+                            @csrf
+                            @method('DELETE')
+                            <button type="button" class="btn btn-danger w-100" onclick="confirmDeleteContact({{ $contact->id }})">
+                                <i class="bi bi-trash"></i> Excluir Contato
+                            </button>
+                        </form>
+                    @endif
                     
                     <a href="{{ route('contacts.index') }}" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Voltar à Lista
@@ -130,4 +131,24 @@
         </div>
     </div>
 </div>
+
+<script>
+function confirmDeleteContact(contactId) {
+    Swal.fire({
+        title: 'Confirmação',
+        text: 'Tem certeza de que deseja excluir este contato?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-contact-' + contactId).submit();
+        }
+    });
+}
+</script>
+
 @endsection
