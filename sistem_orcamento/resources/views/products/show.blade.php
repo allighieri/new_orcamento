@@ -3,17 +3,20 @@
 @section('title', 'Visualizar Produto - Sistema de Orçamento')
 
 @section('content')
-<div class="row">
+<div class="container mx-auto row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>
                 <i class="bi bi-box"></i> Detalhes do Produto
             </h1>
+            <a href="{{ route('products.index') }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
         </div>
     </div>
 </div>
 
-<div class="row">
+<div class="container mx-auto row">
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
@@ -23,54 +26,42 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Nome:</label>
-                        <p class="form-control-plaintext">{{ $product->name }}</p>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Preço:</label>
-                        <p class="form-control-plaintext text-success fw-bold">R$ {{ number_format($product->price, 2, ',', '.') }}</p>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-1">
+                        <label class="form-label fw-bold">Produto:</label>
+                        {{ $product->name }} -
                         <label class="form-label fw-bold">Categoria:</label>
-                        <p class="form-control-plaintext">
-                            @if($product->category)
-                                <span class="badge bg-primary">{{ $product->category->name }}</span>
-                            @else
-                                <span class="text-muted">Sem categoria</span>
-                            @endif
-                        </p>
+                        @if($product->category)
+                            {{ $product->category->name }}
+                        @else
+                            Sem categoria
+                        @endif
                     </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Slug:</label>
-                        <p class="form-control-plaintext">{{ $product->slug ?: 'Não informado' }}</p>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Descrição:</label>
-                    <p class="form-control-plaintext">{{ $product->description ?: 'Não informado' }}</p>
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Cadastrado em:</label>
-                        <p class="form-control-plaintext">
-                            <i class="bi bi-calendar"></i> {{ $product->created_at->format('d/m/Y H:i') }}
-                        </p>
+                    <div class="col-md-6 mb-1">
+                        <label class="form-label fw-bold">Preço:</label>
+                        <span class="text-success fw-bold">R$ {{ number_format($product->price, 2, ',', '.') }}</span>
                     </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Última atualização:</label>
-                        <p class="form-control-plaintext">
-                            <i class="bi bi-clock"></i> {{ $product->updated_at->format('d/m/Y H:i') }}
-                        </p>
+                </div>
+                
+                @if($product->description)
+                <div class="row">
+                    <div class="col-12 mb-1">
+                        <label class="form-label fw-bold">Descrição:</label>
+                        {{ $product->description }}
                     </div>
+                </div>
+                @endif
+                
+                <div class="col-md-6 mb-1">
+                    <label class="form-label fw-bold">Data de Criação:</label>
+                    {{ $product->created_at->format('d/m/Y H:i') }}
+                </div>
+                
+                <div class="col-md-6 mb-1">
+                    <label class="form-label fw-bold">Última Atualização:</label>
+                    {{ $product->updated_at->format('d/m/Y H:i') }}
                 </div>
             </div>
         </div>

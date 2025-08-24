@@ -5,8 +5,13 @@
     
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <h4>Novo Produto</h4>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-box"></i> Novo Produto
+                    </h5>
+                    <a href="{{ route('products.index') }}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ route('products.store') }}">
@@ -37,8 +42,8 @@
                             </div>
                         </div>
 
+                        @if(auth()->guard('web')->user()->role === 'super_admin')
                         <div class="row">
-                            @if(auth()->guard('web')->user()->role === 'super_admin')
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="company_id" class="form-label">Empresa *</label>
@@ -55,26 +60,12 @@
                                     @enderror
                                 </div>
                             </div>
-                            @endif
-
-                            <div class="@if(auth()->guard('web')->user()->role === 'super_admin') col-md-6 @else col-md-6 @endif">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="category_id" class="form-label">Categoria *</label>
                                     <div class="input-group">
-                                        <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id" required @if(auth()->guard('web')->user()->role === 'super_admin') disabled @endif>
-                                            @if(auth()->guard('web')->user()->role === 'super_admin')
-                                                <option value="">Selecione uma empresa primeiro</option>
-                                            @else
-                                                <option value="">Selecione uma categoria</option>
-                                                @php
-                                                    $categoriesTree = App\Models\Category::getTreeForSelect(null, null, false);
-                                                @endphp
-                                                @foreach($categoriesTree as $categoryId => $categoryName)
-                                                    <option value="{{ $categoryId }}" {{ (old('category_id') ?? request('category_id')) == $categoryId ? 'selected' : '' }}>
-                                                        {!! $categoryName !!}
-                                                    </option>
-                                                @endforeach
-                                            @endif
+                                        <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id" required disabled>
+                                            <option value="">Selecione uma empresa primeiro</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-primary" id="openCategoryModalBtn" title="Nova Categoria">
                                             <i class="bi bi-plus"></i>
@@ -83,13 +74,42 @@
                                     @error('category_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                    @if(auth()->guard('web')->user()->role === 'super_admin')
-                                        <div class="form-text">Selecione a empresa para exibir categorias</div>
-                                    @endif
+                                    <div class="form-text">Selecione a empresa para exibir categorias</div>
                                 </div>
                             </div>
-
                         </div>
+                        @else
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="category_id" class="form-label">Categoria *</label>
+                                    <div class="input-group">
+                                        <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id" required>
+                                            <option value="">Selecione uma categoria</option>
+                                            @php
+                                                $userCompanyId = auth()->guard('web')->user()->company_id;
+                                                $categoriesTree = App\Models\Category::getTreeForSelect(null, $userCompanyId, false);
+                                            @endphp
+                                            @foreach($categoriesTree as $categoryId => $categoryName)
+                                                <option value="{{ $categoryId }}" {{ (old('category_id') ?? request('category_id')) == $categoryId ? 'selected' : '' }}>
+                                                    {!! $categoryName !!}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-primary" id="openCategoryModalBtn" title="Nova Categoria">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                    </div>
+                                    @error('category_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="form-text">Subcategorias são indicadas por indentação</div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        
 
                         <div class="row">
                             <div class="col-md-12">
@@ -133,18 +153,15 @@
                         <input type="text" class="form-control" id="category_name" name="name" required>
                         <div class="invalid-feedback" id="category_name_error"></div>
                     </div>
+                    
                     <div class="mb-3">
-                        <label for="category_description" class="form-label">Descrição</label>
-                        <textarea class="form-control" id="category_description" name="description" rows="3" placeholder="Descrição da categoria"></textarea>
-                        <div class="invalid-feedback" id="category_description_error"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="parent_category_id" class="form-label">Categoria Pai</label>
+                        <label for="parent_category_id" class="form-label">Categoria</label>
                         <select class="form-select" id="parent_category_id" name="parent_id">
                             <option value="">Categoria Principal</option>
                             @if(auth()->guard('web')->user()->role !== 'super_admin')
                                 @php
-                                    $categoriesTree = App\Models\Category::getTreeForSelect(null, null, false);
+                                    $userCompanyId = auth()->guard('web')->user()->company_id;
+                                    $categoriesTree = App\Models\Category::getTreeForSelect(null, $userCompanyId, false);
                                 @endphp
                                 @foreach($categoriesTree as $categoryId => $categoryName)
                                     <option value="{{ $categoryId }}">
@@ -156,6 +173,13 @@
                         <div class="form-text">Deixe em branco para criar uma categoria principal</div>
                         <div class="invalid-feedback" id="parent_id_error"></div>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="category_description" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="category_description" name="description" rows="3" placeholder="Descrição da categoria"></textarea>
+                        <div class="invalid-feedback" id="category_description_error"></div>
+                    </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -215,7 +239,12 @@ $(document).ready(function() {
         if (companyId) {
             formData += '&company_id=' + companyId;
         } else {
-            alert('Selecione uma empresa primeiro.');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atenção!',
+                text: 'Selecione uma empresa primeiro.',
+                confirmButtonText: 'OK'
+            });
             submitBtn.prop('disabled', false);
             spinner.addClass('d-none');
             return;
@@ -244,7 +273,15 @@ $(document).ready(function() {
                     @endif
                     
                     // Mostrar mensagem de sucesso
-                    //alert('Categoria criada com sucesso!');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso!',
+                        text: 'Categoria criada com sucesso!',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
                 }
             },
             error: function(xhr) {
@@ -260,7 +297,12 @@ $(document).ready(function() {
                         errorDiv.text(errors[field][0]);
                     });
                 } else {
-                    alert('Erro ao criar categoria. Tente novamente.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro!',
+                        text: 'Erro ao criar categoria. Tente novamente.',
+                        confirmButtonText: 'OK'
+                    });
                 }
             },
             complete: function() {
@@ -312,7 +354,12 @@ $(document).ready(function() {
                 categorySelect.prop('disabled', false);
             },
             error: function() {
-                alert('Erro ao carregar categorias');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro!',
+                    text: 'Erro ao carregar categorias',
+                    confirmButtonText: 'OK'
+                });
             }
         });
     }

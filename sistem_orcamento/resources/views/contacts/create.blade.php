@@ -1,12 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+<div class="container row mx-auto">
+    
+        <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <h4>Novo Contato</h4>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                     <h5 class="mb-0">
+                        <i class="bi bi-person-lines-fill"></i> Novo Contato
+                     </h5>
+                    <a href="{{ route('contacts.index') }}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ route('contacts.store') }}">
@@ -79,7 +84,7 @@
                                 </div>
                             </div>
                             @endif
-                            <div class="{{ auth()->guard('web')->user()->role === 'super_admin' ? 'col-md-6' : 'col-md-12' }}">
+                            <div class="{{ auth()->guard('web')->user()->role === 'super_admin' ? 'col-md-6' : 'col-md-6' }}">
                                 <div class="mb-3">
                                     <label for="client_id" class="form-label">Cliente</label>
                                     <select class="form-select @error('client_id') is-invalid @enderror" 
@@ -94,20 +99,24 @@
                                     @error('client_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                    <small class="form-text text-muted">Selecione um cliente{{ auth()->guard('web')->user()->role === 'super_admin' ? ' OU uma empresa' : '' }}</small>
+                                    <small class="form-text text-muted">Selecione um cliente {{ auth()->guard('web')->user()->role === 'super_admin' ? ' OU uma empresa' : '' }}</small>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ route('contacts.index') }}" class="btn btn-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-primary">Salvar Contato</button>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ route('contacts.index') }}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Salvar
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-    </div>
+    
 </div>
 @endsection
 

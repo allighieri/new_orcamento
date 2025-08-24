@@ -35,7 +35,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="parent_id" class="form-label">Categoria Pai</label>
                                 <select class="form-select @error('parent_id') is-invalid @enderror" id="parent_id" name="parent_id">

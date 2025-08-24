@@ -2,11 +2,16 @@
 
 @section('content')
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+    <div class="container mx-auto row">
+        <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <h4>Editar Cliente</h4>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                     <h5 class="mb-0">
+                        <i class="bi bi-people"></i> Editar Cliente
+                     </h5>
+                    <a href="{{ route('clients.index') }}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ route('clients.update', $client->id) }}">
@@ -114,9 +119,13 @@
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <button type="submit" class="btn btn-primary">Salvar</button>
-                            <a href="{{ route('clients.index') }}" class="btn btn-secondary">Cancelar</a>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ route('clients.index') }}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Atualizar
+                            </button>
                         </div>
                     </div>
                 </form>

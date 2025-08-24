@@ -408,7 +408,7 @@
                                     <option value="">Categoria Principal</option>
                                     @php
                                         $showCompanyName = auth()->guard('web')->user()->role === 'super_admin';
-                                        $categoriesTree = App\Models\Category::getTreeForSelect(null, null, $showCompanyName);
+                                        $categoriesTree = App\Models\Category::getTreeForSelect(null, session('tenant_company_id'), $showCompanyName);
                                     @endphp
                                     @foreach($categoriesTree as $categoryId => $categoryName)
                                         <option value="{{ $categoryId }}">
@@ -743,13 +743,31 @@ $(document).ready(function() {
                     $('#addProductForm')[0].reset();
                     
                     // Mostrar mensagem de sucesso
-                    //alert('Produto criado com sucesso!');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso!',
+                        text: 'Produto criado com sucesso!',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
                 } else {
-                    alert('Erro ao criar produto. Tente novamente.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro!',
+                        text: 'Erro ao criar produto. Tente novamente.',
+                        confirmButtonText: 'OK'
+                    });
                 }
             },
             error: function(xhr) {
-                alert('Erro ao criar produto. Verifique os dados e tente novamente.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro!',
+                    text: 'Erro ao criar produto. Verifique os dados e tente novamente.',
+                    confirmButtonText: 'OK'
+                });
             },
             complete: function() {
                 // Reabilitar botão de salvar
@@ -809,12 +827,33 @@ $(document).ready(function() {
                     // Fechar modal e limpar formulário
                     $('#addCategoryModal').modal('hide');
                     $('#addCategoryForm')[0].reset();
+                    
+                    // Mostrar mensagem de sucesso
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso!',
+                        text: 'Categoria criada com sucesso!',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
                 } else {
-                    alert('Erro ao criar categoria. Tente novamente.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro!',
+                        text: 'Erro ao criar categoria. Tente novamente.',
+                        confirmButtonText: 'OK'
+                    });
                 }
             },
             error: function(xhr) {
-                alert('Erro ao criar categoria. Verifique os dados e tente novamente.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro!',
+                    text: 'Erro ao criar categoria. Verifique os dados e tente novamente.',
+                    confirmButtonText: 'OK'
+                });
             },
             complete: function() {
                 // Reabilitar botão de salvar

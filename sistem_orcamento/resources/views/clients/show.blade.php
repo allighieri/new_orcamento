@@ -9,6 +9,9 @@
             <h1>
                 <i class="bi bi-person"></i> Detalhes do Cliente
             </h1>
+            <a href="{{ route('clients.index') }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
         </div>
     </div>
 </div>
