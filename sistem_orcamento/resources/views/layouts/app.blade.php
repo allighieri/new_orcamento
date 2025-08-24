@@ -15,7 +15,7 @@
     
     @stack('styles')
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
@@ -122,7 +122,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="container-fluid mt-4">
+    <main class="container-fluid mt-4 flex-grow-1">
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}
