@@ -53,37 +53,59 @@ class GoogleEmailService
     {
         $googleToken = GoogleToken::where('company_id', $this->companyId)->first();
 
-        if ($googleToken && $googleToken->isValid()) {
-            $this->client->setAccessToken([
-                'access_token' => $googleToken->access_token,
-                'refresh_token' => $googleToken->refresh_token,
-                'expires_in' => $googleToken->expires_at->diffInSeconds(now()),
-                'token_type' => $googleToken->token_type,
-                'scope' => implode(' ', $googleToken->scope)
-            ]);
-
-            // Verificar se o token precisa ser renovado
-            if ($googleToken->isExpired()) {
-                $this->refreshToken($googleToken);
+        if ($googleToken) {
+            // Se o token está válido, configura no cliente
+            if ($googleToken->isValid()) {
+                $this->client->setAccessToken([
+                    'access_token' => $googleToken->access_token,
+                    'refresh_token' => $googleToken->refresh_token,
+                    'expires_in' => $googleToken->expires_at->diffInSeconds(now()),
+                    'token_type' => $googleToken->token_type,
+                    'scope' => implode(' ', $googleToken->scope ?? [])
+                ]);
             }
+            // Se o token está expirado, será tratado no método isAuthenticated()
+            // quando necessário, evitando renovações desnecessárias
         }
     }
 
     private function refreshToken(GoogleToken $googleToken)
     {
         try {
+            if (empty($googleToken->refresh_token)) {
+                throw new \Exception('Refresh token não disponível');
+            }
+            
             $this->client->refreshToken($googleToken->refresh_token);
             $newToken = $this->client->getAccessToken();
+            
+            if (!isset($newToken['access_token'])) {
+                throw new \Exception('Token de acesso não retornado pela API do Google');
+            }
 
             $googleToken->update([
                 'access_token' => $newToken['access_token'],
-                'expires_at' => now()->addSeconds($newToken['expires_in']),
+                'expires_at' => now()->addSeconds($newToken['expires_in'] ?? 3600),
                 'token_type' => $newToken['token_type'] ?? 'Bearer'
             ]);
 
-            Log::info('Token do Google renovado com sucesso para empresa: ' . $this->companyId);
+            Log::info('Token do Google renovado com sucesso para empresa: ' . $this->companyId, [
+                'expires_at' => $googleToken->expires_at,
+                'token_type' => $googleToken->token_type
+            ]);
         } catch (\Exception $e) {
-            Log::error('Erro ao renovar token do Google: ' . $e->getMessage());
+            Log::error('Erro ao renovar token do Google para empresa ' . $this->companyId . ': ' . $e->getMessage(), [
+                'error_class' => get_class($e),
+                'has_refresh_token' => !empty($googleToken->refresh_token)
+            ]);
+            
+            // Se o refresh token expirou ou é inválido, remove o token da base de dados
+            if (strpos($e->getMessage(), 'invalid_grant') !== false || 
+                strpos($e->getMessage(), 'Token has been expired') !== false) {
+                Log::warning('Refresh token expirado para empresa ' . $this->companyId . '. Removendo token da base de dados.');
+                $googleToken->delete();
+            }
+            
             throw new \Exception('Erro ao renovar token de acesso. Reautorização necessária.');
         }
     }
@@ -124,7 +146,30 @@ class GoogleEmailService
     public function isAuthenticated()
     {
         $googleToken = GoogleToken::where('company_id', $this->companyId)->first();
-        return $googleToken && $googleToken->isValid();
+        
+        if (!$googleToken) {
+            return false;
+        }
+        
+        // Se o token está válido, retorna true
+        if ($googleToken->isValid()) {
+            return true;
+        }
+        
+        // Se o token está expirado mas temos refresh_token, tenta renovar
+        if ($googleToken->isExpired() && !empty($googleToken->refresh_token)) {
+            try {
+                $this->refreshToken($googleToken);
+                // Recarrega o token após renovação
+                $googleToken->refresh();
+                return $googleToken->isValid();
+            } catch (\Exception $e) {
+                Log::warning('Falha ao renovar token automaticamente: ' . $e->getMessage());
+                return false;
+            }
+        }
+        
+        return false;
     }
 
     public function sendEmail($to, $subject, $body, $attachmentPath = null)
