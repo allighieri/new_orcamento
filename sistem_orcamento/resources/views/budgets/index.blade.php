@@ -104,9 +104,9 @@
                                                 <i class="bi bi-file-earmark-pdf"></i>
                                             </a>
                                             @if($budget->pdfFiles->count() > 0)
-                                            <a href="{{ route('budgets.whatsapp', $budget) }}" class="btn btn-sm btn-outline-success" title="Enviar PDF via WhatsApp" target="_blank">
+                                            <button type="button" class="btn btn-sm btn-outline-success" title="Enviar PDF via WhatsApp" onclick="handleWhatsAppSend({{ $budget->id }})">
                                                 <i class="bi bi-whatsapp"></i>
-                                            </a>
+                                            </button>
                                             @endif
                                             <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" id="delete-form-budget-{{ $budget->id }}">
                                                 @csrf
@@ -139,7 +139,41 @@
     </div>
 </div>
 
+<!-- Modal de Seleção de Contatos -->
+<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactModalLabel">
+                    <i class="bi bi-whatsapp text-success"></i> Selecionar Contato
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Selecione um contato para enviar o PDF via WhatsApp:</p>
+                <div class="mb-3">
+                    <label for="contactSelect" class="form-label">Contato:</label>
+                    <select class="form-select" id="contactSelect">
+                        <option value="">Selecione um contato...</option>
+                    </select>
+                </div>
+                <div id="contactInfo" class="alert alert-info d-none">
+                    <strong>Telefone:</strong> <span id="contactPhone"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="sendWhatsAppBtn" disabled>
+                    <i class="bi bi-whatsapp"></i> Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+let currentBudgetId = null;
+
 function confirmDeleteBudget(budgetId) {
     Swal.fire({
         title: 'Confirmação',
@@ -154,6 +188,144 @@ function confirmDeleteBudget(budgetId) {
         if (result.isConfirmed) {
             document.getElementById('delete-form-budget-' + budgetId).submit();
         }
+    });
+}
+
+function handleWhatsAppSend(budgetId) {
+    currentBudgetId = budgetId;
+    
+    // Fazer requisição AJAX para verificar se o cliente tem contatos
+    fetch(`{{ url('/budgets') }}/${budgetId}/whatsapp`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.has_contacts) {
+            // Cliente tem contatos, mostrar modal
+            populateContactModal(data.contacts);
+            const modal = new bootstrap.Modal(document.getElementById('contactModal'));
+            modal.show();
+        } else if (data.success === false) {
+            // Erro
+            Swal.fire({
+                title: 'Erro',
+                text: data.message,
+                icon: 'error'
+            });
+        } else if (data.whatsapp_url) {
+            // Cliente não tem contatos, abrir WhatsApp diretamente
+            window.open(data.whatsapp_url, '_blank');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        Swal.fire({
+            title: 'Erro',
+            text: 'Erro ao processar solicitação.',
+            icon: 'error'
+        });
+    });
+}
+
+function populateContactModal(contacts) {
+    const select = document.getElementById('contactSelect');
+    const sendBtn = document.getElementById('sendWhatsAppBtn');
+    const contactInfo = document.getElementById('contactInfo');
+    const contactPhone = document.getElementById('contactPhone');
+    
+    // Limpar opções anteriores
+    select.innerHTML = '<option value="">Selecione um contato...</option>';
+    
+    // Adicionar contatos
+    contacts.forEach(contact => {
+        const option = document.createElement('option');
+        option.value = contact.id;
+        option.textContent = contact.name;
+        option.dataset.phone = contact.phone;
+        select.appendChild(option);
+    });
+    
+    // Event listener para mudança de seleção
+    select.onchange = function() {
+        if (this.value) {
+            const selectedOption = this.options[this.selectedIndex];
+            contactPhone.textContent = selectedOption.dataset.phone;
+            contactInfo.classList.remove('d-none');
+            sendBtn.disabled = false;
+        } else {
+            contactInfo.classList.add('d-none');
+            sendBtn.disabled = true;
+        }
+    };
+    
+    // Event listener para botão enviar
+    sendBtn.onclick = function() {
+        const contactId = select.value;
+        if (contactId && currentBudgetId) {
+            sendWhatsAppToContact(currentBudgetId, contactId);
+        }
+    };
+}
+
+function sendWhatsAppToContact(budgetId, contactId) {
+    const sendBtn = document.getElementById('sendWhatsAppBtn');
+    const originalText = sendBtn.innerHTML;
+    
+    // Mostrar loading
+    sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Enviando...';
+    sendBtn.disabled = true;
+    
+    fetch(`{{ url('/budgets') }}/${budgetId}/whatsapp-contact`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            contact_id: contactId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('contactModal'));
+            modal.hide();
+            
+            // Abrir WhatsApp
+            window.open(data.whatsapp_url, '_blank');
+            
+            Swal.fire({
+                title: 'Sucesso',
+                text: 'WhatsApp aberto com sucesso!',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            Swal.fire({
+                title: 'Erro',
+                text: data.message,
+                icon: 'error'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        Swal.fire({
+            title: 'Erro',
+            text: 'Erro ao enviar mensagem.',
+            icon: 'error'
+        });
+    })
+    .finally(() => {
+        // Restaurar botão
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
     });
 }
 </script>

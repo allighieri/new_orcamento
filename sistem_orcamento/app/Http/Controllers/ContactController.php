@@ -43,7 +43,7 @@ class ContactController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $user = auth()->guard('web')->user();
         
@@ -58,7 +58,10 @@ class ContactController extends Controller
             $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
         }
         
-        return view('contacts.create', compact('companies', 'clients'));
+        // Pegar o client_id da query string se fornecido
+        $selectedClientId = $request->query('client_id');
+        
+        return view('contacts.create', compact('companies', 'clients', 'selectedClientId'));
     }
 
     /**
@@ -298,10 +301,26 @@ class ContactController extends Controller
         }
         
         try {
+            $clientId = $contact->client_id;
             $contact->delete();
+            
+            // Se veio da página de detalhes do cliente, redirecionar de volta
+            if ($clientId && request()->has('from_client')) {
+                return redirect()->route('clients.show', $clientId)
+                    ->with('success', 'Contato excluído com sucesso!');
+            }
+            
             return redirect()->route('contacts.index')
                 ->with('success', 'Contato excluído com sucesso!');
         } catch (\Exception $e) {
+            $clientId = $contact->client_id;
+            
+            // Se veio da página de detalhes do cliente, redirecionar de volta
+            if ($clientId && request()->has('from_client')) {
+                return redirect()->route('clients.show', $clientId)
+                    ->with('error', 'Erro ao excluir contato. Verifique se não há registros relacionados.');
+            }
+            
             return redirect()->route('contacts.index')
                 ->with('error', 'Erro ao excluir contato. Verifique se não há registros relacionados.');
         }

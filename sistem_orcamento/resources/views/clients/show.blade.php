@@ -122,6 +122,10 @@
                         <i class="bi bi-pencil"></i> Editar Cliente
                     </a>
                     
+                    <a href="{{ route('contacts.create', ['client_id' => $client->id]) }}" class="btn btn-info" title="Adicionar novo contato para este cliente">
+                        <i class="bi bi-person-plus"></i> Adicionar Contato
+                    </a>
+                    
                     <form action="{{ route('clients.destroy', $client) }}" method="POST" id="delete-form-{{ $client->id }}">
                         @csrf
                         @method('DELETE')
@@ -190,6 +194,21 @@
                                                 </td>
                                             </tr>
                                         </table>
+                                        <div class="d-flex gap-2 mt-3">
+                                            <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#contactModal{{ $contact->id }}">
+                                                <i class="bi bi-eye"></i> Ver Detalhes
+                                            </button>
+                                            <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-warning btn-sm">
+                                                <i class="bi bi-pencil"></i> Editar
+                                            </a>
+                                            <form action="{{ route('contacts.destroy', $contact) }}?from_client=1" method="POST" class="d-inline" id="delete-form-contact-{{ $contact->id }}">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDeleteContact({{ $contact->id }})">
+                                                    <i class="bi bi-trash"></i> Excluir
+                                                </button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -203,6 +222,128 @@
                 @endif
             </div>
         </div>
+        
+        <!-- Modais de Detalhes dos Contatos -->
+        @foreach($client->contacts as $contact)
+        <div class="modal fade" id="contactModal{{ $contact->id }}" tabindex="-1" aria-labelledby="contactModalLabel{{ $contact->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="contactModalLabel{{ $contact->id }}">
+                            <i class="bi bi-person-rolodex"></i> Detalhes do Contato
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">
+                                            <i class="bi bi-person"></i> Informações Pessoais
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-borderless mb-0">
+                                            <tr>
+                                                <td class="fw-bold" style="width: 40%;">Nome:</td>
+                                                <td>{{ $contact->name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">CPF:</td>
+                                                <td>
+                                                    @if($contact->cpf)
+                                                        {{ $contact->cpf }}
+                                                    @else
+                                                        <span class="text-muted">Não informado</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">
+                                            <i class="bi bi-telephone"></i> Informações de Contato
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-borderless mb-0">
+                                            <tr>
+                                                <td class="fw-bold" style="width: 40%;">Telefone:</td>
+                                                <td>
+                                                    @if($contact->phone)
+                                                        <a href="tel:{{ $contact->phone }}" class="text-decoration-none">
+                                                            <i class="bi bi-telephone"></i> {{ $contact->phone }}
+                                                        </a>
+                                                    @else
+                                                        <span class="text-muted">Não informado</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Email:</td>
+                                                <td>
+                                                    @if($contact->email)
+                                                        <a href="mailto:{{ $contact->email }}" class="text-decoration-none">
+                                                            <i class="bi bi-envelope"></i> {{ $contact->email }}
+                                                        </a>
+                                                    @else
+                                                        <span class="text-muted">Não informado</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        @if($contact->client)
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">
+                                            <i class="bi bi-building"></i> Cliente Associado
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-borderless mb-0">
+                                            <tr>
+                                                <td class="fw-bold" style="width: 20%;">Nome Fantasia:</td>
+                                                <td>{{ $contact->client->fantasy_name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Razão Social:</td>
+                                                <td>{{ $contact->client->corporate_name ?? 'Não informado' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">CNPJ:</td>
+                                                <td>{{ $contact->client->document_number ?? 'Não informado' }}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle"></i> Fechar
+                        </button>
+                        <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> Editar Contato
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endforeach
         
         <!-- Estatísticas de Orçamentos -->
         <div class="card mt-3">
@@ -247,6 +388,23 @@ function confirmDelete(clientId) {
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById('delete-form-' + clientId).submit();
+        }
+    });
+}
+
+function confirmDeleteContact(contactId) {
+    Swal.fire({
+        title: 'Confirmar Exclusão',
+        text: 'Tem certeza que deseja excluir este contato?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-contact-' + contactId).submit();
         }
     });
 }

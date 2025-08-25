@@ -7,6 +7,7 @@ use App\Models\BudgetItem;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Product;
+use App\Models\Contact;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
@@ -674,57 +675,142 @@ class BudgetController extends Controller
      */
     public function sendWhatsApp(Budget $budget)
     {
-        $user = auth()->guard('web')->user();
-        
-        // Super admin pode enviar qualquer orçamento
-        if ($user->role !== 'super_admin') {
-            // Verificar se o orçamento pertence à empresa do usuário
-            if ($budget->company_id !== session('tenant_company_id')) {
-                abort(404);
+        try {
+            $user = auth()->guard('web')->user();
+            
+            // Super admin pode enviar qualquer orçamento
+            if ($user->role !== 'super_admin') {
+                // Verificar se o orçamento pertence à empresa do usuário
+                if ($budget->company_id !== session('tenant_company_id')) {
+                    abort(404);
+                }
             }
+            
+            // Verificar se existe PDF para este orçamento
+            $pdfFile = \App\Models\PdfFile::where('budget_id', $budget->id)->first();
+            
+            if (!$pdfFile) {
+                return redirect()->back()->with('error', 'Nenhum PDF encontrado para este orçamento. Gere o PDF primeiro.');
+            }
+            
+            // Verificar se o arquivo físico existe
+            $filePath = storage_path('app/public/pdfs/' . $pdfFile->filename);
+            if (!file_exists($filePath)) {
+                return redirect()->back()->with('error', 'Arquivo PDF não encontrado no servidor.');
+            }
+            
+            // Carregar relacionamentos necessários
+            $budget->load(['client.contacts', 'company']);
+            
+            // Verificar se o cliente tem contatos
+            $contacts = $budget->client->contacts;
+            
+            if ($contacts->isEmpty()) {
+                // Se não há contatos, verifica se o cliente tem telefone
+                if (empty($budget->client->phone)) {
+                    return redirect()->back()->with('error', 'Cliente não possui telefone ou contatos cadastrados.');
+                }
+                
+                // Envia diretamente para o telefone do cliente
+                $whatsappUrl = $this->generateWhatsAppUrl($budget, $budget->client->phone);
+                
+                // Se for requisição AJAX, retorna JSON
+                if (request()->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'has_contacts' => false,
+                        'whatsapp_url' => $whatsappUrl
+                    ]);
+                }
+                
+                return redirect($whatsappUrl);
+            }
+            
+            // Se há contatos, retorna dados para a modal
+            return response()->json([
+                'success' => true,
+                'has_contacts' => true,
+                'contacts' => $contacts->map(function($contact) {
+                    return [
+                        'id' => $contact->id,
+                        'name' => $contact->name,
+                        'phone' => $contact->phone
+                    ];
+                })
+            ]);
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro ao processar WhatsApp: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Erro ao processar solicitação.'], 500);
         }
-        
+    }
+
+    public function sendWhatsAppToContact(Request $request, Budget $budget)
+    {
+        try {
+            $user = auth()->guard('web')->user();
+            
+            // Super admin pode enviar qualquer orçamento
+            if ($user->role !== 'super_admin') {
+                // Verificar se o orçamento pertence à empresa do usuário
+                if ($budget->company_id !== session('tenant_company_id')) {
+                    abort(404);
+                }
+            }
+            
+            $request->validate([
+                'contact_id' => 'required|exists:contacts,id'
+            ]);
+            
+            $contact = \App\Models\Contact::findOrFail($request->contact_id);
+            
+            // Verifica se o contato pertence ao cliente do orçamento
+            if ($contact->client_id !== $budget->client_id) {
+                return response()->json(['success' => false, 'message' => 'Contato não pertence ao cliente do orçamento.'], 400);
+            }
+            
+            $whatsappUrl = $this->generateWhatsAppUrl($budget, $contact->phone, $contact->name);
+            
+            return response()->json([
+                'success' => true,
+                'whatsapp_url' => $whatsappUrl
+            ]);
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro ao enviar WhatsApp para contato: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Erro ao processar solicitação.'], 500);
+        }
+    }
+
+    private function sendDirectWhatsApp(Budget $budget, $phone)
+    {
+        $whatsappUrl = $this->generateWhatsAppUrl($budget, $phone);
+        return redirect($whatsappUrl);
+    }
+
+    private function generateWhatsAppUrl(Budget $budget, $phone, $contactName = null)
+    {
         // Verificar se existe PDF para este orçamento
         $pdfFile = \App\Models\PdfFile::where('budget_id', $budget->id)->first();
         
         if (!$pdfFile) {
-            return redirect()->back()->with('error', 'Nenhum PDF encontrado para este orçamento. Gere o PDF primeiro.');
+            throw new \Exception('Nenhum PDF encontrado para este orçamento.');
         }
-        
-        // Verificar se o arquivo físico existe
-        $filePath = storage_path('app/public/pdfs/' . $pdfFile->filename);
-        if (!file_exists($filePath)) {
-            return redirect()->back()->with('error', 'Arquivo PDF não encontrado no servidor.');
-        }
-        
-        // Verificar se o cliente tem telefone
-        if (!$budget->client->phone) {
-            return redirect()->back()->with('error', 'Cliente não possui número de telefone cadastrado.');
-        }
-        
-        // Carregar relacionamentos necessários
-        $budget->load(['client', 'company']);
         
         // Gerar URL do PDF com HTTPS
         $pdfUrl = secure_url('storage/pdfs/' . $pdfFile->filename);
         
+        // Usar nome do contato se fornecido, senão usar nome fantasia do cliente
+        $recipientName = $contactName ?: $budget->client->fantasy_name;
+        
         // Preparar mensagem
-        $message = "Olá, {$budget->client->fantasy_name}!\n\n";
+        $message = "Olá, {$recipientName}!\n\n";
         $message .= "Seu orçamento está pronto! Clique no link abaixo para baixar.\n\n";
         $message .= "{$pdfUrl}\n\n";
         $message .= "Qualquer dúvida, estamos à disposição.\n\n";
         $message .= "{$budget->company->fantasy_name}";
         
-        // Enviar mensagem via WhatsApp
-        try {
-            // Gerar URL do WhatsApp
-            $whatsappUrl = $this->sendWhatsAppMessage($budget->client->phone, $message);
-            
-            // Redirecionar para o WhatsApp
-            return redirect($whatsappUrl);
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erro ao gerar link do WhatsApp: ' . $e->getMessage());
-        }
+        return $this->sendWhatsAppMessage($phone, $message);
     }
 
     /**

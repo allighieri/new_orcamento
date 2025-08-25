@@ -60,6 +60,7 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     Route::resource('budgets', BudgetController::class);
     Route::get('budgets/{budget}/pdf', [BudgetController::class, 'generatePdf'])->name('budgets.pdf');
     Route::get('budgets/{budget}/whatsapp', [BudgetController::class, 'sendWhatsApp'])->name('budgets.whatsapp');
+    Route::post('budgets/{budget}/whatsapp-contact', [BudgetController::class, 'sendWhatsAppToContact'])->name('budgets.whatsapp-contact');
 });
 
 // Rota de atualização de status do orçamento (sem middlewares extras que podem interferir)
