@@ -206,7 +206,7 @@ function handleWhatsAppSend(budgetId) {
     .then(data => {
         if (data.has_contacts) {
             // Cliente tem contatos, mostrar modal
-            populateContactModal(data.contacts);
+            populateContactModal(data.contacts, data.client);
             const modal = new bootstrap.Modal(document.getElementById('contactModal'));
             modal.show();
         } else if (data.success === false) {
@@ -231,7 +231,7 @@ function handleWhatsAppSend(budgetId) {
     });
 }
 
-function populateContactModal(contacts) {
+function populateContactModal(contacts, client) {
     const select = document.getElementById('contactSelect');
     const sendBtn = document.getElementById('sendWhatsAppBtn');
     const contactInfo = document.getElementById('contactInfo');
@@ -240,12 +240,23 @@ function populateContactModal(contacts) {
     // Limpar opções anteriores
     select.innerHTML = '<option value="">Selecione um contato...</option>';
     
+    // Adicionar cliente como primeira opção
+    if (client && client.phone) {
+        const clientOption = document.createElement('option');
+        clientOption.value = 'client_' + client.id;
+        clientOption.textContent = client.name + ' (Cliente)';
+        clientOption.dataset.phone = client.phone;
+        clientOption.dataset.isClient = 'true';
+        select.appendChild(clientOption);
+    }
+    
     // Adicionar contatos
     contacts.forEach(contact => {
         const option = document.createElement('option');
         option.value = contact.id;
         option.textContent = contact.name;
         option.dataset.phone = contact.phone;
+        option.dataset.isClient = 'false';
         select.appendChild(option);
     });
     
@@ -265,10 +276,75 @@ function populateContactModal(contacts) {
     // Event listener para botão enviar
     sendBtn.onclick = function() {
         const contactId = select.value;
+        const selectedOption = select.options[select.selectedIndex];
+        const isClient = selectedOption.dataset.isClient === 'true';
+        
         if (contactId && currentBudgetId) {
-            sendWhatsAppToContact(currentBudgetId, contactId);
+            if (isClient) {
+                // Enviar diretamente para o cliente
+                sendWhatsAppToClient(currentBudgetId);
+            } else {
+                // Enviar para contato
+                sendWhatsAppToContact(currentBudgetId, contactId);
+            }
         }
     };
+}
+
+function sendWhatsAppToClient(budgetId) {
+    const sendBtn = document.getElementById('sendWhatsAppBtn');
+    const originalText = sendBtn.innerHTML;
+    
+    // Mostrar loading
+    sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Enviando...';
+    sendBtn.disabled = true;
+    
+    // Usar a rota que força o envio direto para o cliente
+    fetch(`{{ url('/budgets') }}/${budgetId}/whatsapp?force_client=1`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.whatsapp_url) {
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('contactModal'));
+            modal.hide();
+            
+            // Abrir WhatsApp
+            window.open(data.whatsapp_url, '_blank');
+            
+            Swal.fire({
+                title: 'Sucesso',
+                text: 'WhatsApp aberto com sucesso!',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            Swal.fire({
+                title: 'Erro',
+                text: data.message || 'Erro ao enviar mensagem.',
+                icon: 'error'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        Swal.fire({
+            title: 'Erro',
+            text: 'Erro ao enviar mensagem.',
+            icon: 'error'
+        });
+    })
+    .finally(() => {
+        // Restaurar botão
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+    });
 }
 
 function sendWhatsAppToContact(budgetId, contactId) {

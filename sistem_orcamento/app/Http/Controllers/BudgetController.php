@@ -702,6 +702,27 @@ class BudgetController extends Controller
             // Carregar relacionamentos necessários
             $budget->load(['client.contacts', 'company']);
             
+            // Verificar se foi solicitado envio direto para o cliente
+            $forceClient = request()->get('force_client', false);
+            
+            if ($forceClient) {
+                // Forçar envio direto para o cliente
+                if (empty($budget->client->phone)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cliente não possui telefone cadastrado.'
+                    ], 400);
+                }
+                
+                $whatsappUrl = $this->generateWhatsAppUrl($budget, $budget->client->phone);
+                
+                return response()->json([
+                    'success' => true,
+                    'has_contacts' => false,
+                    'whatsapp_url' => $whatsappUrl
+                ]);
+            }
+            
             // Verificar se o cliente tem contatos
             $contacts = $budget->client->contacts;
             
@@ -730,6 +751,11 @@ class BudgetController extends Controller
             return response()->json([
                 'success' => true,
                 'has_contacts' => true,
+                'client' => [
+                    'id' => $budget->client->id,
+                    'name' => $budget->client->fantasy_name,
+                    'phone' => $budget->client->phone
+                ],
                 'contacts' => $contacts->map(function($contact) {
                     return [
                         'id' => $contact->id,
