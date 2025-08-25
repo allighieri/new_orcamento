@@ -314,7 +314,7 @@
 </div>
 
 <script>
-let currentBudgetId = null;
+// Função openStatusModal está definida no app.blade.php
 
 function confirmDeleteBudget(budgetId) {
     Swal.fire({

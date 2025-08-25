@@ -241,52 +241,51 @@
         $(document).ready(function() {
             // Evento para salvar o novo status
             $('#saveStatusBtn').click(function() {
-            const newStatus = $('#status').val();
-            const budgetId = currentBudgetId;
-            
-            if (!newStatus) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Atenção!',
-                    text: 'Por favor, selecione um status.',
-                    timer: 2000,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end'
-                });
+                const newStatus = $('#status').val();
+                const budgetId = currentBudgetId;
+                
+                if (!newStatus) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Atenção!',
+                        text: 'Por favor, selecione um status.',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
 
-                return;
-            }
-            
-            // Criar formulário oculto para enviar via POST com _method PUT (igual ao perfil)
-            const form = $('<form>', {
-                method: 'POST',
-                action: `{{ url('/') }}/budgets/${budgetId}/status`
+                    return;
+                }
+                
+                // Criar formulário oculto para enviar via POST com _method PUT (igual ao perfil)
+                const form = $('<form>', {
+                    method: 'POST',
+                    action: `{{ url('/') }}/budgets/${budgetId}/status`
+                });
+                
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: '_token',
+                    value: $('meta[name="csrf-token"]').attr('content')
+                }));
+                
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: '_method',
+                    value: 'PUT'
+                }));
+                
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'status',
+                    value: newStatus
+                }));
+                
+                // Adicionar o formulário ao body e submeter
+                $('body').append(form);
+                form.submit();
             });
-            
-            form.append($('<input>', {
-                type: 'hidden',
-                name: '_token',
-                value: $('meta[name="csrf-token"]').attr('content')
-            }));
-            
-            form.append($('<input>', {
-                type: 'hidden',
-                name: '_method',
-                value: 'PUT'
-            }));
-            
-            form.append($('<input>', {
-                type: 'hidden',
-                name: 'status',
-                value: newStatus
-            }));
-            
-            // Adicionar o formulário ao body e submeter
-            $('body').append(form);
-            form.submit();
-        });
-        
         }); // Fim do document ready
     </script>
     

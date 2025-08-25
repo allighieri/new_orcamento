@@ -336,6 +336,13 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i class="bi bi-x-circle"></i> Fechar
                         </button>
+                        <form action="{{ route('contacts.destroy', $contact) }}?from_client=1" method="POST" class="d-inline" id="delete-form-contact-{{ $contact->id }}">
+                            @csrf
+                            @method('DELETE')
+                            <button type="button" class="btn btn-danger" onclick="confirmDeleteContact({{ $contact->id }})">
+                                <i class="bi bi-trash"></i> Excluir
+                            </button>
+                        </form>
                         <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-warning">
                             <i class="bi bi-pencil"></i> Editar Contato
                         </a>
