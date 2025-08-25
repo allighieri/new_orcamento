@@ -19,6 +19,9 @@
                         <button type="button" class="btn btn-success mb-2 mb-lg-0" title="Enviar via WhatsApp" onclick="handleWhatsAppSend({{ $budget->id }})">
                             <i class="bi bi-whatsapp"></i> Enviar PDF
                         </button>
+                        <button type="button" class="btn btn-primary mb-2 mb-lg-0" title="Enviar por Email" onclick="handleEmailSend({{ $budget->id }})">
+                            <i class="bi bi-envelope"></i> Enviar Email
+                        </button>
                         @endif
                         <a href="{{ route('contacts.create', ['client_id' => $budget->client_id]) }}" class="btn btn-info mb-2 mb-lg-0" title="Adicionar novo contato para este cliente">
                             <i class="bi bi-person-plus"></i> Adicionar Contato
@@ -313,6 +316,38 @@
     </div>
 </div>
 
+<!-- Modal de Seleção de Contatos para Email -->
+<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailModalLabel">
+                    <i class="bi bi-envelope text-primary"></i> Selecionar Contato
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Selecione um contato para enviar o PDF por email:</p>
+                <div class="mb-3">
+                    <label for="emailContactSelect" class="form-label">Contato:</label>
+                    <select class="form-select" id="emailContactSelect">
+                        <option value="">Selecione um contato...</option>
+                    </select>
+                </div>
+                <div id="emailContactInfo" class="alert alert-info d-none">
+                    <strong>Email:</strong> <span id="contactEmail"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="sendEmailBtn" disabled>
+                    <i class="bi bi-envelope"></i> Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Função openStatusModal está definida no app.blade.php
 
@@ -537,6 +572,258 @@ function sendWhatsAppToContact(budgetId, contactId) {
         Swal.fire({
             title: 'Erro',
             text: 'Erro ao enviar mensagem.',
+            icon: 'error'
+        });
+    })
+    .finally(() => {
+        // Restaurar botão
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+    });
+}
+
+// Funções para envio de Email
+let currentBudgetIdForEmail = null;
+
+function handleEmailSend(budgetId) {
+    currentBudgetIdForEmail = budgetId;
+    
+    fetch(`{{ url('/budgets') }}/${budgetId}/email`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.has_contacts) {
+                // Tem contatos, mostrar modal
+                populateEmailModal(data.contacts, data.client);
+                const modal = new bootstrap.Modal(document.getElementById('emailModal'));
+                modal.show();
+            } else {
+                // Não tem contatos, enviar direto para o cliente
+                if (data.email_url) {
+                    window.open(data.email_url, '_blank');
+                    Swal.fire({
+                        title: 'Sucesso',
+                        text: 'Email enviado com sucesso!',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Erro',
+                        text: 'Cliente não possui email cadastrado.',
+                        icon: 'error'
+                    });
+                }
+            }
+        } else {
+            Swal.fire({
+                title: 'Erro',
+                text: data.message,
+                icon: 'error'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        Swal.fire({
+            title: 'Erro',
+            text: 'Erro ao processar solicitação.',
+            icon: 'error'
+        });
+    });
+}
+
+function populateEmailModal(contacts, client) {
+    const select = document.getElementById('emailContactSelect');
+    const contactInfo = document.getElementById('emailContactInfo');
+    const contactEmail = document.getElementById('contactEmail');
+    
+    // Limpar opções anteriores
+    select.innerHTML = '<option value="">Selecione um contato...</option>';
+    
+    // Adicionar cliente como primeira opção se tiver email
+    if (client && client.email) {
+        const clientOption = document.createElement('option');
+        clientOption.value = JSON.stringify({
+            id: client.id,
+            name: client.name,
+            email: client.email,
+            isClient: true
+        });
+        clientOption.textContent = `${client.name} (Cliente)`;
+        select.appendChild(clientOption);
+    }
+    
+    // Adicionar contatos
+    contacts.forEach(contact => {
+        if (contact.email) {
+            const option = document.createElement('option');
+            option.value = JSON.stringify({
+                id: contact.id,
+                name: contact.name,
+                email: contact.email,
+                isClient: false
+            });
+            option.textContent = contact.name;
+            select.appendChild(option);
+        }
+    });
+    
+    // Event listener para mudança de seleção
+    select.addEventListener('change', function() {
+        const sendBtn = document.getElementById('sendEmailBtn');
+        
+        if (this.value) {
+            const contactData = JSON.parse(this.value);
+            contactEmail.textContent = contactData.email;
+            contactInfo.classList.remove('d-none');
+            sendBtn.disabled = false;
+        } else {
+            contactInfo.classList.add('d-none');
+            sendBtn.disabled = true;
+        }
+    });
+    
+    // Event listener para o botão de envio
+    document.getElementById('sendEmailBtn').addEventListener('click', function() {
+        const selectedValue = select.value;
+        if (selectedValue) {
+            const contactData = JSON.parse(selectedValue);
+            
+            if (contactData.isClient) {
+                sendEmailToClient(currentBudgetIdForEmail);
+            } else {
+                sendEmailToContact(currentBudgetIdForEmail, contactData.id);
+            }
+        }
+    });
+}
+
+function sendEmailToClient(budgetId) {
+    const sendBtn = document.getElementById('sendEmailBtn');
+    const originalText = sendBtn.innerHTML;
+    
+    // Mostrar loading
+    sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Enviando...';
+    sendBtn.disabled = true;
+    
+    // Usar a rota que força o envio direto para o cliente
+    fetch(`{{ url('/budgets') }}/${budgetId}/email?force_client=1`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
+            modal.hide();
+            
+            Swal.fire({
+                title: 'Sucesso',
+                text: 'Email enviado com sucesso!',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            if (data.auth_required) {
+                Swal.fire({
+                    title: 'Configuração Necessária',
+                    html: data.message + ' <a href="{{ route("google.settings") }}" class="text-primary"><u>Configurar agora</u></a>',
+                    icon: 'warning',
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                Swal.fire({
+                    title: 'Erro',
+                    text: data.message || 'Erro ao enviar email.',
+                    icon: 'error'
+                });
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        Swal.fire({
+            title: 'Erro',
+            text: 'Erro ao enviar email.',
+            icon: 'error'
+        });
+    })
+    .finally(() => {
+        // Restaurar botão
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+    });
+}
+
+function sendEmailToContact(budgetId, contactId) {
+    const sendBtn = document.getElementById('sendEmailBtn');
+    const originalText = sendBtn.innerHTML;
+    
+    // Mostrar loading
+    sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Enviando...';
+    sendBtn.disabled = true;
+    
+    fetch(`{{ url('/budgets') }}/${budgetId}/email-contact`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            contact_id: contactId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
+            modal.hide();
+            
+            Swal.fire({
+                title: 'Sucesso',
+                text: 'Email enviado com sucesso!',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            if (data.auth_required) {
+                Swal.fire({
+                    title: 'Configuração Necessária',
+                    html: data.message + ' <a href="{{ route("google.settings") }}" class="text-primary"><u>Configurar agora</u></a>',
+                    icon: 'warning',
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                Swal.fire({
+                    title: 'Erro',
+                    text: data.message,
+                    icon: 'error'
+                });
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        Swal.fire({
+            title: 'Erro',
+            text: 'Erro ao enviar email.',
             icon: 'error'
         });
     })

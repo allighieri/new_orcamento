@@ -61,6 +61,15 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     Route::get('budgets/{budget}/pdf', [BudgetController::class, 'generatePdf'])->name('budgets.pdf');
     Route::get('budgets/{budget}/whatsapp', [BudgetController::class, 'sendWhatsApp'])->name('budgets.whatsapp');
     Route::post('budgets/{budget}/whatsapp-contact', [BudgetController::class, 'sendWhatsAppToContact'])->name('budgets.whatsapp-contact');
+    Route::get('budgets/{budget}/email', [BudgetController::class, 'sendEmail'])->name('budgets.email');
+    Route::post('budgets/{budget}/email-contact', [BudgetController::class, 'sendEmailToContact'])->name('budgets.email-contact');
+    
+    // Rotas para autenticação com Google
+    Route::get('/google/settings', function() { return view('google.settings'); })->name('google.settings');
+    Route::get('/google/auth', [App\Http\Controllers\GoogleAuthController::class, 'redirectToGoogle'])->name('google.auth');
+    Route::get('/google/callback', [App\Http\Controllers\GoogleAuthController::class, 'handleGoogleCallback'])->name('google.callback');
+    Route::get('/google/status', [App\Http\Controllers\GoogleAuthController::class, 'checkStatus'])->name('google.status');
+    Route::post('/google/disconnect', [App\Http\Controllers\GoogleAuthController::class, 'disconnect'])->name('google.disconnect');
 });
 
 // Rota de atualização de status do orçamento (sem middlewares extras que podem interferir)

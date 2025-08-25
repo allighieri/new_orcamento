@@ -861,4 +861,213 @@ class BudgetController extends Controller
         // Retornar a URL para redirecionamento
         return $whatsappUrl;
     }
+
+    /**
+     * Send email with budget PDF
+     */
+    public function sendEmail(Budget $budget)
+    {
+        try {
+            $user = auth()->guard('web')->user();
+            
+            // Super admin pode enviar qualquer orçamento
+            if ($user->role !== 'super_admin') {
+                // Verificar se o orçamento pertence à empresa do usuário
+                if ($budget->company_id !== session('tenant_company_id')) {
+                    abort(404);
+                }
+            }
+            
+            // Verificar se existe PDF para este orçamento
+            $pdfFile = \App\Models\PdfFile::where('budget_id', $budget->id)->first();
+            
+            if (!$pdfFile) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhum PDF encontrado para este orçamento. Gere o PDF primeiro.'
+                ], 400);
+            }
+            
+            // Verificar se o arquivo físico existe
+            $filePath = storage_path('app/public/pdfs/' . $pdfFile->filename);
+            if (!file_exists($filePath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Arquivo PDF não encontrado no servidor.'
+                ], 400);
+            }
+            
+            // Carregar relacionamentos necessários
+            $budget->load(['client.contacts', 'company']);
+            
+            // Verificar se foi solicitado envio direto para o cliente
+            $forceClient = request()->get('force_client', false);
+            
+            if ($forceClient) {
+                // Forçar envio direto para o cliente
+                if (empty($budget->client->email)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cliente não possui email cadastrado.'
+                    ], 400);
+                }
+                
+                $result = $this->sendEmailToRecipient($budget, $budget->client->email, $budget->client->fantasy_name);
+                
+                return response()->json([
+                    'success' => $result['success'],
+                    'message' => $result['message']
+                ]);
+            }
+            
+            // Verificar se o cliente tem contatos com email
+            $contacts = $budget->client->contacts->filter(function($contact) {
+                return !empty($contact->email);
+            });
+            
+            if ($contacts->isEmpty()) {
+                // Se não há contatos com email, verifica se o cliente tem email
+                if (empty($budget->client->email)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cliente não possui email ou contatos com email cadastrados.'
+                    ], 400);
+                }
+                
+                // Envia diretamente para o email do cliente
+                $result = $this->sendEmailToRecipient($budget, $budget->client->email, $budget->client->fantasy_name);
+                
+                return response()->json([
+                    'success' => $result['success'],
+                    'has_contacts' => false,
+                    'message' => $result['message']
+                ]);
+            }
+            
+            // Se há contatos com email, retorna dados para a modal
+            return response()->json([
+                'success' => true,
+                'has_contacts' => true,
+                'client' => [
+                    'id' => $budget->client->id,
+                    'name' => $budget->client->fantasy_name,
+                    'email' => $budget->client->email
+                ],
+                'contacts' => $contacts->map(function($contact) {
+                    return [
+                        'id' => $contact->id,
+                        'name' => $contact->name,
+                        'email' => $contact->email
+                    ];
+                })
+            ]);
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro ao processar envio de email: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Erro ao processar solicitação.'], 500);
+        }
+    }
+
+    /**
+     * Send email to specific contact
+     */
+    public function sendEmailToContact(Request $request, Budget $budget)
+    {
+        try {
+            $user = auth()->guard('web')->user();
+            
+            // Super admin pode enviar qualquer orçamento
+            if ($user->role !== 'super_admin') {
+                // Verificar se o orçamento pertence à empresa do usuário
+                if ($budget->company_id !== session('tenant_company_id')) {
+                    abort(404);
+                }
+            }
+            
+            $request->validate([
+                'contact_id' => 'required|exists:contacts,id'
+            ]);
+            
+            $contact = \App\Models\Contact::findOrFail($request->contact_id);
+            
+            // Verifica se o contato pertence ao cliente do orçamento
+            if ($contact->client_id !== $budget->client_id) {
+                return response()->json(['success' => false, 'message' => 'Contato não pertence ao cliente do orçamento.'], 400);
+            }
+            
+            if (empty($contact->email)) {
+                return response()->json(['success' => false, 'message' => 'Contato não possui email cadastrado.'], 400);
+            }
+            
+            $result = $this->sendEmailToRecipient($budget, $contact->email, $contact->name);
+            
+            return response()->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro ao enviar email para contato: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Erro ao processar solicitação.'], 500);
+        }
+    }
+
+    /**
+     * Send email to recipient using Google API
+     */
+    private function sendEmailToRecipient(Budget $budget, $recipientEmail, $recipientName)
+    {
+        try {
+            // Verificar se existe PDF para este orçamento
+            $pdfFile = \App\Models\PdfFile::where('budget_id', $budget->id)->first();
+            
+            if (!$pdfFile) {
+                return ['success' => false, 'message' => 'Nenhum PDF encontrado para este orçamento.'];
+            }
+            
+            // Verificar se o arquivo físico existe
+            $filePath = storage_path('app/public/pdfs/' . $pdfFile->filename);
+            if (!file_exists($filePath)) {
+                return ['success' => false, 'message' => 'Arquivo PDF não encontrado no servidor.'];
+            }
+            
+            // Carregar dados da empresa
+            $budget->load('company');
+            
+            // Usar o GoogleEmailService para enviar o email
+            $googleEmailService = new \App\Services\GoogleEmailService($budget->company_id);
+            
+            if (!$googleEmailService->isAuthenticated()) {
+                return [
+                    'success' => false,
+                    'message' => 'Integração com Google não configurada. Configure primeiro nas configurações da empresa.',
+                    'auth_required' => true
+                ];
+            }
+            
+            // Preparar dados do email
+            $subject = "Orçamento #{$budget->number} - {$budget->company->fantasy_name}";
+            
+            $body = "Olá, {$recipientName}!\n\n";
+            $body .= "Conforme solicitado, segue anexo o orçamento #{$budget->number}.\n\n";
+            $body .= "Valor total: R$ " . number_format($budget->final_amount, 2, ',', '.') . "\n\n";
+            $body .= "Atenciosamente,\n";
+            $body .= "{$budget->company->fantasy_name}\n";
+            $body .= "{$budget->company->phone}\n";
+            $body .= "{$budget->company->address}, {$budget->company->city} - {$budget->company->state}";
+            
+            $result = $googleEmailService->sendEmail(
+                $recipientEmail,
+                $subject,
+                $body,
+                $filePath
+            );
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro ao enviar email: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Erro ao enviar email: ' . $e->getMessage()];
+        }
+    }
 }

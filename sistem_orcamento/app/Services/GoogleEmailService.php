@@ -1,0 +1,201 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\GoogleToken;
+use Google\Client;
+use Google\Service\Gmail;
+use Google\Service\Gmail\Message;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+
+class GoogleEmailService
+{
+    private $client;
+    private $gmail;
+    private $companyId;
+
+    public function __construct($companyId)
+    {
+        $this->companyId = $companyId;
+        $this->initializeClient();
+    }
+
+    private function initializeClient()
+    {
+        // Verificar se as variáveis de ambiente estão configuradas
+        $clientId = env('GOOGLE_CLIENT_ID');
+        $clientSecret = env('GOOGLE_CLIENT_SECRET');
+        $redirectUri = env('GOOGLE_REDIRECT_URI');
+        
+        if (empty($clientId) || empty($clientSecret) || empty($redirectUri)) {
+            throw new \Exception('Credenciais do Google não configuradas. Verifique as variáveis GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET e GOOGLE_REDIRECT_URI no arquivo .env');
+        }
+        
+        $this->client = new Client();
+        $this->client->setApplicationName('Sistema de Orçamento');
+        $this->client->setScopes(Gmail::GMAIL_SEND);
+        $this->client->setAuthConfig([
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
+            'redirect_uris' => [$redirectUri]
+        ]);
+        $this->client->setAccessType('offline');
+        $this->client->setPrompt('select_account consent');
+
+        // Carregar token se existir
+        $this->loadToken();
+
+        $this->gmail = new Gmail($this->client);
+    }
+
+    private function loadToken()
+    {
+        $googleToken = GoogleToken::where('company_id', $this->companyId)->first();
+
+        if ($googleToken && $googleToken->isValid()) {
+            $this->client->setAccessToken([
+                'access_token' => $googleToken->access_token,
+                'refresh_token' => $googleToken->refresh_token,
+                'expires_in' => $googleToken->expires_at->diffInSeconds(now()),
+                'token_type' => $googleToken->token_type,
+                'scope' => implode(' ', $googleToken->scope)
+            ]);
+
+            // Verificar se o token precisa ser renovado
+            if ($googleToken->isExpired()) {
+                $this->refreshToken($googleToken);
+            }
+        }
+    }
+
+    private function refreshToken(GoogleToken $googleToken)
+    {
+        try {
+            $this->client->refreshToken($googleToken->refresh_token);
+            $newToken = $this->client->getAccessToken();
+
+            $googleToken->update([
+                'access_token' => $newToken['access_token'],
+                'expires_at' => now()->addSeconds($newToken['expires_in']),
+                'token_type' => $newToken['token_type'] ?? 'Bearer'
+            ]);
+
+            Log::info('Token do Google renovado com sucesso para empresa: ' . $this->companyId);
+        } catch (\Exception $e) {
+            Log::error('Erro ao renovar token do Google: ' . $e->getMessage());
+            throw new \Exception('Erro ao renovar token de acesso. Reautorização necessária.');
+        }
+    }
+
+    public function getAuthUrl()
+    {
+        return $this->client->createAuthUrl();
+    }
+
+    public function handleCallback($code)
+    {
+        try {
+            $token = $this->client->fetchAccessTokenWithAuthCode($code);
+
+            if (isset($token['error'])) {
+                throw new \Exception('Erro na autenticação: ' . $token['error']);
+            }
+
+            // Salvar ou atualizar token
+            GoogleToken::updateOrCreate(
+                ['company_id' => $this->companyId],
+                [
+                    'access_token' => $token['access_token'],
+                    'refresh_token' => $token['refresh_token'] ?? null,
+                    'expires_at' => now()->addSeconds($token['expires_in']),
+                    'token_type' => $token['token_type'] ?? 'Bearer',
+                    'scope' => explode(' ', $token['scope'] ?? 'https://www.googleapis.com/auth/gmail.send')
+                ]
+            );
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Erro ao processar callback do Google: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function isAuthenticated()
+    {
+        $googleToken = GoogleToken::where('company_id', $this->companyId)->first();
+        return $googleToken && $googleToken->isValid();
+    }
+
+    public function sendEmail($to, $subject, $body, $attachmentPath = null)
+    {
+        try {
+            if (!$this->isAuthenticated()) {
+                throw new \Exception('Não autenticado com o Google. Configure a integração primeiro.');
+            }
+
+            $message = $this->createMessage($to, $subject, $body, $attachmentPath);
+            $result = $this->gmail->users_messages->send('me', $message);
+
+            Log::info('Email enviado com sucesso via Google API', [
+                'to' => $to,
+                'subject' => $subject,
+                'message_id' => $result->getId()
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Email enviado com sucesso!',
+                'message_id' => $result->getId()
+            ];
+        } catch (\Exception $e) {
+            Log::error('Erro ao enviar email via Google API: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Erro ao enviar email: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    private function createMessage($to, $subject, $body, $attachmentPath = null)
+    {
+        $boundary = uniqid(rand(), true);
+        
+        $rawMessage = "To: {$to}\r\n";
+        $rawMessage .= "Subject: {$subject}\r\n";
+        $rawMessage .= "MIME-Version: 1.0\r\n";
+        $rawMessage .= "Content-Type: multipart/mixed; boundary=\"{$boundary}\"\r\n\r\n";
+        
+        // Corpo do email
+        $rawMessage .= "--{$boundary}\r\n";
+        $rawMessage .= "Content-Type: text/plain; charset=UTF-8\r\n";
+        $rawMessage .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
+        $rawMessage .= $body . "\r\n\r\n";
+        
+        // Anexo (se fornecido)
+        if ($attachmentPath && file_exists($attachmentPath)) {
+            $filename = basename($attachmentPath);
+            $fileContent = base64_encode(file_get_contents($attachmentPath));
+            
+            $rawMessage .= "--{$boundary}\r\n";
+            $rawMessage .= "Content-Type: application/pdf; name=\"{$filename}\"\r\n";
+            $rawMessage .= "Content-Disposition: attachment; filename=\"{$filename}\"\r\n";
+            $rawMessage .= "Content-Transfer-Encoding: base64\r\n\r\n";
+            $rawMessage .= chunk_split($fileContent) . "\r\n";
+        }
+        
+        $rawMessage .= "--{$boundary}--";
+        
+        $message = new Message();
+        $message->setRaw(base64url_encode($rawMessage));
+        
+        return $message;
+    }
+}
+
+// Função auxiliar para codificação base64url
+if (!function_exists('base64url_encode')) {
+    function base64url_encode($data) {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+}
