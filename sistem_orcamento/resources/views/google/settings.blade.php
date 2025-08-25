@@ -53,7 +53,7 @@
 
                     <div id="connected" class="d-none">
                         <div class="alert alert-success">
-                            <i class="fas fa-check-circle me-2"></i>
+                            <i class="bi bi-check2-circle"></i></i>
                             <strong>Integração ativa!</strong><br>
                             Sua conta Google está conectada e pronta para enviar emails.
                         </div>
@@ -62,7 +62,7 @@
                             <div class="col-md-6">
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
-                                        <i class="fas fa-paper-plane fa-3x text-success mb-3"></i>
+                                        <i class="bi bi-envelope-at fs-5"></i>
                                         <h5>Pronto para usar</h5>
                                         <p class="text-muted">Você pode enviar emails com PDFs anexados diretamente dos orçamentos.</p>
                                     </div>
@@ -71,7 +71,7 @@
                             <div class="col-md-6">
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
-                                        <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                                       <i class="bi bi-key fs-5"></i>
                                         <h5>Seguro</h5>
                                         <p class="text-muted">Seus dados estão protegidos e a conexão é criptografada.</p>
                                     </div>
@@ -92,15 +92,7 @@
     </div>
 </div>
 
- <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
-    <!-- jQuery Mask Plugin -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-
+@push('scripts')
 <script>
 $(document).ready(function() {
     checkGoogleStatus();
@@ -148,4 +140,5 @@ function disconnectGoogle() {
     });
 }
 </script>
+@endpush
 @endsection

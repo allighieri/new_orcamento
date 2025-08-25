@@ -161,8 +161,11 @@ class GoogleEmailService
     {
         $boundary = uniqid(rand(), true);
         
+        // Codificar o assunto para UTF-8 usando MIME encoding
+        $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        
         $rawMessage = "To: {$to}\r\n";
-        $rawMessage .= "Subject: {$subject}\r\n";
+        $rawMessage .= "Subject: {$encodedSubject}\r\n";
         $rawMessage .= "MIME-Version: 1.0\r\n";
         $rawMessage .= "Content-Type: multipart/mixed; boundary=\"{$boundary}\"\r\n\r\n";
         

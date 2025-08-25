@@ -94,9 +94,10 @@
                                     <i class="bi bi-person"></i> Perfil
                                 </a>
                             </li>
+                            
                             <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="bi bi-gear"></i> Configurações
+                                <a class="dropdown-item" href="{{ route('google.settings') }}">
+                                    <i class="bi bi-envelope-at"></i> Config Gmail
                                 </a>
                             </li>
                             @if(Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin']) && Auth::user()->company)
