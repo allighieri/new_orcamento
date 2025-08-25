@@ -344,9 +344,9 @@ $(document).ready(function() {
                 
                 // Adicionar novas opções
                 if (response.success && response.categories) {
-                    response.categories.forEach(function(category) {
-                        categorySelect.append('<option value="' + category.id + '">' + category.name_with_indent + '</option>');
-                        parentCategorySelect.append('<option value="' + category.id + '">' + category.name_with_indent + '</option>');
+                    $.each(response.categories, function(categoryId, categoryName) {
+                        categorySelect.append('<option value="' + categoryId + '">' + categoryName + '</option>');
+                        parentCategorySelect.append('<option value="' + categoryId + '">' + categoryName + '</option>');
                     });
                 }
                 

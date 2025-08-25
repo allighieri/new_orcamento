@@ -261,7 +261,7 @@ class ClientController extends Controller
         }
         
         $clients = Client::where('company_id', $companyId)
-            ->orderBy('fantasy_name')
+            ->orderBy('corporate_name')
             ->get()
             ->map(function ($client) {
                 return [
@@ -269,7 +269,7 @@ class ClientController extends Controller
                     'fantasy_name' => $client->fantasy_name,
                     'corporate_name' => $client->corporate_name,
                     'document_number' => $client->document_number,
-                    'display_name' => $client->fantasy_name ?: $client->corporate_name
+                    'display_name' => $client->corporate_name ?: $client->fantasy_name
                 ];
             });
         
