@@ -27,4 +27,12 @@ class Company extends Model
     {
         return $this->hasMany(Contact::class);
     }
+
+    /**
+     * Relacionamento com arquivos PDF
+     */
+    public function pdfFiles(): HasMany
+    {
+        return $this->hasMany(PdfFile::class);
+    }
 }

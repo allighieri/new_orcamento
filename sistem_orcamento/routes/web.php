@@ -61,6 +61,11 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     Route::get('budgets/{budget}/pdf', [BudgetController::class, 'generatePdf'])->name('budgets.pdf');
 });
 
+// Rota de atualização de status do orçamento (sem middlewares extras que podem interferir)
+Route::middleware(['auth', 'user.active'])->group(function () {
+    Route::put('budgets/{budget}/status', [BudgetController::class, 'updateStatus'])->name('budgets.update-status');
+});
+
 // Rota para perfil do usuário (todos os usuários autenticados)
 Route::middleware(['auth', 'user.active'])->group(function () {
     Route::get('profile', [UserController::class, 'profile'])->name('profile');

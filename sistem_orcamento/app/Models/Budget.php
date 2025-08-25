@@ -52,4 +52,12 @@ class Budget extends Model
     {
         return $this->hasMany(BudgetItem::class);
     }
+
+    /**
+     * Relacionamento com arquivos PDF
+     */
+    public function pdfFiles(): HasMany
+    {
+        return $this->hasMany(PdfFile::class);
+    }
 }

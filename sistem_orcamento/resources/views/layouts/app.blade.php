@@ -186,6 +186,110 @@
     <!-- jQuery Mask Plugin -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     
+    <!-- Modal para Alterar Status do Orçamento -->
+    <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="statusModalLabel">
+                        <i class="bi bi-pencil-square"></i> Alterar Status do Orçamento
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="statusForm">
+                        @csrf
+                        @method('PUT')
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Novo Status:</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="">Selecione um status</option>
+                                <option value="Pendente">Pendente</option>
+                                <option value="Enviado">Enviado</option>
+                                <option value="Em negociação">Em negociação</option>
+                                <option value="Aprovado">Aprovado</option>
+                                <option value="Expirado">Expirado</option>
+                                <option value="Concluído">Concluído</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="saveStatusBtn">
+                        <i class="bi bi-check-circle"></i> Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Script para gerenciar a modal de status
+        let currentBudgetId = null;
+        
+        // Função para abrir a modal de status
+        function openStatusModal(budgetId, currentStatus) {
+            currentBudgetId = budgetId;
+            $('#status').val(currentStatus);
+            $('#statusModal').modal('show');
+        }
+        
+        // Aguardar o documento estar pronto
+        $(document).ready(function() {
+            // Evento para salvar o novo status
+            $('#saveStatusBtn').click(function() {
+            const newStatus = $('#status').val();
+            const budgetId = currentBudgetId;
+            
+            if (!newStatus) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Atenção!',
+                    text: 'Por favor, selecione um status.',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+
+                return;
+            }
+            
+            // Criar formulário oculto para enviar via POST com _method PUT (igual ao perfil)
+            const form = $('<form>', {
+                method: 'POST',
+                action: `{{ url('/') }}/budgets/${budgetId}/status`
+            });
+            
+            form.append($('<input>', {
+                type: 'hidden',
+                name: '_token',
+                value: $('meta[name="csrf-token"]').attr('content')
+            }));
+            
+            form.append($('<input>', {
+                type: 'hidden',
+                name: '_method',
+                value: 'PUT'
+            }));
+            
+            form.append($('<input>', {
+                type: 'hidden',
+                name: 'status',
+                value: newStatus
+            }));
+            
+            // Adicionar o formulário ao body e submeter
+            $('body').append(form);
+            form.submit();
+        });
+        
+        }); // Fim do document ready
+    </script>
+    
     @stack('scripts')
 </body>
 </html>

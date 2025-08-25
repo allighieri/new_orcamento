@@ -364,6 +364,23 @@ class BudgetController extends Controller
 
         DB::beginTransaction();
         try {
+            // Verificar se o cliente foi alterado para gerenciar PDFs
+            $clientChanged = $budget->client_id != $clientId;
+            
+            // Se o cliente mudou, excluir PDFs antigos
+            if ($clientChanged) {
+                $pdfFiles = \App\Models\PdfFile::where('budget_id', $budget->id)->get();
+                foreach ($pdfFiles as $pdfFile) {
+                    // Excluir arquivo físico
+                    $filePath = public_path('pdfs/' . $pdfFile->filename);
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+                // Excluir registros da tabela pdf_files
+                \App\Models\PdfFile::where('budget_id', $budget->id)->delete();
+            }
+            
             // Atualizar orçamento
             $budget->update([
                 'client_id' => $clientId,
@@ -450,23 +467,30 @@ class BudgetController extends Controller
         }
         
         try {
-            // Gerar nome do arquivo PDF usando o mesmo padrão da função generatePdf
-            if(empty($budget->client->corporate_name)){
-                $filename = Str::slug($budget->client->fantasy_name) . '-' . 'orcamento-' . str_replace('/', '-', $budget->number) . '.pdf';
-            } else {
-                $filename = Str::slug($budget->client->corporate_name) . '-' . 'orcamento-' . str_replace('/', '-', $budget->number) . '.pdf';
-            }
-            $filePath = storage_path('app/public/pdfs/' . $filename);
+            // Buscar todos os arquivos PDF relacionados ao orçamento na tabela pdf_files
+            $pdfFiles = \App\Models\PdfFile::where('budget_id', $budget->id)->get();
             
-            // Verificar se o arquivo PDF existe e excluí-lo
-            if (file_exists($filePath)) {
-                unlink($filePath);
+            // Excluir os arquivos físicos do servidor
+            foreach ($pdfFiles as $pdfFile) {
+                $filePath = storage_path('app/public/pdfs/' . $pdfFile->filename);
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
             }
+            
+            // Excluir registros da tabela pdf_files (será feito automaticamente pelo cascade)
+            // mas vamos fazer manualmente para garantir
+            \App\Models\PdfFile::where('budget_id', $budget->id)->delete();
             
             // Excluir o orçamento do banco de dados
             $budget->delete();
             
-            return redirect()->route('budgets.index')->with('success', 'Orçamento e arquivo PDF excluídos com sucesso!');
+            $deletedFilesCount = $pdfFiles->count();
+            $message = $deletedFilesCount > 0 
+                ? "Orçamento excluído com sucesso! {$deletedFilesCount} arquivo(s) PDF também foram removidos."
+                : 'Orçamento excluído com sucesso!';
+            
+            return redirect()->route('budgets.index')->with('success', $message);
         } catch (\Exception $e) {
             return redirect()->route('budgets.index')->with('error', 'Erro ao excluir orçamento: ' . $e->getMessage());
         }
@@ -505,6 +529,21 @@ class BudgetController extends Controller
         
         $budget->load(['client', 'items.product']);
         
+        // Sistema de limpeza: comparar arquivos na pasta com registros na tabela
+        $this->cleanupOrphanedPdfFiles();
+        
+        // Excluir PDFs antigos antes de gerar um novo
+        $oldPdfFiles = \App\Models\PdfFile::where('budget_id', $budget->id)->get();
+        foreach ($oldPdfFiles as $oldPdfFile) {
+            // Excluir arquivo físico antigo
+            $oldFilePath = storage_path('app/public/pdfs/' . $oldPdfFile->filename);
+            if (file_exists($oldFilePath)) {
+                unlink($oldFilePath);
+            }
+        }
+        // Excluir registros antigos da tabela pdf_files
+        \App\Models\PdfFile::where('budget_id', $budget->id)->delete();
+        
         $pdf = Pdf::loadView('pdf.budget', compact('budget'));
         $pdf->setPaper('A4', 'portrait');
 
@@ -529,6 +568,13 @@ class BudgetController extends Controller
         // Salvar o arquivo
         file_put_contents($fullPath, $pdf->output());
         
+        // Registrar na tabela pdf_files
+        \App\Models\PdfFile::create([
+            'budget_id' => $budget->id,
+            'company_id' => $budget->company_id,
+            'filename' => $filename
+        ]);
+        
         // Verificar se a requisição é AJAX
         if (request()->ajax()) {
             // Para requisições AJAX, retornar JSON com URL para abrir
@@ -547,4 +593,79 @@ class BudgetController extends Controller
             return $pdf->stream($filename);
         }
     }
+    
+    /**
+     * Limpa arquivos PDF órfãos que existem na pasta mas não estão na tabela pdf_files
+     */
+    private function cleanupOrphanedPdfFiles()
+    {
+        try {
+            $pdfDirectory = storage_path('app/public/pdfs/');
+            
+            // Verificar se o diretório existe
+            if (!is_dir($pdfDirectory)) {
+                return;
+            }
+            
+            // Obter todos os arquivos PDF na pasta
+            $filesInDirectory = [];
+            $files = scandir($pdfDirectory);
+            foreach ($files as $file) {
+                if (pathinfo($file, PATHINFO_EXTENSION) === 'pdf') {
+                    $filesInDirectory[] = $file;
+                }
+            }
+            
+            // Obter todos os nomes de arquivos registrados na tabela pdf_files
+            $filesInDatabase = \App\Models\PdfFile::pluck('filename')->toArray();
+            
+            // Encontrar arquivos órfãos (existem na pasta mas não na tabela)
+            $orphanedFiles = array_diff($filesInDirectory, $filesInDatabase);
+            
+            // Excluir arquivos órfãos
+            $deletedCount = 0;
+            foreach ($orphanedFiles as $orphanedFile) {
+                $filePath = $pdfDirectory . $orphanedFile;
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                    $deletedCount++;
+                }
+            }
+            
+            // Log para debug (opcional)
+            if ($deletedCount > 0) {
+                \Log::info("Sistema de limpeza PDF: {$deletedCount} arquivos órfãos removidos.");
+            }
+            
+        } catch (\Exception $e) {
+             // Em caso de erro, apenas registrar no log sem interromper o processo
+             \Log::error('Erro no sistema de limpeza de PDFs: ' . $e->getMessage());
+         }
+     }
+     
+     /**
+      * Atualiza o status do orçamento via AJAX
+      */
+     public function updateStatus(Request $request, Budget $budget)
+    {
+        $user = auth()->guard('web')->user();
+         
+         // Super admin pode alterar status de qualquer orçamento
+         if ($user->role !== 'super_admin') {
+             // Verificar se o orçamento pertence à empresa do usuário
+             if ($budget->company_id !== session('tenant_company_id')) {
+                 return response()->json(['success' => false, 'message' => 'Acesso negado'], 403);
+             }
+         }
+         
+         $request->validate([
+             'status' => 'required|string|in:Pendente,Enviado,Em negociação,Aprovado,Expirado,Concluído'
+         ]);
+         
+         $budget->status = $request->status;
+         $budget->save();
+         
+         return redirect()->route('budgets.index')
+             ->with('success', 'Status atualizado com sucesso!');
+     }
 }

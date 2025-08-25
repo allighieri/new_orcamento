@@ -76,7 +76,7 @@
                                     </td>
                                     <td>{{ $budget->issue_date->format('d/m/Y') }}</td>
                                     <td>
-                                        <span class="badge 
+                                        <span class="badge status-clickable
                                             @if($budget->status == 'Pendente') bg-warning
                                             @elseif($budget->status == 'Enviado') bg-info
                                             @elseif($budget->status == 'Em negociação') bg-primary
@@ -84,7 +84,10 @@
                                             @elseif($budget->status == 'Expirado') bg-danger
                                             @elseif($budget->status == 'Concluído') bg-secondary
                                             @else bg-light text-dark
-                                            @endif">
+                                            @endif" 
+                                            style="cursor: pointer;" 
+                                            onclick="openStatusModal({{ $budget->id }}, '{{ $budget->status }}')" 
+                                            title="Clique para alterar o status">
                                             {{ $budget->status }}
                                         </span>
                                     </td>
