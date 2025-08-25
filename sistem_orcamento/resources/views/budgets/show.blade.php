@@ -168,6 +168,8 @@
                                                     <td>
                                                         @if($item->product)
                                                             {{ $item->product->name }}
+                                                        @elseif($item->produto)
+                                                            {{ $item->produto }}
                                                         @else
                                                             Produto excluído
                                                         @endif

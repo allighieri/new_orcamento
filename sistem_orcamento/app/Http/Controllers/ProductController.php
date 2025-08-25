@@ -227,12 +227,20 @@ class ProductController extends Controller
         }
         
         try {
+            // Primeiro, desassociar o produto dos itens de orçamento (definir product_id como null)
+            // para preservar os orçamentos existentes
+            \Illuminate\Support\Facades\DB::table('budget_items')
+                ->where('product_id', $product->id)
+                ->update(['product_id' => null]);
+            
+            // Depois, excluir o produto
             $product->delete();
+            
             return redirect()->route('products.index')
-                ->with('success', 'Produto excluído com sucesso!');
+                ->with('success', 'Produto excluído com sucesso! Os orçamentos foram preservados.');
         } catch (\Exception $e) {
             return redirect()->route('products.index')
-                ->with('error', 'Erro ao excluir produto. Verifique se não há registros relacionados.');
+                ->with('error', 'Erro ao excluir produto: ' . $e->getMessage());
         }
     }
 

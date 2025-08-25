@@ -193,9 +193,14 @@ class BudgetController extends Controller
                 $totalPrice = $itemTotal - $discountAmount;
                 $totalAmount += $totalPrice;
 
+                // Buscar o nome do produto
+                $product = Product::find($productData['product_id']);
+                $productName = $product ? $product->name : '';
+
                 BudgetItem::create([
                     'budget_id' => $budget->id,
                     'product_id' => $productData['product_id'],
+                    'produto' => $productName,
                     'quantity' => $productData['quantity'],
                     'unit_price' => $productData['unit_price'],
                     'discount_percentage' => $productData['discount_percentage'] ?? 0,
@@ -317,7 +322,7 @@ class BudgetController extends Controller
             'total_discount_perc' => 'nullable|numeric|min:0|max:100',
             'observations' => 'nullable|string|max:1000',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => 'nullable|exists:products,id',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.description' => 'nullable|string',
@@ -370,20 +375,40 @@ class BudgetController extends Controller
                 'observations' => $request->observations
             ]);
 
+            // Salvar nomes dos produtos excluídos antes de deletar
+            $excludedProducts = [];
+            foreach ($budget->items as $item) {
+                if (!$item->product_id && $item->produto) {
+                    $excludedProducts[$item->id] = $item->produto;
+                }
+            }
+
             // Remover itens antigos
             $budget->items()->delete();
 
             // Criar novos itens
             $totalAmount = 0;
-            foreach ($request->items as $itemData) {
+            foreach ($request->items as $index => $itemData) {
                 $itemTotal = $itemData['quantity'] * $itemData['unit_price'];
                 $discountAmount = $itemTotal * (($itemData['discount_percentage'] ?? 0) / 100);
                 $totalPrice = $itemTotal - $discountAmount;
                 $totalAmount += $totalPrice;
 
+                // Buscar o nome do produto ou manter o nome do produto excluído
+                $productId = $itemData['product_id'] ?? null;
+                if ($productId) {
+                    $product = Product::find($productId);
+                    $productName = $product ? $product->name : '';
+                } else {
+                    // Usar o nome do produto excluído salvo anteriormente
+                    $productName = isset($itemData['produto_name']) ? $itemData['produto_name'] : 
+                                  (count($excludedProducts) > 0 ? array_values($excludedProducts)[0] : '');
+                }
+
                 BudgetItem::create([
                     'budget_id' => $budget->id,
-                    'product_id' => $itemData['product_id'],
+                    'product_id' => $productId,
+                    'produto' => $productName,
                     'quantity' => $itemData['quantity'],
                     'unit_price' => $itemData['unit_price'],
                     'discount_percentage' => $itemData['discount_percentage'] ?? 0,

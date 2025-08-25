@@ -120,9 +120,13 @@
                                             <div class="input-group">
                                                 <select class="form-select product-select" name="items[{{ $index }}][product_id]" required>
                                                     <option value="">Selecione um produto</option>
-                                                    @if($item->product_id && !$products->contains('id', $item->product_id))
-                                                        <option value="{{ $item->product_id }}" selected disabled class="text-muted">
-                                                            Produto excluído (ID: {{ $item->product_id }})
+                                                    @if(($item->product_id && !$products->contains('id', $item->product_id)) || (!$item->product_id && $item->produto))
+                                                        <option value="{{ $item->product_id }}" selected  class="text-muted">
+                                                            @if($item->produto)
+                                                                {{ $item->produto }} (Produto excluído)
+                                                            @else
+                                                                Produto excluído (ID: {{ $item->product_id }})
+                                                            @endif
                                                         </option>
                                                     @endif
                                                     @foreach($products as $product)
@@ -136,6 +140,9 @@
                                                     <i class="bi bi-plus"></i>
                                                 </button>
                                             </div>
+                                            @if(!$item->product_id && $item->produto)
+                                                <input type="hidden" name="items[{{ $index }}][produto_name]" value="{{ $item->produto }}">
+                                            @endif
                                         </div>
                                         
                                         <div class="col-md-3">
@@ -602,8 +609,9 @@ $(document).ready(function() {
         const originalSelect = currentRow.find('.product-select');
         const newSelect = newRow.find('.product-select');
         
-        // Copiar apenas as opções, não o valor selecionado
-        originalSelect.find('option').each(function() {
+        // Limpar o select e copiar apenas as opções de produtos (pular a primeira opção "Selecione um produto")
+        newSelect.html('<option value="">Selecione um produto</option>');
+        originalSelect.find('option:not(:first)').each(function() {
             const option = $(this).clone();
             option.removeAttr('selected'); // Remove seleção
             newSelect.append(option);

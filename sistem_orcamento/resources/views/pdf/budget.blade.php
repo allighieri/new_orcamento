@@ -222,6 +222,8 @@
                 <td>
                     @if($item->product)
                         {{ $item->product->name }}
+                    @elseif($item->produto)
+                        {{ $item->produto }}
                     @else
                         <em>Produto excluído</em>
                     @endif
