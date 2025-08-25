@@ -185,12 +185,19 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p class="mb-3">Selecione um contato para enviar o PDF por email:</p>
+                <p class="mb-3">Selecione um contato e template para enviar o PDF por email:</p>
                 <div class="mb-3">
                     <label for="emailContactSelect" class="form-label">Contato:</label>
                     <select class="form-select" id="emailContactSelect">
                         <option value="">Selecione um contato...</option>
                     </select>
+                </div>
+                <div class="mb-3">
+                    <label for="emailTemplateSelect" class="form-label">Template de Email:</label>
+                    <select class="form-select" id="emailTemplateSelect">
+                        <option value="">Template Padrão</option>
+                    </select>
+                    <small class="form-text text-muted">Deixe em branco para usar o template padrão do sistema</small>
                 </div>
                 <div id="emailContactInfo" class="alert alert-info d-none">
                     <strong>Email:</strong> <span id="contactEmail"></span>
@@ -458,7 +465,7 @@ function handleEmailSend(budgetId) {
         if (data.success) {
             if (data.has_contacts) {
                 // Tem contatos, mostrar modal
-                populateEmailModal(data.contacts, data.client);
+                populateEmailModal(data.contacts, data.client, data.email_templates);
                 const modal = new bootstrap.Modal(document.getElementById('emailModal'));
                 modal.show();
             } else {
@@ -498,13 +505,15 @@ function handleEmailSend(budgetId) {
     });
 }
 
-function populateEmailModal(contacts, client) {
+function populateEmailModal(contacts, client, emailTemplates = []) {
     const select = document.getElementById('emailContactSelect');
+    const templateSelect = document.getElementById('emailTemplateSelect');
     const contactInfo = document.getElementById('emailContactInfo');
     const contactEmail = document.getElementById('contactEmail');
     
     // Limpar opções anteriores
     select.innerHTML = '<option value="">Selecione um contato...</option>';
+    templateSelect.innerHTML = '<option value="">Template Padrão</option>';
     
     // Adicionar cliente como primeira opção se tiver email
     if (client && client.email) {
@@ -533,6 +542,16 @@ function populateEmailModal(contacts, client) {
             select.appendChild(option);
         }
     });
+    
+    // Adicionar templates de email
+    if (emailTemplates && emailTemplates.length > 0) {
+        emailTemplates.forEach(template => {
+            const option = document.createElement('option');
+            option.value = template.id;
+            option.textContent = `${template.name} (${template.subject})`;
+            templateSelect.appendChild(option);
+        });
+    }
     
     // Event listener para mudança de seleção
     select.addEventListener('change', function() {
@@ -566,14 +585,18 @@ function populateEmailModal(contacts, client) {
 
 function sendEmailToClient(budgetId) {
     const sendBtn = document.getElementById('sendEmailBtn');
+    const templateSelect = document.getElementById('emailTemplateSelect');
     const originalText = sendBtn.innerHTML;
     
     // Mostrar loading
     sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Enviando...';
     sendBtn.disabled = true;
     
+    // Obter template_id selecionado
+    const templateId = templateSelect.value || '';
+    
     // Usar a rota que força o envio direto para o cliente
-    fetch(`{{ url('/budgets') }}/${budgetId}/email?force_client=1`, {
+    fetch(`{{ url('/budgets') }}/${budgetId}/email?force_client=1&template_id=${templateId}`, {
         method: 'GET',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
@@ -629,11 +652,15 @@ function sendEmailToClient(budgetId) {
 
 function sendEmailToContact(budgetId, contactId) {
     const sendBtn = document.getElementById('sendEmailBtn');
+    const templateSelect = document.getElementById('emailTemplateSelect');
     const originalText = sendBtn.innerHTML;
     
     // Mostrar loading
     sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Enviando...';
     sendBtn.disabled = true;
+    
+    // Obter template_id selecionado
+    const templateId = templateSelect.value || '';
     
     fetch(`{{ url('/budgets') }}/${budgetId}/email-contact`, {
         method: 'POST',
@@ -642,7 +669,8 @@ function sendEmailToContact(budgetId, contactId) {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
         body: JSON.stringify({
-            contact_id: contactId
+            contact_id: contactId,
+            template_id: templateId
         })
     })
     .then(response => response.json())

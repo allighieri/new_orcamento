@@ -912,7 +912,8 @@ class BudgetController extends Controller
                     ], 400);
                 }
                 
-                $result = $this->sendEmailToRecipient($budget, $budget->client->email, $budget->client->fantasy_name);
+                $templateId = request()->get('template_id');
+                $result = $this->sendEmailToRecipient($budget, $budget->client->email, $budget->client->fantasy_name, $templateId);
                 
                 return response()->json([
                     'success' => $result['success'],
@@ -935,13 +936,24 @@ class BudgetController extends Controller
                 }
                 
                 // Envia diretamente para o email do cliente
-                $result = $this->sendEmailToRecipient($budget, $budget->client->email, $budget->client->fantasy_name);
+                $templateId = request()->get('template_id');
+                $result = $this->sendEmailToRecipient($budget, $budget->client->email, $budget->client->fantasy_name, $templateId);
                 
                 return response()->json([
                     'success' => $result['success'],
                     'has_contacts' => false,
                     'message' => $result['message']
                 ]);
+            }
+            
+            // Buscar templates de email ativos da empresa
+            $user = auth()->guard('web')->user();
+            if ($user->role === 'super_admin') {
+                $emailTemplates = \App\Models\EmailTemplate::where('is_active', true)->get();
+            } else {
+                // Para admin e user, buscar templates da empresa (se implementado no futuro)
+                // Por enquanto, buscar todos os templates ativos
+                $emailTemplates = \App\Models\EmailTemplate::where('is_active', true)->get();
             }
             
             // Se há contatos com email, retorna dados para a modal
@@ -958,6 +970,13 @@ class BudgetController extends Controller
                         'id' => $contact->id,
                         'name' => $contact->name,
                         'email' => $contact->email
+                    ];
+                }),
+                'email_templates' => $emailTemplates->map(function($template) {
+                    return [
+                        'id' => $template->id,
+                        'name' => $template->name,
+                        'subject' => $template->subject
                     ];
                 })
             ]);
@@ -999,7 +1018,8 @@ class BudgetController extends Controller
                 return response()->json(['success' => false, 'message' => 'Contato não possui email cadastrado.'], 400);
             }
             
-            $result = $this->sendEmailToRecipient($budget, $contact->email, $contact->name);
+            $templateId = $request->get('template_id');
+            $result = $this->sendEmailToRecipient($budget, $contact->email, $contact->name, $templateId);
             
             return response()->json([
                 'success' => $result['success'],
@@ -1015,7 +1035,7 @@ class BudgetController extends Controller
     /**
      * Send email to recipient using Google API
      */
-    private function sendEmailToRecipient(Budget $budget, $recipientEmail, $recipientName)
+    private function sendEmailToRecipient(Budget $budget, $recipientEmail, $recipientName, $templateId = null)
     {
         try {
             // Verificar se existe PDF para este orçamento
@@ -1056,19 +1076,20 @@ class BudgetController extends Controller
                 'budgetDate' => $budget->created_at->format('d/m/Y'),
                 'budgetValidity' => $budget->created_at->addDays(30)->format('d/m/Y'), // 30 dias de validade
                 'budgetStatus' => 'Aguardando Aprovação',
-                'companyName' => $budget->company->fantasy_name,
-                'companyPhone' => $budget->company->phone,
+                'companyName' => $budget->company->fantasy_name ?? 'Empresa',
+                'companyPhone' => $budget->company->phone ?? '(00) 0000-0000',
                 'companyEmail' => $budget->company->email ?? 'contato@empresa.com',
-                'companyAddress' => $budget->company->address,
-                'companyCity' => $budget->company->city,
-                'companyState' => $budget->company->state
+                'companyAddress' => $budget->company->address ?? 'Endereço não informado',
+                'companyCity' => $budget->company->city ?? 'Cidade',
+                'companyState' => $budget->company->state ?? 'Estado'
             ];
             
             $result = $googleEmailService->sendBudgetEmail(
                 $recipientEmail,
                 $subject,
                 $budgetData,
-                $filePath
+                $filePath,
+                $templateId
             );
             
             return $result;

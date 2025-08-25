@@ -157,7 +157,7 @@ class GoogleEmailService
         }
     }
 
-    public function sendBudgetEmail($to, $subject, $budgetData, $attachmentPath = null)
+    public function sendBudgetEmail($to, $subject, $budgetData, $attachmentPath = null, $templateId = null)
     {
         try {
             if (!$this->isAuthenticated()) {
@@ -165,7 +165,15 @@ class GoogleEmailService
             }
 
             // Renderizar o template HTML
-            $htmlBody = view('emails.budget-template', $budgetData)->render();
+            $htmlBody = $this->renderEmailTemplate($budgetData, $templateId);
+            
+            // Se um template personalizado foi usado, também renderizar o assunto
+            if ($templateId) {
+                $emailTemplate = \App\Models\EmailTemplate::find($templateId);
+                if ($emailTemplate && $emailTemplate->is_active) {
+                    $subject = $emailTemplate->render($budgetData, $emailTemplate->subject);
+                }
+            }
             
             $message = $this->createHtmlMessage($to, $subject, $htmlBody, $attachmentPath);
             $result = $this->gmail->users_messages->send('me', $message);
@@ -174,6 +182,7 @@ class GoogleEmailService
                 'to' => $to,
                 'subject' => $subject,
                 'budget_number' => $budgetData['budgetNumber'] ?? 'N/A',
+                'template_id' => $templateId,
                 'message_id' => $result->getId()
             ]);
 
@@ -189,6 +198,22 @@ class GoogleEmailService
                 'message' => 'Erro ao enviar email: ' . $e->getMessage()
             ];
         }
+    }
+
+    /**
+     * Renderizar template de email (personalizado ou padrão)
+     */
+    private function renderEmailTemplate($budgetData, $templateId = null)
+    {
+        if ($templateId) {
+            $emailTemplate = \App\Models\EmailTemplate::find($templateId);
+            if ($emailTemplate && $emailTemplate->is_active) {
+                return $emailTemplate->render($budgetData);
+            }
+        }
+        
+        // Usar template padrão se não houver template personalizado ou se estiver inativo
+        return view('emails.budget-template', $budgetData)->render();
     }
 
     private function createHtmlMessage($to, $subject, $htmlBody, $attachmentPath = null)

@@ -73,6 +73,10 @@
                         <a class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}" href="{{ route('contacts.index') }}">
                             <i class="bi bi-person-rolodex"></i> Contatos</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('email-templates.*') ? 'active' : '' }}" href="{{ route('email-templates.index') }}">
+                            <i class="bi bi-envelope-paper"></i> Templates Email</a>
+                    </li>
                     @if(Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin']))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">

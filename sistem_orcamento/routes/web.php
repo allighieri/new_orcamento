@@ -10,6 +10,7 @@ use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmailTemplateController;
 
 // Rotas de Autenticação
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -63,6 +64,10 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     Route::post('budgets/{budget}/whatsapp-contact', [BudgetController::class, 'sendWhatsAppToContact'])->name('budgets.whatsapp-contact');
     Route::get('budgets/{budget}/email', [BudgetController::class, 'sendEmail'])->name('budgets.email');
     Route::post('budgets/{budget}/email-contact', [BudgetController::class, 'sendEmailToContact'])->name('budgets.email-contact');
+    
+    // Rotas para Templates de Email (todos os usuários autenticados)
+    Route::resource('email-templates', EmailTemplateController::class);
+    Route::get('email-templates/{emailTemplate}/preview', [EmailTemplateController::class, 'preview'])->name('email-templates.preview');
     
     // Rotas para autenticação com Google
     Route::get('/google/settings', function() { return view('google.settings'); })->name('google.settings');
