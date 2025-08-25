@@ -24,12 +24,12 @@ class BudgetController extends Controller
         
         if ($user->role === 'super_admin') {
             // Super admin pode ver todos os orçamentos
-            $query = Budget::with(['client', 'company'])
+            $query = Budget::with(['client', 'company', 'pdfFiles'])
                 ->orderBy('created_at', 'desc');
         } else {
             // Admin e user veem apenas orçamentos da sua empresa
             $query = Budget::where('company_id', $companyId)
-                ->with(['client', 'company'])
+                ->with(['client', 'company', 'pdfFiles'])
                 ->orderBy('created_at', 'desc');
         }
         
@@ -245,7 +245,7 @@ class BudgetController extends Controller
             }
         }
         
-        $budget->load(['client', 'company', 'items.product']);
+        $budget->load(['client', 'company', 'items.product', 'pdfFiles']);
         return view('budgets.show', compact('budget'));
     }
 
@@ -668,4 +668,85 @@ class BudgetController extends Controller
          return redirect()->route('budgets.index')
              ->with('success', 'Status atualizado com sucesso!');
      }
+
+    /**
+     * Send budget PDF via WhatsApp.
+     */
+    public function sendWhatsApp(Budget $budget)
+    {
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode enviar qualquer orçamento
+        if ($user->role !== 'super_admin') {
+            // Verificar se o orçamento pertence à empresa do usuário
+            if ($budget->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
+        }
+        
+        // Verificar se existe PDF para este orçamento
+        $pdfFile = \App\Models\PdfFile::where('budget_id', $budget->id)->first();
+        
+        if (!$pdfFile) {
+            return redirect()->back()->with('error', 'Nenhum PDF encontrado para este orçamento. Gere o PDF primeiro.');
+        }
+        
+        // Verificar se o arquivo físico existe
+        $filePath = storage_path('app/public/pdfs/' . $pdfFile->filename);
+        if (!file_exists($filePath)) {
+            return redirect()->back()->with('error', 'Arquivo PDF não encontrado no servidor.');
+        }
+        
+        // Verificar se o cliente tem telefone
+        if (!$budget->client->phone) {
+            return redirect()->back()->with('error', 'Cliente não possui número de telefone cadastrado.');
+        }
+        
+        // Carregar relacionamentos necessários
+        $budget->load(['client', 'company']);
+        
+        // Gerar URL do PDF com HTTPS
+        $pdfUrl = secure_url('storage/pdfs/' . $pdfFile->filename);
+        
+        // Preparar mensagem
+        $message = "Olá, {$budget->client->fantasy_name}!\n\n";
+        $message .= "Seu orçamento está pronto! Clique no link abaixo para baixar.\n\n";
+        $message .= "{$pdfUrl}\n\n";
+        $message .= "Qualquer dúvida, estamos à disposição.\n\n";
+        $message .= "{$budget->company->fantasy_name}";
+        
+        // Enviar mensagem via WhatsApp
+        try {
+            // Gerar URL do WhatsApp
+            $whatsappUrl = $this->sendWhatsAppMessage($budget->client->phone, $message);
+            
+            // Redirecionar para o WhatsApp
+            return redirect($whatsappUrl);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erro ao gerar link do WhatsApp: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send WhatsApp message using wa.me URL.
+     */
+    private function sendWhatsAppMessage($phone, $message)
+    {
+        // Limpar e formatar o número de telefone
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        
+        // Se o número não começar com código do país, adicionar +55 (Brasil)
+        if (!str_starts_with($phone, '55')) {
+            $phone = '55' . $phone;
+        }
+        
+        // Codificar a mensagem para URL
+        $encodedMessage = urlencode($message);
+        
+        // Gerar URL do WhatsApp
+        $whatsappUrl = "https://wa.me/{$phone}/?text={$encodedMessage}";
+        
+        // Retornar a URL para redirecionamento
+        return $whatsappUrl;
+    }
 }

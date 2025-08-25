@@ -15,6 +15,11 @@
                         <a href="{{ route('budgets.pdf', $budget) }}" class="btn btn-secondary mb-2 mb-lg-0" target="_blank">
                             <i class="bi bi-file-earmark-pdf"></i> PDF
                         </a>
+                        @if($budget->pdfFiles->count() > 0)
+                        <a href="{{ route('budgets.whatsapp', $budget) }}" class="btn btn-success mb-2 mb-lg-0" title="Enviar via WhatsApp" target="_blank">
+                            <i class="bi bi-whatsapp"></i> Enviar PDF
+                        </a>
+                        @endif
                         <a href="{{ route('budgets.edit', $budget) }}" class="btn btn-warning mb-2 mb-lg-0">
                             <i class="bi bi-pencil"></i> Editar
                         </a>

@@ -103,6 +103,11 @@
                                             <a href="{{ route('budgets.pdf', $budget) }}" class="btn btn-sm btn-outline-secondary" title="Gerar PDF" target="_blank">
                                                 <i class="bi bi-file-earmark-pdf"></i>
                                             </a>
+                                            @if($budget->pdfFiles->count() > 0)
+                                            <a href="{{ route('budgets.whatsapp', $budget) }}" class="btn btn-sm btn-outline-success" title="Enviar PDF via WhatsApp" target="_blank">
+                                                <i class="bi bi-whatsapp"></i>
+                                            </a>
+                                            @endif
                                             <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" id="delete-form-budget-{{ $budget->id }}">
                                                 @csrf
                                                 @method('DELETE')

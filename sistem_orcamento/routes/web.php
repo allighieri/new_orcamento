@@ -59,6 +59,7 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     // Rotas para Orçamentos (todos os usuários autenticados)
     Route::resource('budgets', BudgetController::class);
     Route::get('budgets/{budget}/pdf', [BudgetController::class, 'generatePdf'])->name('budgets.pdf');
+    Route::get('budgets/{budget}/whatsapp', [BudgetController::class, 'sendWhatsApp'])->name('budgets.whatsapp');
 });
 
 // Rota de atualização de status do orçamento (sem middlewares extras que podem interferir)
