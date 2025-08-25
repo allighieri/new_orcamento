@@ -40,17 +40,17 @@
                                     <div class="row">
                                         <!-- Logo da Empresa -->
                                         @if($budget->company->logo)
-                                        <div class="col-md-2 text-center mb-2">
+                                        <div class="col-md-3 text-center mb-2">
                                             <img src="{{ asset('storage/' . $budget->company->logo) }}" alt="Logo da {{ $budget->company->corporate_name ?? $budget->company->fantasy_name }}" class="img-fluid" style="width: 100%; height: 100%;">
                                         </div>
-                                        <div class="col-md-10">
+                                        <div class="col-md-9">
                                         @else
                                         <div class="col-md-12">
                                         @endif
                                             <h6 class="fw-bold mb-3">{{ $budget->company->corporate_name }}</h6>
                                             
                                             <div class="row">
-                                                <div class="col-md-6">
+                                                <div class="col-md-12">
                                                     @if($budget->company->document_number)
                                                     <p class="mb-2"><strong>CNPJ:</strong> {{ $budget->company->document_number }}</p>
                                                     @endif
@@ -61,7 +61,7 @@
                                                     <p class="mb-2"><strong>Email:</strong> {{ $budget->company->email }}</p>
                                                     @endif
                                                      @if($budget->company->address || $budget->company->city || $budget->company->state)
-                                                    <p class="mb-2"><strong>Endereço:</strong><br>
+                                                    <p class="mb-2"><strong>Endereço:</strong>
                                                         {{ $budget->company->address }}@if($budget->company->address && ($budget->company->city || $budget->company->state)), @endif{{ $budget->company->city }}@if($budget->company->city && $budget->company->state) - @endif{{ $budget->company->state }}
                                                     </p>
                                                     @endif

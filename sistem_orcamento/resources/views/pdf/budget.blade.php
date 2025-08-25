@@ -18,10 +18,10 @@
         }
         .header {
             position: fixed;
-            top: -110px;
+            top: -120px;
             left: 0;
             right: 0;
-            height: 90px;
+            height: 95px;
             margin-bottom: 30px;
             border-bottom: 1px dotted #333;
             padding-bottom: 5px;
@@ -74,7 +74,7 @@
 
         .budget-info {
             position: absolute;
-            top: 10px;
+            top: 0;
             right: 0;
             text-align: right;
             min-width: 300px;
@@ -179,9 +179,10 @@
             </div>
             
             <div class="budget-info">
-                <div class="budget-number">Nº. {{ $budget->number }}</div>
-                <p><strong>Data:</strong> {{ $budget->issue_date->format('d/m/Y') }}</p>
-                <p><strong>Validade:</strong> {{ $budget->valid_until->format('d/m/Y') }}</p>
+                <p style="margin: 0 0 3px 0; padding: 0; font-weight: bold">Orçamento</p>
+                <p class="budget-number">Nº. {{ $budget->number }}</p>
+                <p style="margin: 0 0 5px 0; padding-bottom: 0"><strong>Data:</strong> {{ $budget->issue_date->format('d/m/Y') }}</p>
+                <p style="margin-top: 0; padding-top: 0"><strong>Validade:</strong> {{ $budget->valid_until->format('d/m/Y') }}</p>
             </div>
         </div>
     </div>
@@ -207,12 +208,12 @@
     <table class="items-table" style="font-size: 10px;">
         <thead>
             <tr>
-                <th>Item</th>
+                <th style="text-align: center; width:20px;">Item</th>
                 <th>Produto</th>
                 <th>Descrição</th>
-                <th class="text-right">Qtd</th>
-                <th class="text-right">Valor Unit.</th>
-                <th class="text-right">Total</th>
+                <th class="text-right" style="text-align: center; width:30px;">Qtd</th>
+                <th class="text-right" style="width: 70px">Valor Unit.</th>
+                <th class="text-right" style="width: 80px">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -235,7 +236,7 @@
                         {{ $item->description ?? '' }}
                     @endif
                 </td>
-                <td style="text-align: center;">{{ $item->quantity }}</td>
+                <td>{{ $item->quantity }}</td>
                 <td>R$ {{ number_format($item->unit_price, 2, ',', '.') }}</td>
                 <td class="text-right">R$ {{ number_format($item->total_price, 2, ',', '.') }}</td>
             </tr>
