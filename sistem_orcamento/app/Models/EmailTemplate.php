@@ -10,6 +10,7 @@ class EmailTemplate extends Model
     use HasFactory;
 
     protected $fillable = [
+        'company_id',
         'name',
         'subject',
         'html_content',
@@ -24,11 +25,27 @@ class EmailTemplate extends Model
     ];
 
     /**
+     * Relacionamento com Company
+     */
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /**
      * Scope para templates ativos
      */
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope para templates de uma empresa específica
+     */
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 
     /**

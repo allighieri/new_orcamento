@@ -604,23 +604,14 @@ function handleEmailSend(budgetId) {
                 const modal = new bootstrap.Modal(document.getElementById('emailModal'));
                 modal.show();
             } else {
-                // Não tem contatos, enviar direto para o cliente
-                if (data.email_url) {
-                    window.open(data.email_url, '_blank');
-                    Swal.fire({
-                        title: 'Sucesso',
-                        text: 'Email enviado com sucesso!',
-                        icon: 'success',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                } else {
-                    Swal.fire({
-                        title: 'Erro',
-                        text: 'Cliente não possui email cadastrado.',
-                        icon: 'error'
-                    });
-                }
+                // Não tem contatos, email foi enviado direto para o cliente
+                Swal.fire({
+                    title: 'Sucesso',
+                    text: data.message || 'Email enviado com sucesso!',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             }
         } else {
             Swal.fire({

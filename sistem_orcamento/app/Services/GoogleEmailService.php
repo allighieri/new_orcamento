@@ -169,8 +169,11 @@ class GoogleEmailService
             
             // Se um template personalizado foi usado, também renderizar o assunto
             if ($templateId) {
-                $emailTemplate = \App\Models\EmailTemplate::find($templateId);
-                if ($emailTemplate && $emailTemplate->is_active) {
+                $emailTemplate = \App\Models\EmailTemplate::where('id', $templateId)
+                    ->where('company_id', $this->companyId)
+                    ->where('is_active', true)
+                    ->first();
+                if ($emailTemplate) {
                     $subject = $emailTemplate->render($budgetData, $emailTemplate->subject);
                 }
             }
@@ -206,8 +209,11 @@ class GoogleEmailService
     private function renderEmailTemplate($budgetData, $templateId = null)
     {
         if ($templateId) {
-            $emailTemplate = \App\Models\EmailTemplate::find($templateId);
-            if ($emailTemplate && $emailTemplate->is_active) {
+            $emailTemplate = \App\Models\EmailTemplate::where('id', $templateId)
+                ->where('company_id', $this->companyId)
+                ->where('is_active', true)
+                ->first();
+            if ($emailTemplate) {
                 return $emailTemplate->render($budgetData);
             }
         }

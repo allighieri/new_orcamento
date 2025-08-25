@@ -905,15 +905,33 @@ class BudgetController extends Controller
             
             if ($forceClient) {
                 // Forçar envio direto para o cliente
-                if (empty($budget->client->email)) {
+                // Primeiro verifica se o cliente tem email direto
+                if (!empty($budget->client->email)) {
+                    $templateId = request()->get('template_id');
+                    $result = $this->sendEmailToRecipient($budget, $budget->client->email, $budget->client->fantasy_name, $templateId);
+                    
+                    return response()->json([
+                        'success' => $result['success'],
+                        'message' => $result['message']
+                    ]);
+                }
+                
+                // Se não tem email direto, verifica se tem contatos com email
+                $contacts = $budget->client->contacts->filter(function($contact) {
+                    return !empty($contact->email);
+                });
+                
+                if ($contacts->isEmpty()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Cliente não possui email cadastrado.'
+                        'message' => 'Cliente não possui email ou contatos com email cadastrados.'
                     ], 400);
                 }
                 
+                // Usa o primeiro contato com email
+                $firstContact = $contacts->first();
                 $templateId = request()->get('template_id');
-                $result = $this->sendEmailToRecipient($budget, $budget->client->email, $budget->client->fantasy_name, $templateId);
+                $result = $this->sendEmailToRecipient($budget, $firstContact->email, $firstContact->name, $templateId);
                 
                 return response()->json([
                     'success' => $result['success'],
@@ -949,11 +967,13 @@ class BudgetController extends Controller
             // Buscar templates de email ativos da empresa
             $user = auth()->guard('web')->user();
             if ($user->role === 'super_admin') {
+                // Super admin pode ver todos os templates
                 $emailTemplates = \App\Models\EmailTemplate::where('is_active', true)->get();
             } else {
-                // Para admin e user, buscar templates da empresa (se implementado no futuro)
-                // Por enquanto, buscar todos os templates ativos
-                $emailTemplates = \App\Models\EmailTemplate::where('is_active', true)->get();
+                // Para admin e user, buscar apenas templates da sua empresa
+                $emailTemplates = \App\Models\EmailTemplate::where('is_active', true)
+                    ->where('company_id', $user->company_id)
+                    ->get();
             }
             
             // Se há contatos com email, retorna dados para a modal

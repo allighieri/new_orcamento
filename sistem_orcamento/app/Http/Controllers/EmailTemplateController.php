@@ -13,7 +13,10 @@ class EmailTemplateController extends Controller
      */
     public function index()
     {
-        $templates = EmailTemplate::orderBy('created_at', 'desc')->paginate(10);
+        $companyId = auth()->user()->company_id;
+        $templates = EmailTemplate::forCompany($companyId)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
         return view('email-templates.index', compact('templates'));
     }
 
@@ -30,8 +33,10 @@ class EmailTemplateController extends Controller
      */
     public function store(Request $request)
     {
+        $companyId = auth()->user()->company_id;
+        
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:email_templates',
+            'name' => 'required|string|max:255|unique:email_templates,name,NULL,id,company_id,' . $companyId,
             'subject' => 'required|string|max:255',
             'html_content' => 'required|string',
             'description' => 'nullable|string',
@@ -45,7 +50,9 @@ class EmailTemplateController extends Controller
                 ->withInput();
         }
 
-        EmailTemplate::create($request->all());
+        $data = $request->all();
+        $data['company_id'] = $companyId;
+        EmailTemplate::create($data);
 
         return redirect()->route('email-templates.index')
             ->with('success', 'Template criado com sucesso!');
@@ -56,6 +63,11 @@ class EmailTemplateController extends Controller
      */
     public function show(EmailTemplate $emailTemplate)
     {
+        // Verificar se o template pertence à empresa do usuário
+        if ($emailTemplate->company_id !== auth()->user()->company_id) {
+            abort(403, 'Acesso negado.');
+        }
+        
         return view('email-templates.show', compact('emailTemplate'));
     }
 
@@ -64,6 +76,11 @@ class EmailTemplateController extends Controller
      */
     public function edit(EmailTemplate $emailTemplate)
     {
+        // Verificar se o template pertence à empresa do usuário
+        if ($emailTemplate->company_id !== auth()->user()->company_id) {
+            abort(403, 'Acesso negado.');
+        }
+        
         return view('email-templates.edit', compact('emailTemplate'));
     }
 
@@ -72,8 +89,13 @@ class EmailTemplateController extends Controller
      */
     public function update(Request $request, EmailTemplate $emailTemplate)
     {
+        // Verificar se o template pertence à empresa do usuário
+        if ($emailTemplate->company_id !== auth()->user()->company_id) {
+            abort(403, 'Acesso negado.');
+        }
+        
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:email_templates,name,' . $emailTemplate->id,
+            'name' => 'required|string|max:255|unique:email_templates,name,' . $emailTemplate->id . ',id,company_id,' . $emailTemplate->company_id,
             'subject' => 'required|string|max:255',
             'html_content' => 'required|string',
             'description' => 'nullable|string',
@@ -98,6 +120,11 @@ class EmailTemplateController extends Controller
      */
     public function destroy(EmailTemplate $emailTemplate)
     {
+        // Verificar se o template pertence à empresa do usuário
+        if ($emailTemplate->company_id !== auth()->user()->company_id) {
+            abort(403, 'Acesso negado.');
+        }
+        
         $emailTemplate->delete();
 
         return redirect()->route('email-templates.index')
@@ -109,6 +136,11 @@ class EmailTemplateController extends Controller
      */
     public function preview(EmailTemplate $emailTemplate)
     {
+        // Verificar se o template pertence à empresa do usuário
+        if ($emailTemplate->company_id !== auth()->user()->company_id) {
+            abort(403, 'Acesso negado.');
+        }
+        
         // Dados de exemplo para preview
         $sampleData = [
             'recipientName' => 'João Silva',
