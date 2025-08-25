@@ -157,6 +157,78 @@ class GoogleEmailService
         }
     }
 
+    public function sendBudgetEmail($to, $subject, $budgetData, $attachmentPath = null)
+    {
+        try {
+            if (!$this->isAuthenticated()) {
+                throw new \Exception('Não autenticado com o Google. Configure a integração primeiro.');
+            }
+
+            // Renderizar o template HTML
+            $htmlBody = view('emails.budget-template', $budgetData)->render();
+            
+            $message = $this->createHtmlMessage($to, $subject, $htmlBody, $attachmentPath);
+            $result = $this->gmail->users_messages->send('me', $message);
+
+            Log::info('Email de orçamento enviado com sucesso via Google API', [
+                'to' => $to,
+                'subject' => $subject,
+                'budget_number' => $budgetData['budgetNumber'] ?? 'N/A',
+                'message_id' => $result->getId()
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Email enviado com sucesso!',
+                'message_id' => $result->getId()
+            ];
+        } catch (\Exception $e) {
+            Log::error('Erro ao enviar email de orçamento via Google API: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Erro ao enviar email: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    private function createHtmlMessage($to, $subject, $htmlBody, $attachmentPath = null)
+    {
+        $boundary = uniqid(rand(), true);
+        
+        // Codificar o assunto para UTF-8 usando MIME encoding
+        $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        
+        $rawMessage = "To: {$to}\r\n";
+        $rawMessage .= "Subject: {$encodedSubject}\r\n";
+        $rawMessage .= "MIME-Version: 1.0\r\n";
+        $rawMessage .= "Content-Type: multipart/mixed; boundary=\"{$boundary}\"\r\n\r\n";
+        
+        // Corpo do email HTML
+        $rawMessage .= "--{$boundary}\r\n";
+        $rawMessage .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $rawMessage .= "Content-Transfer-Encoding: quoted-printable\r\n\r\n";
+        $rawMessage .= quoted_printable_encode($htmlBody) . "\r\n\r\n";
+        
+        // Anexo (se fornecido)
+        if ($attachmentPath && file_exists($attachmentPath)) {
+            $filename = basename($attachmentPath);
+            $fileContent = base64_encode(file_get_contents($attachmentPath));
+            
+            $rawMessage .= "--{$boundary}\r\n";
+            $rawMessage .= "Content-Type: application/pdf; name=\"{$filename}\"\r\n";
+            $rawMessage .= "Content-Disposition: attachment; filename=\"{$filename}\"\r\n";
+            $rawMessage .= "Content-Transfer-Encoding: base64\r\n\r\n";
+            $rawMessage .= chunk_split($fileContent) . "\r\n";
+        }
+        
+        $rawMessage .= "--{$boundary}--";
+        
+        $message = new Message();
+        $message->setRaw(base64url_encode($rawMessage));
+        
+        return $message;
+    }
+
     private function createMessage($to, $subject, $body, $attachmentPath = null)
     {
         $boundary = uniqid(rand(), true);

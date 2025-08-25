@@ -1048,18 +1048,26 @@ class BudgetController extends Controller
             // Preparar dados do email
             $subject = "Orçamento #{$budget->number} - {$budget->company->fantasy_name}";
             
-            $body = "Olá, {$recipientName}!\n\n";
-            $body .= "Conforme solicitado, segue anexo o orçamento #{$budget->number}.\n\n";
-            $body .= "Valor total: R$ " . number_format($budget->final_amount, 2, ',', '.') . "\n\n";
-            $body .= "Atenciosamente,\n";
-            $body .= "{$budget->company->fantasy_name}\n";
-            $body .= "{$budget->company->phone}\n";
-            $body .= "{$budget->company->address}, {$budget->company->city} - {$budget->company->state}";
+            // Preparar dados para o template HTML
+            $budgetData = [
+                'recipientName' => $recipientName,
+                'budgetNumber' => $budget->number,
+                'budgetValue' => number_format($budget->final_amount, 2, ',', '.'),
+                'budgetDate' => $budget->created_at->format('d/m/Y'),
+                'budgetValidity' => $budget->created_at->addDays(30)->format('d/m/Y'), // 30 dias de validade
+                'budgetStatus' => 'Aguardando Aprovação',
+                'companyName' => $budget->company->fantasy_name,
+                'companyPhone' => $budget->company->phone,
+                'companyEmail' => $budget->company->email ?? 'contato@empresa.com',
+                'companyAddress' => $budget->company->address,
+                'companyCity' => $budget->company->city,
+                'companyState' => $budget->company->state
+            ];
             
-            $result = $googleEmailService->sendEmail(
+            $result = $googleEmailService->sendBudgetEmail(
                 $recipientEmail,
                 $subject,
-                $body,
+                $budgetData,
                 $filePath
             );
             
