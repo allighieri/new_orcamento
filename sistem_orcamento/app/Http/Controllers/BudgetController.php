@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Company;
 use App\Models\Product;
 use App\Models\Contact;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
@@ -69,15 +70,17 @@ class BudgetController extends Controller
             $clients = Client::orderBy('fantasy_name')->get();
             $companies = Company::orderBy('fantasy_name')->get();
             $products = Product::with(['category'])->orderBy('name')->get();
+            $paymentMethods = PaymentMethod::orderBy('name')->get();
         } else {
             // Admin e user veem apenas da sua empresa
             $companyId = session('tenant_company_id');
             $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
             $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
             $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
+            $paymentMethods = PaymentMethod::forCompany($companyId)->orderBy('name')->get();
         }
         
-        return view('budgets.create', compact('clients', 'companies', 'products'));
+        return view('budgets.create', compact('clients', 'companies', 'products', 'paymentMethods'));
     }
 
     /**
@@ -219,7 +222,31 @@ class BudgetController extends Controller
                 'final_amount' => $finalAmount
             ]);
 
-            \Illuminate\Support\Facades\Log::info('Budget created successfully', ['budget_id' => $budget->id, 'budget_number' => $budget->number]);
+            // Processar métodos de pagamento se fornecidos
+            if ($request->has('payment_methods') && is_array($request->payment_methods)) {
+                foreach ($request->payment_methods as $index => $paymentData) {
+                    // Verificar se os campos obrigatórios estão preenchidos
+                    $hasPaymentMethodId = !empty($paymentData['payment_method_id']);
+                    $hasAmount = !empty($paymentData['amount']);
+                    $convertedAmount = $this->convertMoneyToFloat($paymentData['amount'] ?? '');
+                    
+                    if ($hasPaymentMethodId && $convertedAmount > 0) {
+                        $budgetPayment = $budget->budgetPayments()->create([
+                            'payment_method_id' => $paymentData['payment_method_id'],
+                            'amount' => $convertedAmount,
+                            'installments' => $paymentData['installments'] ?? 1,
+                            'payment_moment' => $paymentData['payment_moment'] ?? 'approval',
+                            'custom_date' => $paymentData['custom_date'] ?? null,
+                            'days_after_pickup' => $paymentData['days_after_pickup'] ?? null,
+                            'notes' => $paymentData['notes'] ?? null,
+                            'order' => $paymentData['order'] ?? ($index + 1)
+                        ]);
+                        
+                        // Criar parcelas automaticamente
+                        $budgetPayment->createInstallments();
+                    }
+                }
+            }
             
             DB::commit();
             
@@ -278,17 +305,19 @@ class BudgetController extends Controller
             $clients = Client::where('company_id', $budget->company_id)->orderBy('fantasy_name')->get();
             $companies = Company::orderBy('fantasy_name')->get();
             $products = Product::with(['category'])->orderBy('name')->get();
+            $paymentMethods = PaymentMethod::forCompany($budget->company_id)->orderBy('name')->get();
         } else {
             // Admin e user veem apenas da sua empresa
             $companyId = session('tenant_company_id');
             $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
             $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
             $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
+            $paymentMethods = PaymentMethod::forCompany($companyId)->orderBy('name')->get();
         }
         
-        $budget->load(['items.product']);
+        $budget->load(['items.product', 'budgetPayments.paymentMethod']);
         
-        return view('budgets.edit', compact('budget', 'clients', 'companies', 'products'));
+        return view('budgets.edit', compact('budget', 'clients', 'companies', 'products', 'paymentMethods'));
     }
 
     /**
@@ -451,6 +480,31 @@ class BudgetController extends Controller
                 'total_amount' => $totalAmount,
                 'final_amount' => $finalAmount
             ]);
+
+            // Atualizar métodos de pagamento
+            // Remover pagamentos antigos
+            $budget->budgetPayments()->delete();
+            
+            // Processar novos métodos de pagamento se fornecidos
+            if ($request->has('payment_methods') && is_array($request->payment_methods)) {
+                foreach ($request->payment_methods as $paymentData) {
+                    if (!empty($paymentData['payment_method_id']) && !empty($paymentData['amount'])) {
+                        $budgetPayment = $budget->budgetPayments()->create([
+                            'payment_method_id' => $paymentData['payment_method_id'],
+                            'amount' => $this->convertMoneyToFloat($paymentData['amount']),
+                            'installments' => $paymentData['installments'] ?? 1,
+                            'payment_moment' => $paymentData['payment_moment'] ?? 'approval',
+                            'custom_date' => $paymentData['custom_date'] ?? null,
+                            'days_after_pickup' => $paymentData['days_after_pickup'] ?? null,
+                            'notes' => $paymentData['notes'] ?? null,
+                            'order' => $paymentData['order'] ?? 1
+                        ]);
+                        
+                        // Criar parcelas automaticamente
+                        $budgetPayment->createInstallments();
+                    }
+                }
+            }
 
             DB::commit();
             

@@ -256,7 +256,63 @@
                             
                         </div>
 
-                         
+                        <!-- Seção de Métodos de Pagamento -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="bi bi-credit-card"></i> Métodos de Pagamento</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="payment-methods-container">
+                                    <div class="payment-method-row mb-3">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <label class="form-label">Método de Pagamento</label>
+                                                <select class="form-select" name="payment_methods[0][payment_method_id]">
+                                                    <option value="">Selecione um método</option>
+                                                    @foreach($paymentMethods as $method)
+                                                        <option value="{{ $method->id }}">{{ $method->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Valor</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">R$</span>
+                                                    <input type="text" class="form-control money" name="payment_methods[0][amount]" placeholder="0,00">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Parcelas</label>
+                                                <input type="number" class="form-control" name="payment_methods[0][installments]" value="1" min="1">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Momento</label>
+                                                <select class="form-select" name="payment_methods[0][payment_moment]">
+                                                    <option value="approval">Na Aprovação</option>
+                                                    <option value="pickup">Na Retirada</option>
+                                                    <option value="custom">Data Personalizada</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Data Personalizada</label>
+                                                <input type="date" class="form-control" name="payment_methods[0][custom_date]">
+                                            </div>
+                                            <div class="col-md-1 d-flex align-items-end">
+                                                <button type="button" class="btn btn-success btn-sm add-payment-method">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-md-11">
+                                                <label class="form-label">Observações</label>
+                                                <input type="text" class="form-control" name="payment_methods[0][notes]" placeholder="Observações sobre este pagamento">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         
                         <hr class="my-4" />
 
@@ -489,551 +545,590 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Definir o índice inicial para o próximo produto a ser adicionado
-    let productIndex = $('#productsContainer .product-row').length;
-    
-    // Calcular totais iniciais se a página for recarregada com dados
-    if (productIndex > 0) {
-        // Recalcular os totais das linhas existentes
-        $('#productsContainer .product-row').each(function() {
-            calculateRowTotal($(this));
-        });
-        updateTotals();
-    } else {
-        // Se não houver produtos, adicionar a primeira linha
-        let template = $('#productRowTemplate').html();
-        template = template.replace(/INDEX/g, productIndex);
-        $('#productsContainer').append(template);
-        
-        // Se temos opções de produto armazenadas, aplicá-las ao novo select
-        if (window.currentProductOptions) {
-            $('#productsContainer .product-row:last .product-select').html(window.currentProductOptions);
-        }
-        
-        productIndex++;
-    }
-    
-    // Máscara para valores monetários
-    $('.money').mask('000.000.000.000.000,00', {
-        reverse: true,
-        placeholder: '0,00'
-    });
-    
-    // Adicionar produto (novo botão em cada linha)
-    $(document).on('click', '.add-product', function() {
-        let template = $('#productRowTemplate').html();
-        template = template.replace(/INDEX/g, productIndex);
-        let currentRow = $(this).closest('.product-row');
-        
-        // Adicionar nova linha após a atual
-        currentRow.after(template);
-        
-        // Se temos opções de produto armazenadas, aplicá-las ao novo select
-        if (window.currentProductOptions) {
-            currentRow.next().find('.product-select').html(window.currentProductOptions);
-        }
-        
-        // Aplicar máscara nos novos campos com um pequeno delay
-        setTimeout(function() {
-            $('.money').mask('000.000.000.000.000,00', {
-                reverse: true,
-                placeholder: '0,00'
-            });
-        }, 10);
-        
-        // Atualizar visibilidade dos botões '+'
-        updateAddButtons();
-        
-        productIndex++;
-        updateTotals();
-    });
-    
-    // Função para mostrar apenas o botão '+' da última linha
-    function updateAddButtons() {
-        $('.add-product').hide();
-        $('#productsContainer .product-row:last .add-product').show();
-    }
-    
-    // Inicializar botões
-    updateAddButtons();
-    
-    // Remover produto
-    $(document).on('click', '.remove-product', function() {
-        let rowToRemove = $(this).closest('.product-row');
-        
-        rowToRemove.remove();
-        
-        // Se não sobrou nenhuma linha, adicionar uma nova
-        if ($('#productsContainer .product-row').length === 0) {
-            let template = $('#productRowTemplate').html();
-            template = template.replace(/INDEX/g, 0); // O primeiro índice é sempre 0
-            $('#productsContainer').append(template);
-            
-            // Se temos opções de produto armazenadas, aplicá-las ao novo select
-            if (window.currentProductOptions) {
-                $('#productsContainer .product-row:last .product-select').html(window.currentProductOptions);
-            }
-            
-            setTimeout(function() {
-                $('.money').mask('000.000.000.000.000,00', {
-                    reverse: true,
-                    placeholder: '0,00'
-                });
-            }, 10);
-            productIndex = 1; // Resetar o índice
-        }
-        
-        // Atualizar visibilidade dos botões '+'
-        updateAddButtons();
-        
-        updateTotals();
-    });
-    
-    // Quando selecionar um produto, preencher o preço e descrição
-    $(document).on('change', '.product-select', function() {
-        let price = $(this).find(':selected').data('price');
-        let description = $(this).find(':selected').data('description');
-        let row = $(this).closest('.product-row');
-        
-        if (price) {
-            let formattedPrice = parseFloat(price).toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-            row.find('.unit-price-input').val(formattedPrice);
-            calculateRowTotal(row);
-        }
-        
-        // Preencher descrição adicional com a descrição do produto
-        if (description) {
-            row.find('textarea[name*="[description]"]').val(description);
-        }
-    });
-    
-    // Calcular total da linha quando quantidade ou preço mudar
-    $(document).on('input', '.quantity-input, .unit-price-input', function() {
-        calculateRowTotal($(this).closest('.product-row'));
-    });
-    
-    // Calcular total quando desconto mudar
-    $('#total_discount').on('input', function() {
-        // Limpar campo de porcentagem quando digitar valor em reais
-        $('#total_discount_perc').val('');
-        updateTotals();
-    });
-    
-    // Calcular desconto em reais quando porcentagem mudar
-    $('#total_discount_perc').on('input', function() {
-        let percentage = parseFloat($(this).val()) || 0;
-        if (percentage > 0) {
-            let subtotal = calculateSubtotal();
-            let discountAmount = (subtotal * percentage) / 100;
-            
-            // Atualizar campo de desconto em reais
-            $('#total_discount').val(discountAmount.toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }));
-        } else {
-            $('#total_discount').val('');
-        }
-        updateTotals();
-    });
-    
-    function calculateRowTotal(row) {
-        let quantity = parseFloat(row.find('.quantity-input').val()) || 0;
-        let unitPrice = parseFloat(row.find('.unit-price-input').val().replace(/\./g, '').replace(',', '.')) || 0;
-        let total = quantity * unitPrice;
-        
-        row.find('.total-price').val(total.toLocaleString('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }));
-        
-        updateTotals();
-    }
-    
-    function calculateSubtotal() {
-        let subtotal = 0;
-        
-        $('.product-row').each(function() {
-            let quantity = parseFloat($(this).find('.quantity-input').val()) || 0;
-            let unitPrice = parseFloat($(this).find('.unit-price-input').val().replace(/\./g, '').replace(',', '.')) || 0;
-            subtotal += quantity * unitPrice;
-        });
-        
-        return subtotal;
-    }
-    
-    function updateTotals() {
-        let subtotal = calculateSubtotal();
-        
-        let discount = parseFloat($('#total_discount').val().replace(/\./g, '').replace(',', '.')) || 0;
-        let total = subtotal - discount;
-        
-        $('#subtotal').text('R$ ' + subtotal.toLocaleString('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }));
-        
-        $('#discountDisplay').text('R$ ' + discount.toLocaleString('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }));
-        
-        $('#total').text('R$ ' + total.toLocaleString('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }));
-    }
-    
-    // Permitir que as validações do Laravel funcionem naturalmente
-    
-    // Funcionalidade do modal de adicionar produto
-    $('#addProductForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        // Preparar para envio
-        
-        // Desabilitar botão de salvar
-        $('#saveProductBtn').prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Salvando...');
-        
-        // Preparar dados do formulário
-        let formData = {
-            name: $('#modal_name').val(),
-            price: $('#modal_price').val(),
-            description: $('#modal_description').val(),
-            category_id: $('#modal_category_id').val(),
-            _token: $('input[name="_token"]').val()
-        };
-        
-        // Adicionar company_id se usuário for super_admin
-        @if(Auth::check() && Auth::user()->role === 'super_admin')
-        let companyId = $('#company_id').val();
-        if (companyId) {
-            formData.company_id = companyId;
-        }
-        @endif
-        
-        // Enviar requisição AJAX
-        $.ajax({
-            url: '{{ route("products.store") }}',
-            method: 'POST',
-            data: formData,
-            success: function(response) {
-                if (response.success) {
-                    // Adicionar novo produto ao select de todas as linhas
-                    let newOption = `<option value="${response.product.id}" data-price="${response.product.price}" data-description="${response.product.description}">
-                        ${response.product.name} - ${response.product.category_name || 'Sem categoria'}
-                    </option>`;
-                    
-                    $('.product-select').each(function() {
-                        $(this).append(newOption);
-                    });
-                    
-                    // Selecionar o novo produto na linha atual (última linha visível)
-                    let lastProductSelect = $('.product-row:last .product-select');
-                    lastProductSelect.val(response.product.id).trigger('change');
-                    
-                    // Preencher descrição automaticamente
-                    let lastDescriptionField = $('.product-row:last textarea[name*="[description]"]');
-                    lastDescriptionField.val(response.product.description);
-                    
-                    // Fechar modal e limpar formulário
-                    $('#addProductModal').modal('hide');
-                    $('#addProductForm')[0].reset();
-                    
-                    // Mostrar mensagem de sucesso
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Sucesso!',
-                        text: 'Produto criado com sucesso!',
-                        timer: 2000,
-                        showConfirmButton: false,
-                        toast: true,
-                        position: 'top-end'
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Erro!',
-                        text: 'Erro ao criar produto. Tente novamente.',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            },
-            error: function(xhr) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro!',
-                    text: 'Erro ao criar produto. Verifique os dados e tente novamente.',
-                    confirmButtonText: 'OK'
-                });
-            },
-            complete: function() {
-                // Reabilitar botão de salvar
-                $('#saveProductBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Produto');
-            }
-        });
-    });
+    // --- Funções Auxiliares ---
 
-    // Limpar formulário quando modal for fechado
-    $('#addProductModal').on('hidden.bs.modal', function() {
-        $('#addProductForm')[0].reset();
-        $('#saveProductBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Produto');
-    });
-    
-    // Funcionalidade do modal de adicionar categoria
-    $('#addCategoryForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        // Preparar para envio
-        
-        // Desabilitar botão de salvar
-        $('#saveCategoryBtn').prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Salvando...');
-        
-        // Preparar dados do formulário
-        let formData = {
-            name: $('#category_name').val(),
-            description: $('#category_description').val(),
-            parent_id: $('#category_parent_id').val(),
-            _token: $('input[name="_token"]').val()
-        };
-        
-        // Adicionar company_id se usuário for super_admin
-        @if(auth()->user()->role === 'super_admin')
-        let companyId = $('#company_id').val();
-        if (companyId) {
-            formData.company_id = companyId;
-        }
-        @endif
-        
-        // Enviar requisição AJAX
-        $.ajax({
-            url: '{{ route("categories.store") }}',
-            method: 'POST',
-            data: formData,
-            success: function(response) {
-                if (response.success) {
-                    // Adicionar nova categoria ao select do modal de produto
-                    let categorySelect = $('#modal_category_id');
-                    let newOption = new Option(response.category.name, response.category.id, true, true);
-                    categorySelect.append(newOption);
-                    
-                    // Atualizar também o select de categoria pai na modal de categoria
-                    let parentSelect = $('#category_parent_id');
-                    let parentOption = new Option(response.category.name, response.category.id);
-                    parentSelect.append(parentOption);
-                    
-                    // Fechar modal e limpar formulário
-                    $('#addCategoryModal').modal('hide');
-                    $('#addCategoryForm')[0].reset();
-                    
-                    // Mostrar mensagem de sucesso
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Sucesso!',
-                        text: 'Categoria criada com sucesso!',
-                        timer: 2000,
-                        showConfirmButton: false,
-                        toast: true,
-                        position: 'top-end'
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Erro!',
-                        text: 'Erro ao criar categoria. Tente novamente.',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            },
-            error: function(xhr) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro!',
-                    text: 'Erro ao criar categoria. Verifique os dados e tente novamente.',
-                    confirmButtonText: 'OK'
-                });
-            },
-            complete: function() {
-                // Reabilitar botão de salvar
-                $('#saveCategoryBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Categoria');
-            }
-        });
-    });
-    
-    // Abrir modal de categoria sem fechar modal de produto
-    $('#openCategoryModalBtn').on('click', function() {
-        $('#addCategoryModal').modal('show');
-    });
-    
-    // Limpar formulário quando modal de categoria for fechado
-    $('#addCategoryModal').on('hidden.bs.modal', function() {
-        $('#addCategoryForm')[0].reset();
-        $('#saveCategoryBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Categoria');
-    });
-    
-    // Aplicar máscara no campo de preço do modal
-    $('#modal_price').mask('000.000.000.000.000,00', {
-        reverse: true,
-        placeholder: '0,00'
-    });
-    
-    // Calcular automaticamente a data de validade (15 dias após a data de emissão)
-    $('#issue_date').on('change', function() {
-        const issueDate = $(this).val();
-        if (issueDate) {
-            const date = new Date(issueDate);
-            date.setDate(date.getDate() + 15);
-            
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            
-            const validUntilDate = `${year}-${month}-${day}`;
-            $('#valid_until').val(validUntilDate);
-        }
-    });
-    
-    // Definir data de validade inicial se já houver data de emissão
-    $(document).ready(function() {
-        const initialIssueDate = $('#issue_date').val();
-        if (initialIssueDate) {
-            $('#issue_date').trigger('change');
-        }
-    });
-    
-    @if(auth()->guard('web')->user()->role === 'super_admin')
-    // Carregamento dinâmico de categorias baseado na empresa selecionada
-    function loadCategoriesByCompany(companyId) {
-        if (!companyId) {
-            // Se nenhuma empresa selecionada, limpar os selects de categoria
-            $('#modal_category_id').html('<option value="">Selecione uma categoria</option>');
-            $('#category_parent_id').html('<option value="">Categoria Principal</option>');
-            return;
-        }
-        
-        // Carregar categorias para o modal de produto
-        $.get({
-            url: '{{ route("categories.by-company") }}',
-            data: { company_id: companyId },
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            success: function(response) {
-                if (response.success && response.categories) {
-                    let productCategoryOptions = '<option value="">Selecione uma categoria</option>';
-                    let parentCategoryOptions = '<option value="">Categoria Principal</option>';
-                    
-                    $.each(response.categories, function(categoryId, categoryName) {
-                        productCategoryOptions += `<option value="${categoryId}">${categoryName}</option>`;
-                        parentCategoryOptions += `<option value="${categoryId}">${categoryName}</option>`;
-                    });
-                    
-                    $('#modal_category_id').html(productCategoryOptions);
-                    $('#category_parent_id').html(parentCategoryOptions);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Erro ao carregar categorias:', error);
-            }
-        });
-    }
-    
-    // Monitorar mudanças no select de empresa
-    $('#company_id').on('change', function() {
-        const companyId = $(this).val();
-        loadCategoriesByCompany(companyId);
-    });
-    
-    // Carregamento dinâmico de produtos baseado na empresa selecionada
-    function loadProductsByCompany(companyId) {
-        if (!companyId) {
-            // Se nenhuma empresa selecionada, limpar os selects de produto
-            const emptyOptions = '<option value="">Selecione um produto</option>';
-            updateProductSelects(emptyOptions);
-            return;
-        }
-        
-        $.get({
-            url: '{{ route("products.by-company") }}',
-            data: { company_id: companyId },
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            success: function(response) {
-                let productOptions = '<option value="">Selecione um produto</option>';
-                
-                response.forEach(function(product) {
-                    productOptions += `<option value="${product.id}" data-price="${product.price}" data-description="${product.description}">${product.name} - ${product.category_name}</option>`;
-                });
-                
-                updateProductSelects(productOptions);
-            },
-            error: function(xhr, status, error) {
-                console.error('Erro ao carregar produtos:', error);
-            }
-        });
-    }
-    
-    // Função para atualizar os selects de produto existentes e futuros
-    function updateProductSelects(productOptions) {
-        // Atualizar todos os selects de produto existentes
-        $('.product-select').html(productOptions);
-        
-        // Armazenar as opções para uso em novos produtos
-        window.currentProductOptions = productOptions;
-    }
-    
-    // Carregamento dinâmico de clientes baseado na empresa selecionada
-    function loadClientsByCompany(companyId) {
-        if (!companyId) {
-            // Se nenhuma empresa selecionada, limpar o select de cliente
-            $('#client_id').html('<option value="">Selecione um cliente</option>');
-            return;
-        }
-        
-        $.get({
-            url: '{{ route("clients.by-company") }}',
-            data: { company_id: companyId },
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            success: function(response) {
-                let clientOptions = '<option value="">Selecione um cliente</option>';
-                
-                response.forEach(function(client) {
-                    clientOptions += `<option value="${client.id}">${client.display_name}</option>`;
-                });
-                
-                $('#client_id').html(clientOptions);
-            },
-            error: function(xhr, status, error) {
-                console.error('Erro ao carregar clientes:', error);
-            }
-        });
-    }
-    
-    // Monitorar mudanças no select de empresa para carregar produtos e clientes
-    $('#company_id').on('change', function() {
-        const companyId = $(this).val();
-        loadCategoriesByCompany(companyId);
-        loadProductsByCompany(companyId);
-        loadClientsByCompany(companyId);
-    });
-    
-    // Carregar dados inicialmente se já houver empresa selecionada
-    const initialCompanyId = $('#company_id').val();
-    if (initialCompanyId) {
-        loadCategoriesByCompany(initialCompanyId);
-        loadProductsByCompany(initialCompanyId);
-        loadClientsByCompany(initialCompanyId);
-    }
-      @endif
+    // Remove formatação de moeda e converte para float (ex: "1.234,56" -> 1234.56)
+    function parseMoney(value) {
+        return parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
+    }
+
+    // Formata um número para o padrão monetário brasileiro (ex: 1234.56 -> "1.234,56")
+    function formatMoney(value) {
+        return (parseFloat(value) || 0).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    // --- Gerenciamento de Produtos e Totais ---
+
+    // Definir o índice inicial para o próximo produto a ser adicionado
+    let productIndex = $('#productsContainer .product-row').length;
+
+    // Recalcula o total de uma linha específica
+    function calculateRowTotal(row) {
+        let quantity = parseFloat(row.find('.quantity-input').val()) || 0;
+        let unitPrice = parseMoney(row.find('.unit-price-input').val());
+        let total = quantity * unitPrice;
+        
+        row.find('.total-price').val(formatMoney(total));
+        
+        updateTotals();
+    }
+
+    // Calcula o subtotal de todos os produtos
+    function calculateSubtotal() {
+        let subtotal = 0;
+        
+        $('.product-row').each(function() {
+            let quantity = parseFloat($(this).find('.quantity-input').val()) || 0;
+            let unitPrice = parseMoney($(this).find('.unit-price-input').val());
+            subtotal += quantity * unitPrice;
+        });
+        
+        return subtotal;
+    }
+
+    // Atualiza os totais globais (subtotal, desconto e total final)
+    function updateTotals() {
+        let subtotal = calculateSubtotal();
+        let discount = parseMoney($('#total_discount').val());
+        
+        // Recalcular desconto se o campo de porcentagem estiver preenchido
+        let percentage = parseFloat($('#total_discount_perc').val()) || 0;
+        if (percentage > 0 && $('#total_discount').val() === '') {
+            discount = (subtotal * percentage) / 100;
+            $('#total_discount').val(formatMoney(discount));
+        } else if (percentage === 0) {
+            // Se a porcentagem for zerada, garante que o valor também seja zerado
+            discount = parseMoney($('#total_discount').val());
+        }
+
+        let total = subtotal - discount;
+        
+        $('#subtotal').text('R$ ' + formatMoney(subtotal));
+        $('#discountDisplay').text('R$ ' + formatMoney(discount));
+        $('#total').text('R$ ' + formatMoney(total));
+    }
+
+    // Função para mostrar apenas o botão '+' da última linha de produto
+    function updateAddButtons() {
+        $('.add-product').hide();
+        $('#productsContainer .product-row:last .add-product').show();
+    }
+
+    // --- Iniciação do Formulário ---
+
+    // Se a página for recarregada com produtos, recalcula os totais
+    if (productIndex > 0) {
+        $('#productsContainer .product-row').each(function() {
+            calculateRowTotal($(this));
+        });
+        updateTotals();
+    } else {
+        // Se não houver produtos, adiciona a primeira linha
+        let template = $('#productRowTemplate').html();
+        template = template.replace(/INDEX/g, productIndex);
+        $('#productsContainer').append(template);
+        
+        if (window.currentProductOptions) {
+            $('#productsContainer .product-row:last .product-select').html(window.currentProductOptions);
+        }
+        
+        productIndex++;
+    }
+
+    // Aplica máscara nos campos monetários (tanto os existentes quanto os novos)
+    function applyMasks() {
+        $('.money').mask('000.000.000.000.000,00', {
+            reverse: true,
+            placeholder: '0,00'
+        });
+    }
+    applyMasks();
+    updateAddButtons();
+
+    // --- Eventos de Produto ---
+
+    // Adicionar produto
+    $(document).on('click', '.add-product', function() {
+        let template = $('#productRowTemplate').html();
+        template = template.replace(/INDEX/g, productIndex);
+        let currentRow = $(this).closest('.product-row');
+        
+        currentRow.after(template);
+        
+        if (window.currentProductOptions) {
+            currentRow.next().find('.product-select').html(window.currentProductOptions);
+        }
+        
+        // Aplica máscaras nos novos campos
+        applyMasks();
+        updateAddButtons();
+        productIndex++;
+        updateTotals();
+    });
+    
+    // Remover produto
+    $(document).on('click', '.remove-product', function() {
+        let rowToRemove = $(this).closest('.product-row');
+        
+        rowToRemove.remove();
+        
+        if ($('#productsContainer .product-row').length === 0) {
+            // Se não sobrou nenhuma linha, adiciona uma nova
+            let template = $('#productRowTemplate').html();
+            template = template.replace(/INDEX/g, 0);
+            $('#productsContainer').append(template);
+            
+            if (window.currentProductOptions) {
+                $('#productsContainer .product-row:last .product-select').html(window.currentProductOptions);
+            }
+            
+            applyMasks();
+            productIndex = 1;
+        } else {
+            // Se uma linha foi removida, reindexa as restantes
+            $('#productsContainer .product-row').each(function(index) {
+                $(this).find('input, select, textarea').each(function() {
+                    // Regex para substituir o índice no atributo 'name'
+                    const newName = $(this).attr('name').replace(/\[\d+\]/g, `[${index}]`);
+                    $(this).attr('name', newName);
+                });
+            });
+            productIndex = $('#productsContainer .product-row').length;
+        }
+
+        updateAddButtons();
+        updateTotals();
+    });
+
+    // Preencher preço e descrição ao selecionar um produto
+    $(document).on('change', '.product-select', function() {
+        let price = $(this).find(':selected').data('price');
+        let description = $(this).find(':selected').data('description');
+        let row = $(this).closest('.product-row');
+        
+        if (price) {
+            row.find('.unit-price-input').val(formatMoney(price));
+        }
+        
+        if (description) {
+            row.find('textarea[name*="[description]"]').val(description);
+        } else {
+            row.find('textarea[name*="[description]"]').val('');
+        }
+
+        calculateRowTotal(row);
+    });
+    
+    // Recalcular total da linha quando quantidade ou preço unitário mudam
+    $(document).on('input', '.quantity-input, .unit-price-input', function() {
+        calculateRowTotal($(this).closest('.product-row'));
+    });
+    
+    // Recalcular totais quando o desconto muda
+    $('#total_discount').on('input', function() {
+        $('#total_discount_perc').val('');
+        updateTotals();
+    });
+    
+    // Recalcular desconto em reais quando a porcentagem muda
+    $('#total_discount_perc').on('input', function() {
+        $('#total_discount').val('');
+        updateTotals();
+    });
+
+    // --- Lógica de Modais (Produto e Categoria) ---
+    
+    // Submissão do formulário do modal de produto
+    $('#addProductForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        $('#saveProductBtn').prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Salvando...');
+        
+        let formData = {
+            name: $('#modal_name').val(),
+            price: parseMoney($('#modal_price').val()),
+            description: $('#modal_description').val(),
+            category_id: $('#modal_category_id').val(),
+            _token: $('input[name="_token"]').val()
+        };
+        
+        @if(Auth::check() && Auth::user()->role === 'super_admin')
+        let companyId = $('#company_id').val();
+        if (companyId) {
+            formData.company_id = companyId;
+        }
+        @endif
+        
+        $.ajax({
+            url: '{{ route("products.store") }}',
+            method: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    // Adiciona a nova opção a todos os selects de produto e a armazena
+                    let newOption = `<option value="${response.product.id}" data-price="${response.product.price}" data-description="${response.product.description}">
+                        ${response.product.name} - ${response.product.category_name || 'Sem categoria'}
+                    </option>`;
+                    
+                    $('.product-select').append(newOption);
+                    
+                    // Seleciona o novo produto na última linha
+                    $('.product-row:last .product-select').val(response.product.id).trigger('change');
+                    
+                    $('#addProductModal').modal('hide');
+                    showSuccessToast('Produto criado com sucesso!');
+                } else {
+                    showErrorAlert('Erro ao criar produto. Tente novamente.');
+                }
+            },
+            error: function(xhr) {
+                showErrorAlert('Erro ao criar produto. Verifique os dados e tente novamente.');
+            },
+            complete: function() {
+                $('#saveProductBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Produto');
+                $('#addProductForm')[0].reset();
+            }
+        });
+    });
+
+    // Submissão do formulário do modal de categoria
+    $('#addCategoryForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        $('#saveCategoryBtn').prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Salvando...');
+        
+        let formData = {
+            name: $('#category_name').val(),
+            description: $('#category_description').val(),
+            parent_id: $('#category_parent_id').val(),
+            _token: $('input[name="_token"]').val()
+        };
+        
+        @if(auth()->user()->role === 'super_admin')
+        let companyId = $('#company_id').val();
+        if (companyId) {
+            formData.company_id = companyId;
+        }
+        @endif
+        
+        $.ajax({
+            url: '{{ route("categories.store") }}',
+            method: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    let newOption = new Option(response.category.name, response.category.id, true, true);
+                    $('#modal_category_id').append(newOption);
+                    $('#category_parent_id').append(new Option(response.category.name, response.category.id));
+                    
+                    $('#addCategoryModal').modal('hide');
+                    showSuccessToast('Categoria criada com sucesso!');
+                } else {
+                    showErrorAlert('Erro ao criar categoria. Tente novamente.');
+                }
+            },
+            error: function(xhr) {
+                showErrorAlert('Erro ao criar categoria. Verifique os dados e tente novamente.');
+            },
+            complete: function() {
+                $('#saveCategoryBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Categoria');
+                $('#addCategoryForm')[0].reset();
+            }
+        });
+    });
+
+    // Limpar formulários ao fechar os modais
+    $('#addProductModal').on('hidden.bs.modal', function() {
+        $('#addProductForm')[0].reset();
+        $('#saveProductBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Produto');
+        applyMasks();
+    });
+    
+    $('#addCategoryModal').on('hidden.bs.modal', function() {
+        $('#addCategoryForm')[0].reset();
+        $('#saveCategoryBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Categoria');
+    });
+
+    // Abrir modal de categoria sem fechar o de produto
+    $('#openCategoryModalBtn').on('click', function() {
+        $('#addCategoryModal').modal('show');
+    });
+    
+    // --- Lógica de Datas ---
+
+    // Calcula automaticamente a data de validade (15 dias após a data de emissão)
+    $('#issue_date').on('change', function() {
+        const issueDate = $(this).val();
+        if (issueDate) {
+            const date = new Date(issueDate);
+            date.setDate(date.getDate() + 15);
+            
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            const validUntilDate = `${year}-${month}-${day}`;
+            $('#valid_until').val(validUntilDate);
+        }
+    });
+    
+    // Definir data de validade inicial se já houver data de emissão
+    const initialIssueDate = $('#issue_date').val();
+    if (initialIssueDate) {
+        $('#issue_date').trigger('change');
+    }
+    
+    @if(auth()->guard('web')->user()->role === 'super_admin')
+    // --- Lógica de Carregamento Dinâmico (Super Admin) ---
+
+    // Carregamento dinâmico de categorias baseado na empresa selecionada
+    function loadCategoriesByCompany(companyId) {
+        if (!companyId) {
+            $('#modal_category_id').html('<option value="">Selecione uma categoria</option>');
+            $('#category_parent_id').html('<option value="">Categoria Principal</option>');
+            return;
+        }
+        
+        $.get({
+            url: '{{ route("categories.by-company") }}',
+            data: { company_id: companyId },
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                if (response.success && response.categories) {
+                    let productCategoryOptions = '<option value="">Selecione uma categoria</option>';
+                    let parentCategoryOptions = '<option value="">Categoria Principal</option>';
+                    
+                    $.each(response.categories, function(categoryId, categoryName) {
+                        productCategoryOptions += `<option value="${categoryId}">${categoryName}</option>`;
+                        parentCategoryOptions += `<option value="${categoryId}">${categoryName}</option>`;
+                    });
+                    
+                    $('#modal_category_id').html(productCategoryOptions);
+                    $('#category_parent_id').html(parentCategoryOptions);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Erro ao carregar categorias:', error);
+            }
+        });
+    }
+    
+    // Carregamento dinâmico de produtos baseado na empresa selecionada
+    function loadProductsByCompany(companyId) {
+        if (!companyId) {
+            updateProductSelects('<option value="">Selecione um produto</option>');
+            return;
+        }
+        
+        $.get({
+            url: '{{ route("products.by-company") }}',
+            data: { company_id: companyId },
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                let productOptions = '<option value="">Selecione um produto</option>';
+                response.forEach(function(product) {
+                    productOptions += `<option value="${product.id}" data-price="${product.price}" data-description="${product.description}">${product.name} - ${product.category_name}</option>`;
+                });
+                updateProductSelects(productOptions);
+                // Armazena as opções para novas linhas
+                window.currentProductOptions = productOptions;
+            },
+            error: function(xhr, status, error) {
+                console.error('Erro ao carregar produtos:', error);
+            }
+        });
+    }
+
+    // Atualiza todos os selects de produto na tela
+    function updateProductSelects(options) {
+        $('.product-select').html(options);
+    }
+    
+    // Carregamento dinâmico de clientes baseado na empresa selecionada
+    function loadClientsByCompany(companyId) {
+        if (!companyId) {
+            $('#client_id').html('<option value="">Selecione um cliente</option>');
+            return;
+        }
+        
+        $.get({
+            url: '{{ route("clients.by-company") }}',
+            data: { company_id: companyId },
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                let clientOptions = '<option value="">Selecione um cliente</option>';
+                response.forEach(function(client) {
+                    clientOptions += `<option value="${client.id}">${client.display_name}</option>`;
+                });
+                $('#client_id').html(clientOptions);
+            },
+            error: function(xhr, status, error) {
+                console.error('Erro ao carregar clientes:', error);
+            }
+        });
+    }
+    
+    // Monitorar mudanças no select de empresa
+    $('#company_id').on('change', function() {
+        const companyId = $(this).val();
+        loadCategoriesByCompany(companyId);
+        loadProductsByCompany(companyId);
+        loadClientsByCompany(companyId);
+    });
+    
+    // Carregar dados inicialmente se já houver empresa selecionada
+    const initialCompanyId = $('#company_id').val();
+    if (initialCompanyId) {
+        loadCategoriesByCompany(initialCompanyId);
+        loadProductsByCompany(initialCompanyId);
+        loadClientsByCompany(initialCompanyId);
+    }
+    @endif
+
+    // --- Gerenciamento de Métodos de Pagamento ---
+    
+    let paymentMethodIndex = $('#payment-methods-container .payment-method-row').length;
+
+    function addPaymentRow() {
+        const template = `
+            <div class="payment-method-row mb-3">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Método de Pagamento</label>
+                        <select class="form-select" name="payment_methods[${paymentMethodIndex}][payment_method_id]">
+                            <option value="">Selecione um método</option>
+                            @foreach($paymentMethods as $method)
+                                <option value="{{ $method->id }}">{{ $method->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Valor</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" class="form-control money" name="payment_methods[${paymentMethodIndex}][amount]" placeholder="0,00">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Parcelas</label>
+                        <input type="number" class="form-control" name="payment_methods[${paymentMethodIndex}][installments]" value="1" min="1">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Momento</label>
+                        <select class="form-select" name="payment_methods[${paymentMethodIndex}][payment_moment]">
+                            <option value="approval">Na Aprovação</option>
+                            <option value="pickup">Na Retirada</option>
+                            <option value="custom">Data Personalizada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Data Personalizada</label>
+                        <input type="date" class="form-control" name="payment_methods[${paymentMethodIndex}][custom_date]">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-payment-method me-1">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm add-payment-method">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-11">
+                        <label class="form-label">Observações</label>
+                        <input type="text" class="form-control" name="payment_methods[${paymentMethodIndex}][notes]" placeholder="Observações sobre este pagamento">
+                    </div>
+                </div>
+            </div>
+        `;
+        $('#payment-methods-container').append(template);
+        applyMasks();
+        paymentMethodIndex++;
+        updatePaymentAddButtons();
+    }
+
+    // Reindexa os métodos de pagamento após uma remoção
+    function reindexPaymentMethods() {
+        $('#payment-methods-container .payment-method-row').each(function(index) {
+            $(this).find('select, input').each(function() {
+                const newName = $(this).attr('name').replace(/\[\d+\]/g, `[${index}]`);
+                $(this).attr('name', newName);
+            });
+        });
+        paymentMethodIndex = $('#payment-methods-container .payment-method-row').length;
+    }
+    
+    // Mostra apenas o botão de adicionar na última linha de pagamento
+    function updatePaymentAddButtons() {
+        $('.add-payment-method').hide();
+        $('#payment-methods-container .payment-method-row:last .add-payment-method').show();
+    }
+
+    // Adiciona a primeira linha de pagamento se a container estiver vazia
+    if ($('#payment-methods-container .payment-method-row').length === 0) {
+        addPaymentRow();
+    } else {
+        // Reindexa as linhas existentes ao carregar a página
+        reindexPaymentMethods();
+    }
+    
+    $(document).on('click', '.add-payment-method', function() {
+        addPaymentRow();
+    });
+
+    $(document).on('click', '.remove-payment-method', function() {
+        const rowCount = $('.payment-method-row').length;
+        if (rowCount > 1) {
+            $(this).closest('.payment-method-row').remove();
+            reindexPaymentMethods();
+        } else {
+            // Se for a última linha, apenas limpa os campos
+            $(this).closest('.payment-method-row').find('input, select').val('');
+            $(this).closest('.payment-method-row').find('input[type="number"]').val('1');
+        }
+        updatePaymentAddButtons();
+    });
+
+    // --- Funções de Notificação (opcional, requer SweetAlert2) ---
+
+    function showSuccessToast(text) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Sucesso!',
+                text: text,
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
+    }
+
+    function showErrorAlert(text) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro!',
+                text: text,
+                confirmButtonText: 'OK'
+            });
+        }
+    }
+
 });
 </script>
 @endpush

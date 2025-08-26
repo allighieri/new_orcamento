@@ -258,6 +258,70 @@
                     </div>
                     @endif
                     
+                    @if($budget->budgetPayments->count() > 0)
+                    <!-- Métodos de Pagamento -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="bi bi-credit-card"></i> Métodos de Pagamento</h5>
+                                </div>
+                                <div class="card-body">
+                                    @foreach($budget->budgetPayments as $payment)
+                                    <div class="mb-4">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6 class="text-primary">{{ $payment->paymentMethod->name }}</h6>
+                                                <p class="mb-1"><strong>Valor:</strong> R$ {{ number_format($payment->amount, 2, ',', '.') }}</p>
+                                                <p class="mb-1"><strong>Parcelas:</strong> {{ $payment->installments }}x</p>
+                                                <p class="mb-1"><strong>Momento:</strong> {{ $payment->payment_moment_description }}</p>
+                                                @if($payment->notes)
+                                                <p class="mb-1"><strong>Observações:</strong> {{ $payment->notes }}</p>
+                                                @endif
+                                            </div>
+                                            <div class="col-md-6">
+                                                @if($payment->installments()->count() > 0)
+                                                <h6 class="text-secondary">Parcelas</h6>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-striped">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Parcela</th>
+                                                                <th>Valor</th>
+                                                                <th>Vencimento</th>
+                                                                <th>Status</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($payment->installments() as $installment)
+                                                            <tr>
+                                                                <td>{{ $installment->installment_number }}/{{ $payment->installments }}</td>
+                                                                <td>R$ {{ number_format($installment->amount, 2, ',', '.') }}</td>
+                                                                <td>{{ $installment->due_date->format('d/m/Y') }}</td>
+                                                                <td>
+                                                                    <span class="badge bg-{{ $installment->status == 'paid' ? 'success' : ($installment->status == 'overdue' ? 'danger' : 'warning') }}">
+                                                                        {{ $installment->status_description }}
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @if(!$loop->last)
+                                        <hr>
+                                        @endif
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    
                     <!-- Linhas de Assinatura -->
                     <div class="row mb-4">
                         <div class="col-md-5">

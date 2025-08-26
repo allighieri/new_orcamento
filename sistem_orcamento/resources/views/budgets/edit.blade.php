@@ -306,7 +306,130 @@
                         
                         </div>
 
-                        
+                        <!-- Seção de Métodos de Pagamento -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="bi bi-credit-card"></i> Métodos de Pagamento</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="payment-methods-container">
+                                    @if($budget->budgetPayments->count() > 0)
+                                        @foreach($budget->budgetPayments as $index => $payment)
+                                            <div class="payment-method-row mb-3">
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">Método de Pagamento</label>
+                                                        <select class="form-select" name="payment_methods[{{ $index }}][payment_method_id]">
+                                                            <option value="">Selecione um método</option>
+                                                            @foreach($paymentMethods as $method)
+                                                                <option value="{{ $method->id }}" {{ $payment->payment_method_id == $method->id ? 'selected' : '' }}>
+                                                                    {{ $method->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">Valor</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">R$</span>
+                                                            <input type="text" class="form-control money" name="payment_methods[{{ $index }}][amount]" 
+                                                                   value="{{ number_format($payment->amount, 2, ',', '.') }}" placeholder="0,00">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">Parcelas</label>
+                                                        <input type="number" class="form-control" name="payment_methods[{{ $index }}][installments]" 
+                                                               value="{{ $payment->installments }}" min="1">
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">Momento</label>
+                                                        <select class="form-select" name="payment_methods[{{ $index }}][payment_moment]">
+                                                            <option value="approval" {{ $payment->payment_moment == 'approval' ? 'selected' : '' }}>Na Aprovação</option>
+                                                            <option value="pickup" {{ $payment->payment_moment == 'pickup' ? 'selected' : '' }}>Na Retirada</option>
+                                                            <option value="custom" {{ $payment->payment_moment == 'custom' ? 'selected' : '' }}>Data Personalizada</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">Data Personalizada</label>
+                                                        <input type="date" class="form-control" name="payment_methods[{{ $index }}][custom_date]" 
+                                                               value="{{ $payment->custom_date }}">
+                                                    </div>
+                                                    <div class="col-md-1 d-flex align-items-end">
+                                                        @if($index == 0)
+                                                            <button type="button" class="btn btn-success btn-sm add-payment-method">
+                                                                <i class="bi bi-plus"></i>
+                                                            </button>
+                                                        @else
+                                                            <button type="button" class="btn btn-danger btn-sm remove-payment-method me-1">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-success btn-sm add-payment-method">
+                                                                <i class="bi bi-plus"></i>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-md-11">
+                                                        <label class="form-label">Observações</label>
+                                                        <input type="text" class="form-control" name="payment_methods[{{ $index }}][notes]" 
+                                                               value="{{ $payment->notes }}" placeholder="Observações sobre este pagamento">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <div class="payment-method-row mb-3">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Método de Pagamento</label>
+                                                    <select class="form-select" name="payment_methods[0][payment_method_id]">
+                                                        <option value="">Selecione um método</option>
+                                                        @foreach($paymentMethods as $method)
+                                                            <option value="{{ $method->id }}">{{ $method->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">Valor</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">R$</span>
+                                                        <input type="text" class="form-control money" name="payment_methods[0][amount]" placeholder="0,00">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">Parcelas</label>
+                                                    <input type="number" class="form-control" name="payment_methods[0][installments]" value="1" min="1">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">Momento</label>
+                                                    <select class="form-select" name="payment_methods[0][payment_moment]">
+                                                        <option value="approval">Na Aprovação</option>
+                                                        <option value="pickup">Na Retirada</option>
+                                                        <option value="custom">Data Personalizada</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">Data Personalizada</label>
+                                                    <input type="date" class="form-control" name="payment_methods[0][custom_date]">
+                                                </div>
+                                                <div class="col-md-1 d-flex align-items-end">
+                                                    <button type="button" class="btn btn-success btn-sm add-payment-method">
+                                                        <i class="bi bi-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="row mt-2">
+                                                <div class="col-md-11">
+                                                    <label class="form-label">Observações</label>
+                                                    <input type="text" class="form-control" name="payment_methods[0][notes]" placeholder="Observações sobre este pagamento">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
 
                         <hr class="my-4" />
 
@@ -1141,6 +1264,87 @@ $(document).ready(function() {
 
     updateAddButtonVisibility();
     calculateTotals();
+
+    // Gerenciamento de métodos de pagamento
+    let paymentMethodIndex = {{ $budget->budgetPayments->count() > 0 ? $budget->budgetPayments->count() : 1 }};
+
+    // Adicionar novo método de pagamento
+    $(document).on('click', '.add-payment-method', function() {
+        const newPaymentMethod = `
+            <div class="payment-method-row mb-3">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Método de Pagamento</label>
+                        <select class="form-select" name="payment_methods[${paymentMethodIndex}][payment_method_id]">
+                            <option value="">Selecione um método</option>
+                            @foreach($paymentMethods as $method)
+                                <option value="{{ $method->id }}">{{ $method->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Valor</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" class="form-control money" name="payment_methods[${paymentMethodIndex}][amount]" placeholder="0,00">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Parcelas</label>
+                        <input type="number" class="form-control" name="payment_methods[${paymentMethodIndex}][installments]" value="1" min="1">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Momento</label>
+                        <select class="form-select" name="payment_methods[${paymentMethodIndex}][payment_moment]">
+                            <option value="approval">Na Aprovação</option>
+                            <option value="pickup">Na Retirada</option>
+                            <option value="custom">Data Personalizada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Data Personalizada</label>
+                        <input type="date" class="form-control" name="payment_methods[${paymentMethodIndex}][custom_date]">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-payment-method me-1">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm add-payment-method">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-11">
+                        <label class="form-label">Observações</label>
+                        <input type="text" class="form-control" name="payment_methods[${paymentMethodIndex}][notes]" placeholder="Observações sobre este pagamento">
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('#payment-methods-container').append(newPaymentMethod);
+        
+        // Aplicar máscara de dinheiro ao novo campo
+        $('.money').mask('#.##0,00', {reverse: true});
+        
+        paymentMethodIndex++;
+    });
+
+    // Remover método de pagamento
+    $(document).on('click', '.remove-payment-method', function() {
+        const paymentRows = $('.payment-method-row');
+        if (paymentRows.length > 1) {
+            $(this).closest('.payment-method-row').remove();
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atenção!',
+                text: 'Deve haver pelo menos um método de pagamento.',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
 });
 </script>
 @endpush

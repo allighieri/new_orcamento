@@ -62,6 +62,14 @@ class Budget extends Model
     }
 
     /**
+     * Relacionamento com pagamentos do orçamento
+     */
+    public function budgetPayments(): HasMany
+    {
+        return $this->hasMany(BudgetPayment::class);
+    }
+
+    /**
      * Relacionamento com formas de pagamento
      */
     public function payments(): HasMany

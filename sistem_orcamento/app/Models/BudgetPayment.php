@@ -98,4 +98,71 @@ class BudgetPayment extends Model
     {
         return $query->orderBy('order');
     }
+
+    /**
+     * Cria as parcelas automaticamente após salvar o pagamento
+     */
+    public function createInstallments($pickupDate = null)
+    {
+        // Remove parcelas existentes
+        $this->installments()->delete();
+
+        // Se for apenas 1 parcela, cria uma única parcela
+        if ($this->installments <= 1) {
+            PaymentInstallment::create([
+                'budget_payment_id' => $this->id,
+                'installment_number' => 1,
+                'amount' => $this->amount,
+                'due_date' => $this->calculateDueDate($pickupDate),
+                'status' => 'pending'
+            ]);
+            return;
+        }
+
+        // Calcula o valor de cada parcela
+        $installmentAmount = round($this->amount / $this->installments, 2);
+        $totalDistributed = 0;
+
+        // Cria as parcelas
+        for ($i = 1; $i <= $this->installments; $i++) {
+            // Para a última parcela, ajusta o valor para garantir que a soma seja exata
+            if ($i == $this->installments) {
+                $currentAmount = $this->amount - $totalDistributed;
+            } else {
+                $currentAmount = $installmentAmount;
+                $totalDistributed += $currentAmount;
+            }
+
+            // Calcula a data de vencimento baseada no momento de pagamento
+            $dueDate = $this->calculateInstallmentDueDate($i, $pickupDate);
+
+            PaymentInstallment::create([
+                'budget_payment_id' => $this->id,
+                'installment_number' => $i,
+                'amount' => $currentAmount,
+                'due_date' => $dueDate,
+                'status' => 'pending'
+            ]);
+        }
+    }
+
+    /**
+     * Calcula a data de vencimento de uma parcela específica
+     */
+    private function calculateInstallmentDueDate($installmentNumber, $pickupDate = null)
+    {
+        $baseDate = match($this->payment_moment) {
+            'approval' => now(),
+            'pickup' => $pickupDate ? Carbon::parse($pickupDate) : now(),
+            'custom' => $this->custom_date ? Carbon::parse($this->custom_date) : now(),
+            default => now()
+        };
+
+        // Para parcelas múltiplas, adiciona 30 dias para cada parcela subsequente
+        if ($installmentNumber > 1) {
+            $baseDate->addMonths($installmentNumber - 1);
+        }
+
+        return $baseDate->toDateString();
+    }
 }
