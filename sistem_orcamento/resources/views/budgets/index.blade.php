@@ -356,6 +356,9 @@ function sendWhatsAppToClient(budgetId) {
             const modal = bootstrap.Modal.getInstance(document.getElementById('contactModal'));
             modal.hide();
             
+            // Limpar dados do modal
+            clearWhatsAppModal();
+            
             // Abrir WhatsApp
             window.open(data.whatsapp_url, '_blank');
             
@@ -413,6 +416,9 @@ function sendWhatsAppToContact(budgetId, contactId) {
             // Fechar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('contactModal'));
             modal.hide();
+            
+            // Limpar dados do modal
+            clearWhatsAppModal();
             
             // Abrir WhatsApp
             window.open(data.whatsapp_url, '_blank');
@@ -597,9 +603,10 @@ function sendEmailToClient(budgetId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Fechar modal
+            // Fechar modal e limpar dados
             const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
             modal.hide();
+            clearEmailModal();
             
             Swal.fire({
                 title: 'Sucesso',
@@ -667,9 +674,10 @@ function sendEmailToContact(budgetId, contactId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Fechar modal
+            // Fechar modal e limpar dados
             const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
             modal.hide();
+            clearEmailModal();
             
             Swal.fire({
                 title: 'Sucesso',
@@ -710,6 +718,67 @@ function sendEmailToContact(budgetId, contactId) {
         sendBtn.disabled = false;
     });
 }
+
+// Função para limpar dados do modal de email
+function clearEmailModal() {
+    const emailContactSelect = document.getElementById('emailContactSelect');
+    const emailTemplateSelect = document.getElementById('emailTemplateSelect');
+    const emailContactInfo = document.getElementById('emailContactInfo');
+    const sendEmailBtn = document.getElementById('sendEmailBtn');
+    
+    // Resetar selects
+    if (emailContactSelect) emailContactSelect.selectedIndex = 0;
+    if (emailTemplateSelect) emailTemplateSelect.selectedIndex = 0;
+    
+    // Ocultar informações do contato
+    if (emailContactInfo) emailContactInfo.classList.add('d-none');
+    
+    // Desabilitar botão de envio
+    if (sendEmailBtn) sendEmailBtn.disabled = true;
+    
+    // Limpar variável global se existir
+    if (typeof currentBudgetIdForEmail !== 'undefined') {
+        currentBudgetIdForEmail = null;
+    }
+}
+
+// Função para limpar dados do modal do WhatsApp
+function clearWhatsAppModal() {
+    const contactSelect = document.getElementById('contactSelect');
+    const contactInfo = document.getElementById('contactInfo');
+    const sendWhatsAppBtn = document.getElementById('sendWhatsAppBtn');
+    
+    // Resetar select
+    if (contactSelect) contactSelect.selectedIndex = 0;
+    
+    // Ocultar informações do contato
+    if (contactInfo) contactInfo.classList.add('d-none');
+    
+    // Desabilitar botão de envio
+    if (sendWhatsAppBtn) sendWhatsAppBtn.disabled = true;
+    
+    // Limpar variável global se existir
+    if (typeof currentBudgetId !== 'undefined') {
+        currentBudgetId = null;
+    }
+}
+
+// Event listener para limpar modal quando for fechado
+document.addEventListener('DOMContentLoaded', function() {
+    const emailModal = document.getElementById('emailModal');
+    if (emailModal) {
+        emailModal.addEventListener('hidden.bs.modal', function() {
+            clearEmailModal();
+        });
+    }
+    
+    const contactModal = document.getElementById('contactModal');
+    if (contactModal) {
+        contactModal.addEventListener('hidden.bs.modal', function() {
+            clearWhatsAppModal();
+        });
+    }
+});
 </script>
 
 @endsection

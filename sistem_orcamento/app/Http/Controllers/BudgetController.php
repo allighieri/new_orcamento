@@ -944,24 +944,15 @@ class BudgetController extends Controller
                 return !empty($contact->email);
             });
             
-            if ($contacts->isEmpty()) {
-                // Se não há contatos com email, verifica se o cliente tem email
-                if (empty($budget->client->email)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Cliente não possui email ou contatos com email cadastrados.'
-                    ], 400);
-                }
-                
-                // Envia diretamente para o email do cliente
-                $templateId = request()->get('template_id');
-                $result = $this->sendEmailToRecipient($budget, $budget->client->email, $budget->client->fantasy_name, $templateId);
-                
+            // Verificar se o cliente ou contatos têm email
+            $hasClientEmail = !empty($budget->client->email);
+            $hasContactEmails = !$contacts->isEmpty();
+            
+            if (!$hasClientEmail && !$hasContactEmails) {
                 return response()->json([
-                    'success' => $result['success'],
-                    'has_contacts' => false,
-                    'message' => $result['message']
-                ]);
+                    'success' => false,
+                    'message' => 'Cliente não possui email ou contatos com email cadastrados.'
+                ], 400);
             }
             
             // Buscar templates de email ativos da empresa
@@ -976,10 +967,10 @@ class BudgetController extends Controller
                     ->get();
             }
             
-            // Se há contatos com email, retorna dados para a modal
+            // Sempre retorna dados para a modal, permitindo escolha do template
             return response()->json([
                 'success' => true,
-                'has_contacts' => true,
+                'has_contacts' => $hasContactEmails || $hasClientEmail,
                 'client' => [
                     'id' => $budget->client->id,
                     'name' => $budget->client->fantasy_name,

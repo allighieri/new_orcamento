@@ -3,34 +3,40 @@
 @section('title', 'Templates de Email')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
+<div class="container mx-auto row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="bi bi-envelope-paper-heart-fill"></i> Templates de Email</h3>
+            </h1>
+            
+           <div>
+                <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <a href="{{ route('email-templates.create') }}" class="btn btn-primary">
+                    <i class="bi bi-envelope-paper-heart-fill"></i> Novo Template
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mx-auto row">
+    <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title">📧 Templates de Email</h3>
-                    <a href="{{ route('email-templates.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Novo Template
-                    </a>
-                </div>
                 <div class="card-body">
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
 
                     @if($templates->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="table-dark">
+                            <table class="table table-hover">
+                                <thead>
                                     <tr>
                                         <th>Nome</th>
                                         <th>Assunto</th>
                                         <th>Descrição</th>
                                         <th>Status</th>
-                                        <th>Criado em</th>
+                                        <th>Data</th>
                                         <th>Ações</th>
                                     </tr>
                                 </thead>
@@ -56,24 +62,24 @@
                                                 <div class="btn-group" role="group">
                                                     <a href="{{ route('email-templates.show', $template) }}" 
                                                        class="btn btn-sm btn-info" title="Visualizar">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="bi bi-eye"></i>
                                                     </a>
                                                     <a href="{{ route('email-templates.preview', $template) }}" 
                                                        class="btn btn-sm btn-success" title="Preview" target="_blank">
-                                                        <i class="fas fa-external-link-alt"></i>
+                                                        <i class="bi bi-pc-display"></i>
                                                     </a>
                                                     <a href="{{ route('email-templates.edit', $template) }}" 
                                                        class="btn btn-sm btn-warning" title="Editar">
-                                                        <i class="fas fa-edit"></i>
+                                                        <i class="bi bi-pencil"></i>
                                                     </a>
-                                                    <form action="{{ route('email-templates.destroy', $template) }}" 
-                                                          method="POST" class="d-inline" 
-                                                          onsubmit="return confirm('Tem certeza que deseja excluir este template?')">
+                                                    <form action="{{ route('email-templates.destroy', $template) }}" method="POST" class="d-inline" id="delete-form-template-{{ $template->id }}">
+                                                   
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-danger" title="Excluir">
-                                                            <i class="fas fa-trash"></i>
+                                                        <button type="button" class="btn btn-sm btn-danger" title="Excluir" onclick="confirmDeleteTemplate({{ $template->id }})">
+                                                            <i class="bi bi-trash"></i>
                                                         </button>
+                                                        
                                                     </form>
                                                 </div>
                                             </td>
@@ -100,9 +106,33 @@
                 </div>
             </div>
         </div>
-    </div>
+
 </div>
 @endsection
+
+@push('scripts')
+<script>
+
+    function confirmDeleteTemplate(templateId) {
+        Swal.fire({
+            title: 'Atenção!',
+            text: 'Tem certeza que deseja excluir este template?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sim, excluir!',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form-template-' + templateId).submit();
+            }
+        });
+    }
+
+
+</script>
+@endpush
 
 @push('styles')
 <style>

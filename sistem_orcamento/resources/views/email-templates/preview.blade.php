@@ -12,8 +12,8 @@
             background-color: #f5f5f5;
         }
         .preview-header {
-            background: #343a40;
-            color: white;
+            background:rgb(219, 219, 219);
+            color: ##999;
             padding: 15px 20px;
             position: sticky;
             top: 0;

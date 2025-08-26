@@ -3,14 +3,15 @@
 @section('title', 'Criar Template de Email')
 
 @section('content')
-<div class="container-fluid">
+<div class="container mx-auto row">
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title">📧 Criar Novo Template de Email</h3>
-                    <a href="{{ route('email-templates.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Voltar
+                    <h4 class="card-title"><i class="bi bi-envelope-paper-heart-fill"></i> Criar Novo Template de Email</h4>
+                    
+                    <a href="{{ route('email-templates.index') }}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Voltar
                     </a>
                 </div>
                 <div class="card-body">
@@ -109,14 +110,17 @@
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ route('email-templates.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancelar
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ route('email-templates.index') }}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Salvar Template
+                                <i class="bi bi-check-circle"></i> Salvar
                             </button>
                         </div>
+
                     </form>
                 </div>
             </div>

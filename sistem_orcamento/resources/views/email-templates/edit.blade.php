@@ -3,17 +3,15 @@
 @section('title', 'Editar Template de Email')
 
 @section('content')
-<div class="container-fluid">
+<div class="container mx-auto row">
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title">📧 Editar Template: {{ $emailTemplate->name }}</h3>
+                    <h3 class="card-title"><i class="bi bi-envelope-paper-heart-fill"></i> Editar Template: {{ $emailTemplate->name }}</h3>
                     <div>
-                        <a href="{{ route('email-templates.preview', $emailTemplate) }}" class="btn btn-info me-2" target="_blank">
-                            <i class="fas fa-eye"></i> Preview
-                        </a>
-                        <a href="{{ route('email-templates.index') }}" class="btn btn-secondary">
+                        
+                        <a href="{{ route('email-templates.index') }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> Voltar
                         </a>
                     </div>
@@ -107,7 +105,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="mb-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="is_active" 
@@ -118,30 +116,22 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <small class="text-muted">
-                                        <i class="fas fa-info-circle"></i> 
-                                        Criado em: {{ $emailTemplate->created_at->format('d/m/Y H:i') }}<br>
-                                        Última atualização: {{ $emailTemplate->updated_at->format('d/m/Y H:i') }}
-                                    </small>
-                                </div>
-                            </div>
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ route('email-templates.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancelar
-                            </a>
-                            <div>
-                                <a href="{{ route('email-templates.preview', $emailTemplate) }}" class="btn btn-info me-2" target="_blank">
-                                    <i class="fas fa-eye"></i> Visualizar Preview
+                        
+                            
+                            <hr class="my-4">
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{{ route('email-templates.index') }}" class="btn btn-secondary me-md-2">
+                                    <i class="bi bi-x-circle"></i> Cancelar
                                 </a>
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Salvar Alterações
+                                    <i class="bi bi-check-circle"></i> Salvar
                                 </button>
                             </div>
-                        </div>
+
+                        
                     </form>
                 </div>
             </div>
@@ -479,15 +469,45 @@ function loadSampleTemplate() {
 </body>
 </html>`;
     
-    if (confirm('Isso substituirá o conteúdo atual. Deseja continuar?')) {
-        document.getElementById('html_content').value = sampleTemplate;
-    }
+    
+    Swal.fire({
+        title: 'Confirmação',
+        html: 'Isso substituirá o conteúdo atual..<br><br>Tem certeza de que deseja continuar?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, restaurar!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+           document.getElementById('html_content').value = sampleTemplate;
+        }
+    });
+
+
 }
 
 function resetToOriginal() {
-    if (confirm('Isso restaurará o conteúdo original do template. Deseja continuar?')) {
-        document.getElementById('html_content').value = originalContent;
-    }
+    
+
+    Swal.fire({
+        title: 'Confirmação',
+        html: 'Isso restaurará o conteúdo original do template.<br><br>Tem certeza que deseja restaurar?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, restaurar!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('html_content').value = originalContent;
+        }
+    });
+
+
+
 }
 </script>
 @endpush

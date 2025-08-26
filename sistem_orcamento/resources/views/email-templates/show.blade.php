@@ -3,27 +3,30 @@
 @section('title', 'Visualizar Template de Email')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title">📧 {{ $emailTemplate->name }}</h3>
-                    <div>
-                        <a href="{{ route('email-templates.preview', $emailTemplate) }}" class="btn btn-info me-2" target="_blank">
-                            <i class="fas fa-eye"></i> Preview
-                        </a>
-                        <a href="{{ route('email-templates.edit', $emailTemplate) }}" class="btn btn-warning me-2">
-                            <i class="fas fa-edit"></i> Editar
-                        </a>
-                        <a href="{{ route('email-templates.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Voltar
-                        </a>
-                    </div>
-                </div>
+<div class="container mx-auto row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="bi bi-envelope-paper-heart-fill"></i> {{ $emailTemplate->name }}</h3>
+            </h1>
+            
+           <div>
+                <a href="{{ route('email-templates.index') }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <a href="{{ route('email-templates.create') }}" class="btn btn-primary">
+                    <i class="bi bi-envelope-paper-heart-fill"></i> Novo Template
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container mx-auto row">
+    <div class="col-8">
+        <div class="card">
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-8">
+                        <div class="col-md-12">
                             <!-- Informações do Template -->
                             <div class="row mb-4">
                                 <div class="col-md-6">
@@ -89,72 +92,72 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+        </div>
+    </div>
 
-                        <div class="col-md-4">
-                            <!-- Ações Rápidas -->
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h6 class="mb-0">⚡ Ações Rápidas</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-grid gap-2">
-                                        <a href="{{ route('email-templates.preview', $emailTemplate) }}" class="btn btn-info" target="_blank">
-                                            <i class="fas fa-eye"></i> Visualizar Preview
-                                        </a>
-                                        <a href="{{ route('email-templates.edit', $emailTemplate) }}" class="btn btn-warning">
-                                            <i class="fas fa-edit"></i> Editar Template
-                                        </a>
-                                        <button class="btn btn-secondary" onclick="copyToClipboard()">
-                                            <i class="fas fa-copy"></i> Copiar HTML
-                                        </button>
-                                        <hr>
-                                        <form action="{{ route('email-templates.destroy', $emailTemplate) }}" method="POST" 
-                                              onsubmit="return confirm('Tem certeza que deseja excluir este template?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger w-100">
-                                                <i class="fas fa-trash"></i> Excluir Template
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <!-- Variáveis Disponíveis -->
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">📝 Variáveis Disponíveis</h6>
-                                </div>
-                                <div class="card-body">
-                                    <small class="text-muted">Variáveis que podem ser usadas no template:</small>
-                                    <div class="mt-2">
-                                        <div class="mb-2">
-                                            <strong>Destinatário:</strong><br>
-                                            <code class="small">@{{recipientName}}</code>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <code class="small">@{{budgetNumber}}</code><br>
-                                    <code class="small">@{{budgetValue}}</code><br>
-                                    <code class="small">@{{budgetDate}}</code><br>
-                                    <code class="small">@{{budgetValidity}}</code><br>
-                                    <code class="small">@{{budgetStatus}}</code>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <code class="small">@{{companyName}}</code><br>
-                                    <code class="small">@{{companyAddress}}</code><br>
-                                    <code class="small">@{{companyCity}}</code><br>
-                                    <code class="small">@{{companyState}}</code><br>
-                                    <code class="small">@{{companyPhone}}</code><br>
-                                    <code class="small">@{{companyEmail}}</code>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    <div class="col-md-4">
+        <!-- Ações Rápidas -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-gear"></i> Ações Rápidas</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ route('email-templates.preview', $emailTemplate) }}" class="btn btn-info" target="_blank">
+                        <i class="fas fa-eye"></i> Preview
+                    </a>
+                    <a href="{{ route('email-templates.edit', $emailTemplate) }}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <button class="btn btn-secondary" onclick="copyToClipboard()">
+                        <i class="fas fa-copy"></i> Copiar HTML
+                    </button>
+                    <hr>
+                    <form action="{{ route('email-templates.destroy', $emailTemplate) }}" method="POST" 
+                            onsubmit="return confirm('Tem certeza que deseja excluir este template?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Variáveis Disponíveis -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">📝 Variáveis Disponíveis</h6>
+            </div>
+            <div class="card-body">
+                <small class="text-muted">Variáveis que podem ser usadas no template:</small>
+                <div class="mt-2">
+                    <div class="mb-2">
+                        <strong>Destinatário:</strong><br>
+                        <code class="small">@{{recipientName}}</code>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <code class="small">@{{budgetNumber}}</code><br>
+                <code class="small">@{{budgetValue}}</code><br>
+                <code class="small">@{{budgetDate}}</code><br>
+                <code class="small">@{{budgetValidity}}</code><br>
+                <code class="small">@{{budgetStatus}}</code>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <code class="small">@{{companyName}}</code><br>
+                <code class="small">@{{companyAddress}}</code><br>
+                <code class="small">@{{companyCity}}</code><br>
+                <code class="small">@{{companyState}}</code><br>
+                <code class="small">@{{companyPhone}}</code><br>
+                <code class="small">@{{companyEmail}}</code>
                     </div>
                 </div>
             </div>
