@@ -253,18 +253,7 @@
                         </div>
                     </div>
                     
-                    <!-- Campo de Valor Restante -->
-                    <div class="col-md-4 mt-3">
-                        <div class="card bg-warning bg-opacity-10 border-warning">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">Valor Restante:</span>
-                                    <span id="remainingAmount" class="fw-bold text-warning fs-5">R$ 0,00</span>
-                                </div>
-                                <small class="text-muted">Valor que ainda precisa ser pago</small>
-                            </div>
-                        </div>
-                    </div>
+                    
                 </div>
                             
                         </div>
@@ -344,6 +333,29 @@
                             </div>
                         </div>
                         
+
+                        <!-- Campo de Valor Restante -->
+                        <div class="card mt-4" id="remainingAmountCard" style="border-left: 4px solid #28a745; display: none;">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1"><i class="bi bi-calculator"></i> Valor Restante</h5>
+                                                <small class="text-muted">Valor que ainda precisa ser pago</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <h3 class="mb-0" id="remainingAmount">R$ 0,00</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo de Valor Restante -->
+                    
+
                         <hr class="my-4" />
 
                          <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
@@ -654,38 +666,28 @@ $(document).ready(function() {
         return paymentTotal;
     }
     
-    // Atualiza o valor restante
-    function updateRemainingAmount(budgetTotal = null) {
-        if (budgetTotal === null) {
-            let subtotal = calculateSubtotal();
-            let discount = parseMoney($('#total_discount').val());
-            budgetTotal = subtotal - discount;
-        }
-        
-        let paymentTotal = calculatePaymentMethodsTotal();
-        let remaining = budgetTotal - paymentTotal;
+    // Função para atualizar valor restante
+    function updateRemainingAmount() {
+        const budgetTotal = calculateSubtotal() - parseMoney($('#total_discount').val());
+        const paymentTotal = calculatePaymentMethodsTotal();
+        const remaining = budgetTotal - paymentTotal;
         
         $('#remainingAmount').text('R$ ' + formatMoney(remaining));
         
-        // Alterar cor baseado no valor restante
+        // Alterar cor baseado no valor
         const remainingElement = $('#remainingAmount');
-        const cardElement = remainingElement.closest('.card');
+        const cardElement = $('#remainingAmountCard');
         
         if (remaining < 0) {
-            remainingElement.removeClass('text-warning text-success').addClass('text-danger');
-            cardElement.removeClass('bg-warning bg-success border-warning border-success').addClass('bg-danger border-danger');
-            cardElement.addClass('bg-opacity-10');
+            remainingElement.css('color', '#dc3545'); // Vermelho
+            cardElement.css('border-left-color', '#dc3545');
         } else if (remaining === 0) {
-            remainingElement.removeClass('text-warning text-danger').addClass('text-success');
-            cardElement.removeClass('bg-warning bg-danger border-warning border-danger').addClass('bg-success border-success');
-            cardElement.addClass('bg-opacity-10');
+            remainingElement.css('color', '#28a745'); // Verde
+            cardElement.css('border-left-color', '#28a745');
         } else {
-            remainingElement.removeClass('text-danger text-success').addClass('text-warning');
-            cardElement.removeClass('bg-danger bg-success border-danger border-success').addClass('bg-warning border-warning');
-            cardElement.addClass('bg-opacity-10');
+            remainingElement.css('color', '#ffc107'); // Amarelo
+            cardElement.css('border-left-color', '#ffc107');
         }
-        
-        return remaining;
     }
 
     // Função para mostrar apenas o botão '+' da última linha de produto
@@ -1101,12 +1103,14 @@ $(document).ready(function() {
     
     let paymentMethodIndex = $('#payment-methods-container .payment-method-row').length;
     
-    // Controle de exibição dos métodos de pagamento
+    // Controle de exibição dos métodos de pagamento e card de valor restante
     $('input[name="include_payment_methods"]').on('change', function() {
         if ($(this).val() === 'yes') {
             $('#payment-methods-container').show();
+            $('#remainingAmountCard').show();
         } else {
             $('#payment-methods-container').hide();
+            $('#remainingAmountCard').hide();
         }
     });
     

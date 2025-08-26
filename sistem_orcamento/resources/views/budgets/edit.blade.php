@@ -14,7 +14,7 @@
             
                
                 <div class="card-body">
-                    <form method="POST" action="{{ route('budgets.update', $budget) }}">
+                    <form method="POST" action="{{ route('budgets.update', $budget) }}" id="budgetForm">
                         @csrf
                         @method('PUT')
                         
@@ -450,7 +450,7 @@
                         </div>
 
                         <!-- Campo de Valor Restante -->
-                        <div class="card mt-4" id="remainingAmountCard" style="border-left: 4px solid #28a745;">
+                        <div class="card mt-4" id="remainingAmountCard" style="border-left: 4px solid #28a745;{{ $budget->budgetPayments->count() == 0 ? ' display: none;' : '' }}">
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-12">
@@ -1419,12 +1419,14 @@ $(document).ready(function() {
         paymentMethodIndex++;
     });
 
-    // Controlar exibição dos métodos de pagamento com radio buttons
+    // Controlar exibição dos métodos de pagamento e card de valor restante com radio buttons
     $('input[name="include_payment_methods"]').change(function() {
         if ($(this).val() === 'yes') {
             $('#payment-methods-container').show();
+            $('#remainingAmountCard').show();
         } else {
             $('#payment-methods-container').hide();
+            $('#remainingAmountCard').hide();
         }
     });
 
