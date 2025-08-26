@@ -257,6 +257,46 @@
             </div>
             @endif
 
+            @if($budget->budgetPayments->count() > 0)
+            <div class="payment-methods-section" style="margin-bottom: 20px;">
+                <h4>Formas de Pagamento:</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                    <thead>
+                         <tr style="background-color: #f8f9fa;">
+                             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Método</th>
+                             <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Valor</th>
+                             <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Parcelas</th>
+                             <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Momento</th>
+                             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Observações</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         @foreach($budget->budgetPayments as $payment)
+                         <tr>
+                             <td style="border: 1px solid #ddd; padding: 8px;">{{ $payment->paymentMethod->name }}</td>
+                             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">R$ {{ number_format($payment->amount, 2, ',', '.') }}</td>
+                             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{ $payment->installments }}x</td>
+                             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                                 @if($payment->payment_moment == 'approval')
+                                     Na aprovação
+                                 @elseif($payment->payment_moment == 'pickup')
+                                     Na retirada
+                                 @elseif($payment->payment_moment == 'days_after_pickup')
+                                     {{ $payment->days_after_pickup }} dias após retirada
+                                 @elseif($payment->payment_moment == 'custom')
+                                     {{ $payment->custom_date ? $payment->custom_date->format('d/m/Y') : 'Data personalizada' }}
+                                 @else
+                                     -
+                                 @endif
+                             </td>
+                             <td style="border: 1px solid #ddd; padding: 8px;">{{ $payment->notes ?? '-' }}</td>
+                         </tr>
+                         @endforeach
+                     </tbody>
+                </table>
+            </div>
+            @endif
+
             <div class="total-section">
                 <div class="total-row">
                     <strong>Subtotal: R$ {{ number_format($budget->items->sum('total_price'), 2, ',', '.') }}</strong>
