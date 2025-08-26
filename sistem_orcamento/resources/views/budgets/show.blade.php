@@ -24,15 +24,15 @@
                         <span class="budget-actions-{{ $budget->id }}" role="group" 
                              @if($budget->pdfFiles->count() == 0) style="display:none;" @endif>
                             <button type="button" class="btn btn-success mb-2 mb-lg-0" title="Enviar via WhatsApp" onclick="handleWhatsAppSend({{ $budget->id }})">
-                                <i class="bi bi-whatsapp"></i> Enviar PDF
+                                <i class="bi bi-whatsapp"></i> PDF
                             </button>
                             <button type="button" class="btn btn-primary mb-2 mb-lg-0" title="Enviar por Email" onclick="handleEmailSend({{ $budget->id }})">
-                                <i class="bi bi-envelope"></i> Enviar Email
+                                <i class="bi bi-envelope"></i> Email
                             </button>
                         </span>
                         
-                        <a href="{{ route('contacts.create', ['client_id' => $budget->client_id]) }}" class="btn btn-info mb-2 mb-lg-0" title="Adicionar novo contato para este cliente">
-                            <i class="bi bi-person-plus"></i> Adicionar Contato
+                        <a href="{{ route('contacts.create', ['client_id' => $budget->client_id]) }}" class="btn btn-info mb-2 mb-lg-0" title="Adicionar contato>
+                            <i class="bi bi-person-plus"></i> Contato
                         </a>
                         <a href="{{ route('budgets.edit', $budget) }}" class="btn btn-warning mb-2 mb-lg-0">
                             <i class="bi bi-pencil"></i> Editar
