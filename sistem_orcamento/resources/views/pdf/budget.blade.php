@@ -315,6 +315,25 @@
         </tr>
     </table>
 
+    <table class="footer-table" style="text-align: center; width: 100%; border: none; border-collapse: collapse;">
+        <tr>
+            <td style="border: none; padding: 0; text-align: center;">
+                <div style="width: 90%; text-align: center; margin: 0 auto;">
+                    <div style="height: 80px; border-bottom: 1px solid #000; margin-bottom: 10px; text-align: center;"></div>
+                    <p style="margin: 0 !important;"><strong>Assinatura da Empresa</strong></p>
+                    <small>{{ $budget->client->corporate_name ?? $budget->client->fantasy_name ?? 'Cliente' }}</small>
+                </div>
+            </td>
+             <td style="border: none; padding: 0; text-align: center;">
+                <div style="width: 90%; text-align: center; margin: 0 auto;">
+                    <div style="height: 80px; border-bottom: 1px solid #000; margin-bottom: 10px; text-align: center;"></div>
+                    <p style="margin: 0 !important;"><strong>Assinatura da Empresa</strong></p>
+                    <small>{{ $budget->company->corporate_name }}</small>
+                </div>
+            </td>
+        </tr>
+    </table>
+
     
     <!--    
         <div class="footer">
