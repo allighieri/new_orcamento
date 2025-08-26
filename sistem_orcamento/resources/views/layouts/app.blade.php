@@ -301,6 +301,8 @@
                 
                 if (currentPath.includes('/budgets/') && currentPath.match(/\/budgets\/\d+$/)) {
                     redirectTo = 'show'; // estamos na página de detalhes
+                } else if (document.querySelector('.dashboard-page')) {
+                    redirectTo = 'dashboard'; // estamos na dashboard
                 }
                 
                 form.append($('<input>', {

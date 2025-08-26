@@ -677,7 +677,7 @@ class BudgetController extends Controller
          
          $request->validate([
              'status' => 'required|string|in:Pendente,Enviado,Em negociação,Aprovado,Expirado,Concluído',
-             'redirect_to' => 'nullable|string|in:index,show'
+             'redirect_to' => 'nullable|string|in:index,show,dashboard'
          ]);
          
          $budget->status = $request->status;
@@ -686,6 +686,9 @@ class BudgetController extends Controller
          // Determinar para onde redirecionar baseado no parâmetro redirect_to
          if ($request->redirect_to === 'show') {
              return redirect()->route('budgets.show', $budget)
+                 ->with('success', 'Status atualizado com sucesso!');
+         } elseif ($request->redirect_to === 'dashboard') {
+             return redirect()->route('dashboard')
                  ->with('success', 'Status atualizado com sucesso!');
          }
          

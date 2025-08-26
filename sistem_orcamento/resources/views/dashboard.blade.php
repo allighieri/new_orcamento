@@ -3,7 +3,7 @@
 @section('title', 'Dashboard - Sistema de Orçamento')
 
 @section('content')
-<div class="row">
+<div class="row dashboard-page">
     <div class="col-12">
         <h1 class="mb-4">
             <i class="bi bi-speedometer2"></i> Dashboard
@@ -255,7 +255,11 @@
                                             @elseif($budget->status == 'Expirado') bg-danger
                                             @elseif($budget->status == 'Concluído') bg-secondary
                                             @else bg-light text-dark
-                                            @endif">
+                                            @endif
+                                            status-badge"
+                                            style="cursor: pointer;"
+                                            onclick="openStatusModal({{ $budget->id }}, '{{ $budget->status }}')"
+                                            title="Clique para alterar o status">
                                             {{ $budget->status }}
                                         </span>
                                     </td>
