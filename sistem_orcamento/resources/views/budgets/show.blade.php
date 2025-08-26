@@ -12,17 +12,25 @@
                         {{ $budget->client->corporate_name ?? $budget->client->fantasy_name }} {{ $budget->number }}
                     </h3>
                     <div>
-                        <a href="{{ route('budgets.pdf', $budget) }}" class="btn btn-secondary mb-2 mb-lg-0" target="_blank">
+                        <a href="#" 
+                           class="btn btn-secondary mb-2 mb-lg-0 generate-pdf-btn" 
+                           title="Gerar PDF" 
+                           data-budget-id="{{ $budget->id }}"
+                           data-route="{{ route('budgets.pdf', $budget) }}">
                             <i class="bi bi-file-earmark-pdf"></i> PDF
                         </a>
-                        @if($budget->pdfFiles->count() > 0)
-                        <button type="button" class="btn btn-success mb-2 mb-lg-0" title="Enviar via WhatsApp" onclick="handleWhatsAppSend({{ $budget->id }})">
-                            <i class="bi bi-whatsapp"></i> Enviar PDF
-                        </button>
-                        <button type="button" class="btn btn-primary mb-2 mb-lg-0" title="Enviar por Email" onclick="handleEmailSend({{ $budget->id }})">
-                            <i class="bi bi-envelope"></i> Enviar Email
-                        </button>
-                        @endif
+                        
+                        {{-- Grupo de botões de e-mail e WhatsApp (inicialmente ocultos) --}}
+                        <span class="budget-actions-{{ $budget->id }}" role="group" 
+                             @if($budget->pdfFiles->count() == 0) style="display:none;" @endif>
+                            <button type="button" class="btn btn-success mb-2 mb-lg-0" title="Enviar via WhatsApp" onclick="handleWhatsAppSend({{ $budget->id }})">
+                                <i class="bi bi-whatsapp"></i> Enviar PDF
+                            </button>
+                            <button type="button" class="btn btn-primary mb-2 mb-lg-0" title="Enviar por Email" onclick="handleEmailSend({{ $budget->id }})">
+                                <i class="bi bi-envelope"></i> Enviar Email
+                            </button>
+                        </span>
+                        
                         <a href="{{ route('contacts.create', ['client_id' => $budget->client_id]) }}" class="btn btn-info mb-2 mb-lg-0" title="Adicionar novo contato para este cliente">
                             <i class="bi bi-person-plus"></i> Adicionar Contato
                         </a>
@@ -355,8 +363,85 @@
     </div>
 </div>
 
+@push('scripts')
 <script>
 // Função openStatusModal está definida no app.blade.php
+
+$(document).on('click', '.generate-pdf-btn', function(e) {
+    e.preventDefault(); 
+    
+    const generatePdfButton = $(this);
+    const budgetId = generatePdfButton.data('budget-id');
+    const route = generatePdfButton.data('route');
+    const originalButtonHtml = generatePdfButton.html();
+
+    // 1. Mostrar o SweetAlert de loading
+    Swal.fire({
+        title: 'Gerando PDF',
+        html: 'Por favor, aguarde...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Mostrar loading no botão
+    generatePdfButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gerando...');
+    generatePdfButton.prop('disabled', true); // Desabilitar o botão 
+
+    // 2. Requisição AJAX para gerar o PDF
+    $.ajax({
+        url: route,
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(response) {
+            Swal.close(); // Fechar o alerta de loading
+
+            if (response.success) {
+                // Abrir o PDF em uma nova aba
+                window.open(response.url, '_blank');
+
+                // Mostrar os botões de e-mail e WhatsApp
+                $(`.budget-actions-${budgetId}`).show(); 
+
+                // Mostrar SweetAlert de sucesso
+                Swal.fire({
+                    icon: 'success',
+                    title: 'PDF Gerado!',
+                    text: response.message || 'PDF gerado e salvo com sucesso!',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    toast: true,
+                    position: 'top-end'
+                });
+
+            } else {
+                Swal.fire({
+                    title: 'Erro',
+                    text: response.message || 'Erro ao gerar PDF.',
+                    icon: 'error'
+                });
+            }
+        },
+        error: function(xhr) {
+            Swal.close(); // Fechar o alerta de loading
+
+            console.error('Erro ao gerar PDF:', xhr.responseText);
+            Swal.fire({
+                title: 'Erro',
+                text: 'Não foi possível gerar o PDF.',
+                icon: 'error'
+            });
+        },
+        complete: function() {
+            // Restaurar o botão
+            generatePdfButton.html(originalButtonHtml);
+            generatePdfButton.prop('disabled', false);
+        }
+    });
+});
 
 function confirmDeleteBudget(budgetId) {
     Swal.fire({
@@ -934,5 +1019,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
+@endpush
 @endsection

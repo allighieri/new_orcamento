@@ -295,6 +295,20 @@
                     value: newStatus
                 }));
                 
+                // Detectar a página atual para determinar o redirecionamento
+                const currentPath = window.location.pathname;
+                let redirectTo = 'index'; // padrão
+                
+                if (currentPath.includes('/budgets/') && currentPath.match(/\/budgets\/\d+$/)) {
+                    redirectTo = 'show'; // estamos na página de detalhes
+                }
+                
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'redirect_to',
+                    value: redirectTo
+                }));
+                
                 // Adicionar o formulário ao body e submeter
                 $('body').append(form);
                 form.submit();
