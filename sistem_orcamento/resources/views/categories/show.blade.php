@@ -147,13 +147,30 @@
                         <div class="list-group list-group-flush">
                             @foreach($category->products->take(10) as $product)
                             <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                <div>
+                                <div class="flex-grow-1">
                                     <strong>{{ $product->name }}</strong>
                                     @if($product->description)
                                         <small class="text-muted d-block">{{ Str::limit($product->description, 50) }}</small>
                                     @endif
                                 </div>
-                                <span class="text-success fw-bold">R$ {{ number_format($product->price, 2, ',', '.') }}</span>
+                                <div class="d-flex align-items-center">
+                                    <span class="text-success fw-bold me-3">R$ {{ number_format($product->price, 2, ',', '.') }}</span>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline" id="delete-form-product-{{ $product->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteProduct({{ $product->id }}, '{{ $product->name }}')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                             @endforeach
                             
@@ -188,6 +205,23 @@ function confirmDeleteCategory(categoryId) {
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById('delete-form-category-' + categoryId).submit();
+        }
+    });
+}
+
+function confirmDeleteProduct(productId, productName) {
+    Swal.fire({
+        title: 'Confirmar Exclusão',
+        text: `Tem certeza de que deseja excluir o produto "${productName}"?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-product-' + productId).submit();
         }
     });
 }
