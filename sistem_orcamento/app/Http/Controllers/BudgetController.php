@@ -222,7 +222,15 @@ class BudgetController extends Controller
             \Illuminate\Support\Facades\Log::info('Budget created successfully', ['budget_id' => $budget->id, 'budget_number' => $budget->number]);
             
             DB::commit();
-            return redirect()->route('budgets.show', $budget)->with('success', 'Orçamento criado com sucesso!');
+            
+            // Gerar PDF automaticamente após criar o orçamento
+            try {
+                $this->generatePdfAutomatically($budget);
+                return redirect()->route('budgets.show', $budget)->with('success', 'Orçamento criado com sucesso! PDF gerado automaticamente.');
+            } catch (\Exception $pdfException) {
+                \Illuminate\Support\Facades\Log::error('Error generating PDF after budget creation', ['error' => $pdfException->getMessage()]);
+                return redirect()->route('budgets.show', $budget)->with('success', 'Orçamento criado com sucesso! Erro ao gerar PDF: ' . $pdfException->getMessage());
+            }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Error creating budget', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             
@@ -445,7 +453,15 @@ class BudgetController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->route('budgets.show', $budget)->with('success', 'Orçamento atualizado com sucesso!');
+            
+            // Gerar PDF automaticamente após atualizar o orçamento
+            try {
+                $this->generatePdfAutomatically($budget);
+                return redirect()->route('budgets.show', $budget)->with('success', 'Orçamento atualizado com sucesso! PDF gerado automaticamente.');
+            } catch (\Exception $pdfException) {
+                \Illuminate\Support\Facades\Log::error('Error generating PDF after budget update', ['error' => $pdfException->getMessage()]);
+                return redirect()->route('budgets.show', $budget)->with('success', 'Orçamento atualizado com sucesso! Erro ao gerar PDF: ' . $pdfException->getMessage());
+            }
         } catch (\Exception $e) {
             DB::rollback();
             return back()->withInput()->with('error', 'Erro ao atualizar orçamento: ' . $e->getMessage());
@@ -1109,5 +1125,60 @@ class BudgetController extends Controller
             \Illuminate\Support\Facades\Log::error('Erro ao enviar email: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Erro ao enviar email: ' . $e->getMessage()];
         }
+    }
+    
+    /**
+     * Gera PDF automaticamente após criar ou atualizar um orçamento
+     * Versão simplificada do generatePdf que não retorna resposta HTTP
+     */
+    private function generatePdfAutomatically(Budget $budget)
+    {
+        $budget->load(['client', 'items.product']);
+        
+        // Limpar arquivos PDF órfãos antes de gerar um novo
+        $this->cleanupOrphanedPdfFiles();
+        
+        // Excluir PDFs antigos antes de gerar um novo
+        $oldPdfFiles = \App\Models\PdfFile::where('budget_id', $budget->id)->get();
+        foreach ($oldPdfFiles as $oldPdfFile) {
+            // Excluir arquivo físico antigo
+            $oldFilePath = storage_path('app/public/pdfs/' . $oldPdfFile->filename);
+            if (file_exists($oldFilePath)) {
+                unlink($oldFilePath);
+            }
+        }
+        // Excluir registros antigos da tabela pdf_files
+        \App\Models\PdfFile::where('budget_id', $budget->id)->delete();
+        
+        $pdf = Pdf::loadView('pdf.budget', compact('budget'));
+        $pdf->setPaper('A4', 'portrait');
+
+        if(empty($budget->client->corporate_name)){
+             $filename = Str::slug($budget->client->fantasy_name) . '-' . 'orcamento-' . str_replace('/', '-', $budget->number) . '.pdf';
+        } else {
+            $filename = Str::slug($budget->client->corporate_name) . '-' . 'orcamento-' . str_replace('/', '-', $budget->number) . '.pdf';
+        }
+        
+        // Salvar o PDF no servidor
+        $filePath = 'pdfs/' . $filename;
+        $fullPath = storage_path('app/public/' . $filePath);
+        
+        // Criar o diretório se não existir
+        $directory = dirname($fullPath);
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);
+        }
+        
+        // Salvar o arquivo
+        file_put_contents($fullPath, $pdf->output());
+        
+        // Registrar na tabela pdf_files
+        \App\Models\PdfFile::create([
+            'budget_id' => $budget->id,
+            'company_id' => $budget->company_id,
+            'filename' => $filename
+        ]);
+        
+        \Illuminate\Support\Facades\Log::info('PDF generated automatically', ['budget_id' => $budget->id, 'filename' => $filename]);
     }
 }
