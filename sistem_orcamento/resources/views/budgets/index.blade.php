@@ -197,7 +197,7 @@
                     <select class="form-select" id="emailTemplateSelect">
                         <option value="">Template Padrão</option>
                     </select>
-                    <small class="form-text text-muted">Deixe em branco para usar o template padrão do sistema</small>
+                    <small class="form-text text-muted">Escolha Template Padrão para usar no sistema</small>
                 </div>
                 <div id="emailContactInfo" class="alert alert-info d-none">
                     <strong>Email:</strong> <span id="contactEmail"></span>
@@ -476,13 +476,18 @@ function handleEmailSend(budgetId) {
                 modal.show();
             } else {
                 // Não tem contatos, email foi enviado direto para o cliente
+
+
                 Swal.fire({
-                    title: 'Sucesso',
-                    text: data.message || 'Email enviado com sucesso!',
                     icon: 'success',
+                    title: 'Sucesso!',
+                    text: data.message || 'Email enviado com sucesso!',
                     timer: 2000,
-                    showConfirmButton: false
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
                 });
+
             }
         } else {
             Swal.fire({
@@ -545,7 +550,7 @@ function populateEmailModal(contacts, client, emailTemplates = []) {
         emailTemplates.forEach(template => {
             const option = document.createElement('option');
             option.value = template.id;
-            option.textContent = `${template.name} (${template.subject})`;
+            option.textContent = `${template.name}`;
             templateSelect.appendChild(option);
         });
     }
@@ -609,11 +614,13 @@ function sendEmailToClient(budgetId) {
             clearEmailModal();
             
             Swal.fire({
-                title: 'Sucesso',
-                text: 'Email enviado com sucesso!',
                 icon: 'success',
+                title: 'Sucesso!',
+                text: data.message || 'Email enviado com sucesso!',
                 timer: 2000,
-                showConfirmButton: false
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
             });
         } else {
             if (data.auth_required) {
@@ -680,12 +687,14 @@ function sendEmailToContact(budgetId, contactId) {
             clearEmailModal();
             
             Swal.fire({
-                title: 'Sucesso',
-                text: 'Email enviado com sucesso!',
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false
-            });
+                    icon: 'success',
+                    title: 'Sucesso!',
+                    text: data.message || 'Email enviado com sucesso!',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
         } else {
             if (data.auth_required) {
                 Swal.fire({

@@ -50,8 +50,11 @@ class EmailTemplateController extends Controller
                 ->withInput();
         }
 
+        // Tratar o campo is_active explicitamente (checkbox não marcado não é enviado)
         $data = $request->all();
         $data['company_id'] = $companyId;
+        $data['is_active'] = $request->has('is_active') ? 1 : 0;
+        
         EmailTemplate::create($data);
 
         return redirect()->route('email-templates.index')
@@ -109,7 +112,11 @@ class EmailTemplateController extends Controller
                 ->withInput();
         }
 
-        $emailTemplate->update($request->all());
+        // Tratar o campo is_active explicitamente (checkbox não marcado não é enviado)
+        $data = $request->all();
+        $data['is_active'] = $request->has('is_active') ? 1 : 0;
+        
+        $emailTemplate->update($data);
 
         return redirect()->route('email-templates.index')
             ->with('success', 'Template atualizado com sucesso!');

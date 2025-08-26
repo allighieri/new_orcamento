@@ -339,7 +339,7 @@
                     <select class="form-select" id="emailTemplateSelect">
                         <option value="">Template Padrão</option>
                     </select>
-                    <small class="form-text text-muted">Deixe em branco para usar o template padrão do sistema</small>
+                    <small class="form-text text-muted">Escolha Template Padrão para usar no sistema</small>
                 </div>
                 <div id="emailContactInfo" class="alert alert-info d-none">
                     <strong>Email:</strong> <span id="contactEmail"></span>
@@ -685,7 +685,7 @@ function populateEmailModal(contacts, client, emailTemplates = []) {
         emailTemplates.forEach(template => {
             const option = document.createElement('option');
             option.value = template.id;
-            option.textContent = `${template.name} (${template.subject})`;
+            option.textContent = `${template.name}`;
             templateSelect.appendChild(option);
         });
     }

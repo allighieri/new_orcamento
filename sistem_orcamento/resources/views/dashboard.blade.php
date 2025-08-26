@@ -14,26 +14,47 @@
 <!-- Cards de Estatísticas -->
 <div class="row mb-4">
     <div class="col-md-2 mb-3">
-        <div class="card bg-primary text-white">
+        <div class="card bg-info text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="card-title">{{ $stats['clients_count'] }}</h4>
-                        <p class="card-text">Clientes</p>
+                        <h4 class="card-title">{{ $stats['budgets_count'] }}</h4>
+                        <p class="card-text">Orçamentos</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="bi bi-people fs-1"></i>
+                        <i class="bi bi-file-earmark-text fs-1"></i>
                     </div>
                 </div>
             </div>
             <div class="card-footer">
-                <a href="{{ route('clients.index') }}" class="text-white text-decoration-none">
+                <a href="{{ route('budgets.index') }}" class="text-white text-decoration-none">
                     <small>Ver todos <i class="bi bi-arrow-right"></i></small>
                 </a>
             </div>
         </div>
     </div>
-    
+
+    <div class="col-md-2 mb-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ $stats['categories_count'] }}</h4>
+                        <p class="card-text">Categorias</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-tags fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ route('categories.index') }}" class="text-white text-decoration-none">
+                    <small>Ver todas <i class="bi bi-arrow-right"></i></small>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <div class="col-md-2 mb-3">
         <div class="card bg-success text-white">
             <div class="card-body">
@@ -54,43 +75,44 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-2 mb-3">
-        <div class="card bg-info text-white">
+        <div class="card bg-primary text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="card-title">{{ $stats['budgets_count'] }}</h4>
-                        <p class="card-text">Orçamentos</p>
+                        <h4 class="card-title">{{ $stats['clients_count'] }}</h4>
+                        <p class="card-text">Clientes</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="bi bi-file-earmark-text fs-1"></i>
+                        <i class="bi bi-people fs-1"></i>
                     </div>
                 </div>
             </div>
             <div class="card-footer">
-                <a href="{{ route('budgets.index') }}" class="text-white text-decoration-none">
+                <a href="{{ route('clients.index') }}" class="text-white text-decoration-none">
                     <small>Ver todos <i class="bi bi-arrow-right"></i></small>
                 </a>
             </div>
         </div>
     </div>
     
+
     <div class="col-md-2 mb-3">
-        <div class="card bg-warning text-white">
+        <div class="card bg-info text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="card-title">{{ $stats['categories_count'] }}</h4>
-                        <p class="card-text">Categorias</p>
+                        <h4 class="card-title">{{ $stats['contacts_count'] }}</h4>
+                        <p class="card-text">Contatos</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="bi bi-tags fs-1"></i>
+                        <i class="bi bi-person-rolodex fs-1"></i>
                     </div>
                 </div>
             </div>
             <div class="card-footer">
-                <a href="{{ route('categories.index') }}" class="text-white text-decoration-none">
+                <a href="{{ route('contacts.index') }}" class="text-white text-decoration-none">
                     <small>Ver todas <i class="bi bi-arrow-right"></i></small>
                 </a>
             </div>
@@ -119,26 +141,7 @@
         </div>
     </div>
     @endif
-    <div class="col-md-2 mb-3">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4 class="card-title">{{ $stats['contacts_count'] }}</h4>
-                        <p class="card-text">Contatos</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-person-rolodex fs-1"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="card-footer">
-                <a href="{{ route('contacts.index') }}" class="text-white text-decoration-none">
-                    <small>Ver todas <i class="bi bi-arrow-right"></i></small>
-                </a>
-            </div>
-        </div>
-    </div>
+
 </div>
 
 <!-- Ações Rápidas -->
@@ -164,6 +167,16 @@
                             Novo Cliente
                         </a>
                     </div>
+                    
+                    
+
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ route('categories.create') }}" class="btn btn-warning btn-lg w-100">
+                            <i class="bi bi-tag"></i><br>
+                            Nova Categoria
+                        </a>
+                    </div>
+
                     @if(Auth::check() && Auth::user()->role === 'super_admin')
                     <div class="col-md-3 mb-3">
                         <a href="{{ route('companies.create') }}" class="btn btn-secondary btn-lg w-100">
@@ -172,12 +185,6 @@
                         </a>
                     </div>
                     @endif
-                    <div class="col-md-3 mb-3">
-                        <a href="{{ route('contacts.create') }}" class="btn btn-dark btn-lg w-100">
-                            <i class="bi bi-person-rolodex"></i><br>
-                            Novo Contato
-                        </a>
-                    </div>
                 </div>
                 <div class="row">
                     <div class="col-md-3 mb-3">
@@ -187,11 +194,12 @@
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <a href="{{ route('categories.create') }}" class="btn btn-warning btn-lg w-100">
-                            <i class="bi bi-tag"></i><br>
-                            Nova Categoria
+                        <a href="{{ route('contacts.create') }}" class="btn btn-danger btn-lg w-100">
+                            <i class="bi bi-person-rolodex"></i><br>
+                            Novo Contato
                         </a>
                     </div>
+                    
                 </div>
             </div>
         </div>
