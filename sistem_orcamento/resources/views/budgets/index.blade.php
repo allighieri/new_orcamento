@@ -53,7 +53,9 @@
                                 <tr>
                                     <th>Número</th>
                                     <th>Cliente</th>
+                                    @if(Auth::user()->hasRole('super_admin'))
                                     <th>Empresa</th>
+                                    @endif
                                     <th>Data</th>
                                     <th>Status</th>
                                     <th>Total</th>
@@ -69,11 +71,13 @@
                                             {{ $budget->client->corporate_name ?? $budget->client->fantasy_name }}
                                         </a>
                                     </td>
+                                    @if(Auth::user()->hasRole('super_admin'))
                                     <td>
                                         <a href="{{ route('companies.show', $budget->company) }}" class="text-decoration-none">
                                             {{ $budget->company->corporate_name ?? $budget->company->fantasy_name }}
                                         </a>
                                     </td>
+                                    @endif
                                     <td>{{ $budget->issue_date->format('d/m/Y') }}</td>
                                     <td>
                                         <span class="badge status-clickable info-status-badge-{{ $budget->id }}
@@ -101,24 +105,24 @@
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <a href="#" 
-   class="btn btn-sm btn-outline-secondary generate-pdf-btn" 
-   title="Gerar PDF" 
-   data-budget-id="{{ $budget->id }}"
-   data-route="{{ route('budgets.pdf', $budget) }}"> {{-- Adicionando a rota aqui --}}
-    <i class="bi bi-file-earmark-pdf"></i>
-</a>
+                                                class="btn btn-sm btn-outline-secondary generate-pdf-btn" 
+                                                title="Gerar PDF" 
+                                                data-budget-id="{{ $budget->id }}"
+                                                data-route="{{ route('budgets.pdf', $budget) }}"> {{-- Adicionando a rota aqui --}}
+                                                    <i class="bi bi-file-earmark-pdf"></i>
+                                                </a>
 
-{{-- Grupo de botões de e-mail e WhatsApp (inicialmente ocultos) --}}
-{{-- Use um ID ou uma classe única para este grupo, associada ao budget->id --}}
-<div class="btn-group budget-actions-{{ $budget->id }}" role="group" 
-     @if($budget->pdfFiles->count() == 0) style="display:none;" @endif> {{-- ESCONDER INICIALMENTE --}}
-    <button type="button" class="btn btn-sm btn-outline-success" title="Enviar PDF via WhatsApp" onclick="handleWhatsAppSend({{ $budget->id }})">
-        <i class="bi bi-whatsapp"></i>
-    </button>
-    <button type="button" class="btn btn-sm btn-outline-primary" title="Enviar PDF por Email" onclick="handleEmailSend({{ $budget->id }})">
-        <i class="bi bi-envelope"></i>
-    </button>
-</div>
+                                                {{-- Grupo de botões de e-mail e WhatsApp (inicialmente ocultos) --}}
+                                                {{-- Use um ID ou uma classe única para este grupo, associada ao budget->id --}}
+                                                <div class="btn-group budget-actions-{{ $budget->id }}" role="group" 
+                                                    @if($budget->pdfFiles->count() == 0) style="display:none;" @endif> {{-- ESCONDER INICIALMENTE --}}
+                                                    <button type="button" class="btn btn-sm btn-outline-success" title="Enviar PDF via WhatsApp" onclick="handleWhatsAppSend({{ $budget->id }})">
+                                                        <i class="bi bi-whatsapp"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" title="Enviar PDF por Email" onclick="handleEmailSend({{ $budget->id }})">
+                                                        <i class="bi bi-envelope"></i>
+                                                    </button>
+                                                </div>
                                             <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" id="delete-form-budget-{{ $budget->id }}">
                                                 @csrf
                                                 @method('DELETE')

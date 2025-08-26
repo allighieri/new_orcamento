@@ -3,48 +3,35 @@
 @section('title', 'Produtos da Categoria: ' . $category->name . ' - Sistema de Orçamento')
 
 @section('content')
-<div class="row">
+<div class="container mx-auto row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('categories.index') }}">Categorias</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">{{ $category->name }}</li>
-                    </ol>
-                </nav>
                 <h1>
                     <i class="bi bi-box"></i> Produtos da Categoria: {{ $category->name }}
                 </h1>
-                @if($category->description)
-                    <p class="text-muted">{{ $category->description }}</p>
-                @endif
-            </div>
-            <div>
-                <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary me-2">
-                    <i class="bi bi-arrow-left"></i> Voltar
-                </a>
-                <a href="{{ route('products.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus"></i> Novo Produto
-                </a>
-            </div>
+                <div>
+                    <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                    <a href="{{ route('products.create') }}" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> Novo Produto
+                    </a>
+                </div>
+
         </div>
     </div>
 </div>
 
-<div class="row">
+<div class="container mx-auto row">
     <div class="col-12">
         <div class="card">
             <div class="card-body">
                 @if($products->count() > 0)
-                    <div class="mb-3">
-                        <small class="text-muted">{{ $products->total() }} produto(s) encontrado(s)</small>
-                    </div>
+                   
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Nome</th>
                                     <th>Descrição</th>
                                     <th>Preço</th>
@@ -55,7 +42,6 @@
                             <tbody>
                                 @foreach($products as $product)
                                 <tr>
-                                    <td>{{ $product->id }}</td>
                                     <td>{{ $product->name }}</td>
                                     <td>{{ $product->description ? Str::limit($product->description, 50) : 'N/A' }}</td>
                                     <td>R$ {{ number_format($product->price, 2, ',', '.') }}</td>
