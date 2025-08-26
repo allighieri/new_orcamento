@@ -46,6 +46,7 @@ class LoginController extends Controller implements HasMiddleware
             $request->session()->regenerate();
             
             $user = Auth::user();
+            $firstName = explode(' ', $user->name)[0];
             
             // Verificar se o usuário está ativo
             if (!$user->active) {
@@ -57,11 +58,11 @@ class LoginController extends Controller implements HasMiddleware
             
             // Redireciona baseado no role do usuário
             if ($user->role === 'super_admin') {
-                return redirect()->intended('/dashboard')->with('success', 'Bem-vindo, Super Admin!');
+                return redirect()->intended('/dashboard')->with('success', 'Bem-vindo, ' . $user->name . '!');
             } elseif ($user->role === 'admin') {
-                return redirect()->intended('/dashboard')->with('success', 'Bem-vindo, Admin!');
+                return redirect()->intended('/dashboard')->with('success', 'Bem-vindo, ' . $firstName . '!');
             } else {
-                return redirect()->intended('/dashboard')->with('success', 'Bem-vindo!');
+                return redirect()->intended('/dashboard')->with('success', 'Bem-vindo, ' . $firstName . '!');
             }
         }
 
