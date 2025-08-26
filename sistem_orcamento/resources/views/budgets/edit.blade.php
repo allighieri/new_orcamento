@@ -345,7 +345,7 @@
                                                             @endforeach
                                                         </select>
                                                     </div>
-                                                    <div class="col-md-2">
+                                                    <div class="col-md-2 payment-amount-field">
                                                         <label class="form-label">Valor</label>
                                                         <div class="input-group">
                                                             <span class="input-group-text">R$</span>
@@ -353,12 +353,13 @@
                                                                    value="{{ number_format($payment->amount, 2, ',', '.') }}" placeholder="0,00">
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-2">
+                                                    <div class="col-md-2 payment-installments-field">
                                                         <label class="form-label">Parcelas</label>
                                                         <input type="number" class="form-control" name="payment_methods[{{ $index }}][installments]" 
-                                                               value="{{ $payment->installments }}" min="1">
+                                                               value="{{ $payment->installments }}" min="1" 
+                                                               max="{{ $payment->paymentMethod->max_installments ?? 1 }}">
                                                     </div>
-                                                    <div class="col-md-2">
+                                                    <div class="col-md-2 payment-moment-field">
                                                         <label class="form-label">Momento</label>
                                                         <select class="form-select" name="payment_methods[{{ $index }}][payment_moment]">
                                                             <option value="approval" {{ $payment->payment_moment == 'approval' ? 'selected' : '' }}>Na Aprovação</option>
@@ -366,7 +367,7 @@
                                                             <option value="custom" {{ $payment->payment_moment == 'custom' ? 'selected' : '' }}>Data Personalizada</option>
                                                         </select>
                                                     </div>
-                                                    <div class="col-md-2">
+                                                    <div class="col-md-2 custom-date-field" style="{{ $payment->payment_moment == 'custom' ? '' : 'display: none;' }}">
                                                         <label class="form-label">Data Personalizada</label>
                                                         <input type="date" class="form-control" name="payment_methods[{{ $index }}][custom_date]" 
                                                                value="{{ $payment->custom_date }}">
@@ -407,18 +408,18 @@
                                                         @endforeach
                                                     </select>
                                                 </div>
-                                                <div class="col-md-2">
+                                                <div class="col-md-2 payment-amount-field" style="display: none;">
                                                     <label class="form-label">Valor</label>
                                                     <div class="input-group">
                                                         <span class="input-group-text">R$</span>
                                                         <input type="text" class="form-control money" name="payment_methods[0][amount]" placeholder="0,00">
                                                     </div>
                                                 </div>
-                                                <div class="col-md-2">
+                                                <div class="col-md-2 payment-installments-field" style="display: none;">
                                                     <label class="form-label">Parcelas</label>
-                                                    <input type="number" class="form-control" name="payment_methods[0][installments]" value="1" min="1">
+                                                    <input type="number" class="form-control" name="payment_methods[0][installments]" value="1" min="1" max="1">
                                                 </div>
-                                                <div class="col-md-2">
+                                                <div class="col-md-2 payment-moment-field" style="display: none;">
                                                     <label class="form-label">Momento</label>
                                                     <select class="form-select" name="payment_methods[0][payment_moment]">
                                                         <option value="approval">Na Aprovação</option>
@@ -426,7 +427,7 @@
                                                         <option value="custom">Data Personalizada</option>
                                                     </select>
                                                 </div>
-                                                <div class="col-md-2">
+                                                <div class="col-md-2 custom-date-field" style="display: none;">
                                                     <label class="form-label">Data Personalizada</label>
                                                     <input type="date" class="form-control" name="payment_methods[0][custom_date]">
                                                 </div>
@@ -1369,18 +1370,18 @@ $(document).ready(function() {
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2 payment-amount-field" style="display: none;">
                         <label class="form-label">Valor</label>
                         <div class="input-group">
                             <span class="input-group-text">R$</span>
                             <input type="text" class="form-control money" name="payment_methods[${paymentMethodIndex}][amount]" placeholder="0,00">
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2 payment-installments-field" style="display: none;">
                         <label class="form-label">Parcelas</label>
                         <input type="number" class="form-control" name="payment_methods[${paymentMethodIndex}][installments]" value="1" min="1">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2 payment-moment-field" style="display: none;">
                         <label class="form-label">Momento</label>
                         <select class="form-select" name="payment_methods[${paymentMethodIndex}][payment_moment]">
                             <option value="approval">Na Aprovação</option>
@@ -1388,7 +1389,7 @@ $(document).ready(function() {
                             <option value="custom">Data Personalizada</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2 custom-date-field" style="display: none;">
                         <label class="form-label">Data Personalizada</label>
                         <input type="date" class="form-control" name="payment_methods[${paymentMethodIndex}][custom_date]">
                     </div>
@@ -1453,42 +1454,81 @@ $(document).ready(function() {
         }
     });
     
-    // Controle de exibição do campo Parcelas baseado no método de pagamento
+    // Controle de exibição dos campos baseado no método de pagamento selecionado
     $(document).on('change', 'select[name*="[payment_method_id]"]', function() {
         const paymentMethodId = $(this).val();
-        const installmentsField = $(this).closest('.row').find('input[name*="[installments]"]').closest('.col-md-2');
+        const currentRow = $(this).closest('.payment-method-row');
+        const amountField = currentRow.find('.payment-amount-field');
+        const installmentsField = currentRow.find('.payment-installments-field');
+        const momentField = currentRow.find('.payment-moment-field');
         
         if (paymentMethodId) {
-            // Buscar informações do método de pagamento
+            // Mostrar campos Valor e Momento quando método for selecionado
+            amountField.show();
+            momentField.show();
+            
+            // Buscar informações do método de pagamento para controlar Parcelas
             const paymentMethods = @json($paymentMethods);
             const selectedMethod = paymentMethods.find(method => method.id == paymentMethodId);
             
             if (selectedMethod && selectedMethod.allows_installments) {
                 installmentsField.show();
+                // Definir o valor máximo de parcelas baseado no método
+                const installmentsInput = installmentsField.find('input');
+                installmentsInput.attr('max', selectedMethod.max_installments);
+                
+                // Validar se o valor atual excede o máximo permitido
+                const currentValue = parseInt(installmentsInput.val()) || 1;
+                if (currentValue > selectedMethod.max_installments) {
+                    installmentsInput.val(selectedMethod.max_installments);
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Valor Ajustado',
+                        text: `O número de parcelas foi ajustado para ${selectedMethod.max_installments}x (máximo permitido para este método).`,
+                        confirmButtonText: 'OK'
+                    });
+                }
             } else {
                 installmentsField.hide();
                 // Definir parcelas como 1 se não permite parcelamento
-                installmentsField.find('input').val(1);
+                installmentsField.find('input').val(1).attr('max', 1);
             }
         } else {
-            // Se nenhum método selecionado, mostrar o campo
-            installmentsField.show();
+            // Se nenhum método selecionado, esconder todos os campos
+            amountField.hide();
+            installmentsField.hide();
+            momentField.hide();
+            
+            // Limpar valores dos campos
+            amountField.find('input').val('');
+            installmentsField.find('input').val(1);
+            momentField.find('select').val('approval');
         }
     });
     
-    // Verificar campos de parcelas no carregamento da página
+    // Verificar campos no carregamento da página
     $('select[name*="[payment_method_id]"]').each(function() {
-        const paymentMethodId = $(this).val();
-        const installmentsField = $(this).closest('.row').find('input[name*="[installments]"]').closest('.col-md-2');
+        $(this).trigger('change');
+    });
+    
+    // Validação em tempo real do campo parcelas
+    $(document).on('input change', 'input[name*="[installments]"]', function() {
+        const installmentsInput = $(this);
+        const maxInstallments = parseInt(installmentsInput.attr('max')) || 1;
+        const currentValue = parseInt(installmentsInput.val()) || 1;
         
-        if (paymentMethodId) {
-            const paymentMethods = @json($paymentMethods);
-            const selectedMethod = paymentMethods.find(method => method.id == paymentMethodId);
-            
-            if (selectedMethod && !selectedMethod.allows_installments) {
-                installmentsField.hide();
-                installmentsField.find('input').val(1);
-            }
+        if (currentValue > maxInstallments) {
+            installmentsInput.val(maxInstallments);
+            Swal.fire({
+                icon: 'warning',
+                title: 'Valor Máximo Excedido',
+                text: `O número máximo de parcelas para este método é ${maxInstallments}x.`,
+                confirmButtonText: 'OK'
+            });
+        }
+        
+        if (currentValue < 1) {
+            installmentsInput.val(1);
         }
     });
 
