@@ -511,6 +511,7 @@ function sendWhatsAppToClient(budgetId) {
                 timer: 2000,
                 showConfirmButton: false
             });
+            location.reload();
         } else {
             Swal.fire({
                 title: 'Erro',
@@ -572,6 +573,7 @@ function sendWhatsAppToContact(budgetId, contactId) {
                 timer: 2000,
                 showConfirmButton: false
             });
+            location.reload();
         } else {
             Swal.fire({
                 title: 'Erro',
@@ -756,6 +758,7 @@ function sendEmailToClient(budgetId) {
                 timer: 2000,
                 showConfirmButton: false
             });
+            location.reload();
         } else {
             if (data.auth_required) {
                 Swal.fire({
@@ -827,6 +830,7 @@ function sendEmailToContact(budgetId, contactId) {
                 timer: 2000,
                 showConfirmButton: false
             });
+            location.reload();
         } else {
             if (data.auth_required) {
                 Swal.fire({

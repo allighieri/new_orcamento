@@ -369,6 +369,9 @@ function sendWhatsAppToClient(budgetId) {
                 timer: 2000,
                 showConfirmButton: false
             });
+
+            location.reload();
+
         } else {
             Swal.fire({
                 title: 'Erro',
@@ -430,6 +433,7 @@ function sendWhatsAppToContact(budgetId, contactId) {
                 timer: 2000,
                 showConfirmButton: false
             });
+            location.reload();
         } else {
             Swal.fire({
                 title: 'Erro',
@@ -487,6 +491,7 @@ function handleEmailSend(budgetId) {
                     toast: true,
                     position: 'top-end'
                 });
+                
 
             }
         } else {
@@ -622,6 +627,8 @@ function sendEmailToClient(budgetId) {
                 toast: true,
                 position: 'top-end'
             });
+
+            location.reload();
         } else {
             if (data.auth_required) {
                 Swal.fire({
@@ -695,6 +702,7 @@ function sendEmailToContact(budgetId, contactId) {
                     toast: true,
                     position: 'top-end'
                 });
+                location.reload();
         } else {
             if (data.auth_required) {
                 Swal.fire({

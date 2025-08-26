@@ -732,6 +732,12 @@ class BudgetController extends Controller
                 
                 $whatsappUrl = $this->generateWhatsAppUrl($budget, $budget->client->phone);
                 
+                // Atualizar status do orçamento para 'Enviado' quando WhatsApp é gerado
+                $budget->status = 'Enviado';
+                $budget->save();
+                
+                \Illuminate\Support\Facades\Log::info('Status do orçamento atualizado para Enviado após envio por WhatsApp', ['budget_id' => $budget->id]);
+                
                 return response()->json([
                     'success' => true,
                     'has_contacts' => false,
@@ -750,6 +756,12 @@ class BudgetController extends Controller
                 
                 // Envia diretamente para o telefone do cliente
                 $whatsappUrl = $this->generateWhatsAppUrl($budget, $budget->client->phone);
+                
+                // Atualizar status do orçamento para 'Enviado' quando WhatsApp é gerado
+                $budget->status = 'Enviado';
+                $budget->save();
+                
+                \Illuminate\Support\Facades\Log::info('Status do orçamento atualizado para Enviado após envio por WhatsApp', ['budget_id' => $budget->id]);
                 
                 // Se for requisição AJAX, retorna JSON
                 if (request()->ajax()) {
@@ -812,6 +824,12 @@ class BudgetController extends Controller
             }
             
             $whatsappUrl = $this->generateWhatsAppUrl($budget, $contact->phone, $contact->name);
+            
+            // Atualizar status do orçamento para 'Enviado' quando WhatsApp é gerado
+            $budget->status = 'Enviado';
+            $budget->save();
+            
+            \Illuminate\Support\Facades\Log::info('Status do orçamento atualizado para Enviado após envio por WhatsApp para contato', ['budget_id' => $budget->id, 'contact_id' => $contact->id]);
             
             return response()->json([
                 'success' => true,
@@ -1118,6 +1136,14 @@ class BudgetController extends Controller
                 $filePath,
                 $templateId
             );
+            
+            // Se o email foi enviado com sucesso, atualizar status do orçamento para 'Enviado'
+            if ($result['success']) {
+                $budget->status = 'Enviado';
+                $budget->save();
+                
+                \Illuminate\Support\Facades\Log::info('Status do orçamento atualizado para Enviado após envio de email', ['budget_id' => $budget->id]);
+            }
             
             return $result;
             
