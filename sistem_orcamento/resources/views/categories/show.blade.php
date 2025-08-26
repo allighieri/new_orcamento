@@ -118,7 +118,7 @@
                     <div class="list-group list-group-flush">
                         @foreach($category->children as $child)
                         <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <div>
+                            <div class="flex-grow-1">
                                 <a href="{{ route('categories.show', $child) }}" class="text-decoration-none">
                                     {{ $child->name }}
                                 </a>
@@ -126,7 +126,24 @@
                                     <small class="text-muted d-block">{{ Str::limit($child->description, 50) }}</small>
                                 @endif
                             </div>
-                            <span class="badge bg-secondary">{{ $child->products->count() }}</span>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-secondary me-3">{{ $child->products->count() }}</span>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ route('categories.show', $child) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('categories.edit', $child) }}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="{{ route('categories.destroy', $child) }}" method="POST" class="d-inline" id="delete-form-subcategory-{{ $child->id }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteSubcategory({{ $child->id }}, '{{ $child->name }}')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                         @endforeach
                     </div>
@@ -222,6 +239,23 @@ function confirmDeleteProduct(productId, productName) {
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById('delete-form-product-' + productId).submit();
+        }
+    });
+}
+
+function confirmDeleteSubcategory(subcategoryId, subcategoryName) {
+    Swal.fire({
+        title: 'Atenção!',
+        text: `Atenção, excluir a subcategoria "${subcategoryName}" excluirá também todos os produtos relacionados. Tem certeza de que deseja excluir esta subcategoria?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-subcategory-' + subcategoryId).submit();
         }
     });
 }
