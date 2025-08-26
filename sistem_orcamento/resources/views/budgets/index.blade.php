@@ -100,17 +100,25 @@
                                             <a href="{{ route('budgets.edit', $budget) }}" class="btn btn-sm btn-outline-warning" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <a href="{{ route('budgets.pdf', $budget) }}" class="btn btn-sm btn-outline-secondary" title="Gerar PDF" target="_blank">
-                                                <i class="bi bi-file-earmark-pdf"></i>
-                                            </a>
-                                            @if($budget->pdfFiles->count() > 0)
-                                            <button type="button" class="btn btn-sm btn-outline-success" title="Enviar PDF via WhatsApp" onclick="handleWhatsAppSend({{ $budget->id }})">
-                                                <i class="bi bi-whatsapp"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-primary" title="Enviar PDF por Email" onclick="handleEmailSend({{ $budget->id }})">
-                                                <i class="bi bi-envelope"></i>
-                                            </button>
-                                            @endif
+                                            <a href="#" 
+   class="btn btn-sm btn-outline-secondary generate-pdf-btn" 
+   title="Gerar PDF" 
+   data-budget-id="{{ $budget->id }}"
+   data-route="{{ route('budgets.pdf', $budget) }}"> {{-- Adicionando a rota aqui --}}
+    <i class="bi bi-file-earmark-pdf"></i>
+</a>
+
+{{-- Grupo de botões de e-mail e WhatsApp (inicialmente ocultos) --}}
+{{-- Use um ID ou uma classe única para este grupo, associada ao budget->id --}}
+<div class="btn-group budget-actions-{{ $budget->id }}" role="group" 
+     @if($budget->pdfFiles->count() == 0) style="display:none;" @endif> {{-- ESCONDER INICIALMENTE --}}
+    <button type="button" class="btn btn-sm btn-outline-success" title="Enviar PDF via WhatsApp" onclick="handleWhatsAppSend({{ $budget->id }})">
+        <i class="bi bi-whatsapp"></i>
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-primary" title="Enviar PDF por Email" onclick="handleEmailSend({{ $budget->id }})">
+        <i class="bi bi-envelope"></i>
+    </button>
+</div>
                                             <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" id="delete-form-budget-{{ $budget->id }}">
                                                 @csrf
                                                 @method('DELETE')
@@ -212,7 +220,7 @@
         </div>
     </div>
 </div>
-
+@push('scripts')
 <script>
 // Função openStatusModal está definida no app.blade.php
 
@@ -807,6 +815,88 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-</script>
 
+// Listener para o clique no botão "Gerar PDF"
+$(document).on('click', '.generate-pdf-btn', function(e) {
+    e.preventDefault(); 
+    
+    const generatePdfButton = $(this);
+    const budgetId = generatePdfButton.data('budget-id');
+    const route = generatePdfButton.data('route');
+    const originalButtonHtml = generatePdfButton.html();
+
+    // 1. Mostrar o SweetAlert de loading
+    Swal.fire({
+        title: 'Gerando PDF',
+        html: 'Por favor, aguarde...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Desabilitar o botão para evitar cliques duplicados
+    //generatePdfButton.prop('disabled', true);
+
+    // Mostrar loading no botão
+
+        generatePdfButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gerando...');
+
+        generatePdfButton.prop('disabled', true); // Desabilitar o botão 
+
+    // 2. Requisição AJAX para gerar o PDF
+    $.ajax({
+        url: route,
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(response) {
+            Swal.close(); // Fechar o alerta de loading
+
+            if (response.success) {
+                // Abrir o PDF em uma nova aba
+                window.open(response.url, '_blank');
+
+                // Mostrar os botões de e-mail e WhatsApp
+                $(`.budget-actions-${budgetId}`).show(); 
+
+                // Mostrar SweetAlert de sucesso
+                Swal.fire({
+                    icon: 'success',
+                    title: 'PDF Gerado!',
+                    text: response.message || 'PDF gerado e salvo com sucesso!',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    toast: true,
+                    position: 'top-end'
+                });
+
+            } else {
+                Swal.fire({
+                    title: 'Erro',
+                    text: response.message || 'Erro ao gerar PDF.',
+                    icon: 'error'
+                });
+            }
+        },
+        error: function(xhr) {
+            Swal.close(); // Fechar o alerta de loading
+
+            console.error('Erro ao gerar PDF:', xhr.responseText);
+            Swal.fire({
+                title: 'Erro',
+                text: 'Não foi possível gerar o PDF.',
+                icon: 'error'
+            });
+        },
+        complete: function() {
+            // Restaurar o botão
+            generatePdfButton.html(originalButtonHtml);
+            generatePdfButton.prop('disabled', false);
+        }
+    });
+});
+</script>
+@endpush
 @endsection
