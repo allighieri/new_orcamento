@@ -25,28 +25,32 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="mb-1 d-flex align-items-center">
-                    <strong class="me-3" style="min-width: 150px;">Nome:</strong>
-                    <span>{{ $contact->name }}</span>
+                <div class="row mb-4">
+                    <div class="col-12 p-3">
+                        <div class="d-flex align-items-center text-start">
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3" style="width: 80px; height: 80px; font-size: 1.5rem; font-weight: bold;">
+                                {{ strtoupper(substr($contact->name, 0, 2)) }}
+                            </div>
+                            <div>
+                                <h4>{{ $contact->name }}</h4>
+                                <p class="text-muted mb-0">{{ $contact->email ?: 'Email não informado' }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="mb-1 d-flex align-items-center">
-                    <strong class="me-3" style="min-width: 150px;">CPF:</strong>
-                    <span>{{ $contact->cpf ?: 'Não informado' }}</span>
+                    <strong class="me-3" style="min-width: 90px;">CPF:</strong>
+                    <span class="flex-grow-1">{{ $contact->cpf ?: 'Não informado' }}</span>
                 </div>
                 
                 <div class="mb-1 d-flex align-items-center">    
-                    <strong class="me-3" style="min-width: 150px;">Telefone:</strong>
-                    <span>{{ $contact->phone ?: 'Não informado' }}</span>
+                    <strong class="me-3" style="min-width: 90px;">Telefone:</strong>
+                    <span class="flex-grow-1">{{ $contact->phone ?: 'Não informado' }}</span>
                 </div>
                 
                 <div class="mb-1 d-flex align-items-center">
-                    <strong class="me-3" style="min-width: 150px;">Email:</strong>
-                    <span>{{ $contact->email ?: 'Não informado' }}</span>
-                </div>
-                
-                <div class="mb-1 d-flex align-items-center">
-                    <strong class="me-3" style="min-width: 150px;">Empresa:</strong>
+                    <strong class="me-3" style="min-width: 90px;">Empresa:</strong>
                     <span>
                         @if($contact->company)
                             @if(auth()->guard('web')->user()->role === 'super_admin' || auth()->guard('web')->user()->role === 'admin')
@@ -63,8 +67,8 @@
                 </div>
                 
                 <div class="mb-1 d-flex align-items-center">
-                    <strong class="me-3" style="min-width: 150px;">Cliente:</strong>
-                    <span>
+                    <strong class="me-3" style="min-width: 90px;">Cliente:</strong>
+                    <span class="flex-grow-1">
                         @if($contact->client)
                             <a href="{{ route('clients.show', $contact->client) }}" class="text-decoration-none">
                                 {{ $contact->client->fantasy_name }}
@@ -76,13 +80,13 @@
                 </div>
                 
                 <div class="mb-1 d-flex align-items-center">
-                    <strong class="me-3" style="min-width: 150px;">Criado em:</strong>
-                    <span>{{ $contact->created_at->format('d/m/Y H:i') }}</span>
+                    <strong class="me-3" style="min-width: 90px;">Criado em:</strong>
+                    <span class="flex-grow-1">{{ $contact->created_at->format('d/m/Y H:i') }}</span>
                 </div>
                 
                 <div class="mb-3 d-flex align-items-center">
-                    <strong class="me-3" style="min-width: 150px;">Última atualização:</strong>
-                    <span>{{ $contact->updated_at->format('d/m/Y H:i') }}</span>
+                    <strong class="me-3" style="min-width: 90px;">Última atualização:</strong>
+                    <span class="flex-grow-1">{{ $contact->updated_at->format('d/m/Y H:i') }}</span>
                 </div>
             </div>
         </div>
@@ -117,6 +121,60 @@
                 </div>
             </div>
         </div>
+        
+        @if($contact->company)
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-building"></i> Empresa Associada
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ $contact->company->fantasy_name ?? $contact->company->corporate_name }}</h6>
+                <p class="text-muted mb-2">
+                    <i class="bi bi-envelope"></i> {{ $contact->company->email }}
+                </p>
+                <p class="text-muted mb-2">
+                    <i class="bi bi-telephone"></i> {{ $contact->company->phone }}
+                </p>
+                <p class="text-muted mb-3">
+                    <i class="bi bi-geo-alt"></i> {{ $contact->company->city }}, {{ $contact->company->state }}
+                </p>
+                @if(in_array(auth()->guard('web')->user()->role, ['admin', 'super_admin']))
+                    <a href="{{ route('companies.show', $contact->company) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-eye"></i> Detalhes da Empresa
+                    </a>
+                @endif
+            </div>
+        </div>
+        @endif
+        
+        @if($contact->client)
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-person-badge"></i> Cliente Associado
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ $contact->client->fantasy_name ?? $contact->client->corporate_name }}</h6>
+                <p class="text-muted mb-2">
+                    <i class="bi bi-envelope"></i> {{ $contact->client->email }}
+                </p>
+                <p class="text-muted mb-2">
+                    <i class="bi bi-telephone"></i> {{ $contact->client->phone }}
+                </p>
+                <p class="text-muted mb-3">
+                    <i class="bi bi-geo-alt"></i> {{ $contact->client->city }}, {{ $contact->client->state }}
+                </p>
+                @if(in_array(auth()->guard('web')->user()->role, ['admin', 'super_admin']))
+                    <a href="{{ route('clients.show', $contact->client) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-eye"></i> Detalhes do Cliente
+                    </a>
+                @endif
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 
@@ -138,5 +196,6 @@ function confirmDeleteContact(contactId) {
     });
 }
 </script>
+
 
 @endsection

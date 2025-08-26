@@ -28,81 +28,73 @@
             </div>
             <div class="card-body">
                 <div class="row mb-4">
-                    <div class="col-12 text-center">
-                        <div class="avatar-circle-large mb-3">
-                            {{ strtoupper(substr($user->name, 0, 2)) }}
+                    <div class="col-12 p-3">
+                        <div class="d-flex align-items-center text-start">
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3" style="width: 80px; height: 80px; font-size: 1.5rem; font-weight: bold;">
+                                {{ strtoupper(substr($user->name, 0, 2)) }}
+                            </div>
+                            <div>
+                                <h4>{{ $user->name }}</h4>
+                                <p class="text-muted mb-0">{{ $user->email }}</p>
+                            </div>
                         </div>
-                        <h4>{{ $user->name }}</h4>
-                        <p class="text-muted">{{ $user->email }}</p>
                     </div>
                 </div>
                 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Nome Completo:</label>
-                        <p class="form-control-plaintext">{{ $user->name }}</p>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">E-mail:</label>
-                        <p class="form-control-plaintext">{{ $user->email }}</p>
-                    </div>
+                
+                
+                <div class="mb-1 d-flex align-items-center">
+                    <strong class="me-3" style="min-width: 90px;">Função:</strong>
+                    <span class="flex-grow-1">
+                        @if($user->role === 'super_admin')
+                            <span>Super Administrador</span>
+                        @elseif($user->role === 'admin')
+                            <span>Administrador</span>
+                        @else
+                            <span>Usuário</span>
+                        @endif
+                    </span>
                 </div>
                 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Função:</label>
-                        <p class="form-control-plaintext">
-                            @if($user->role === 'super_admin')
-                                <span class="badge bg-danger fs-6">Super Administrador</span>
-                            @elseif($user->role === 'admin')
-                                <span class="badge bg-warning fs-6">Administrador</span>
-                            @else
-                                <span class="badge bg-info fs-6">Usuário</span>
-                            @endif
-                        </p>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Status:</label>
-                        <p class="form-control-plaintext">
-                            @if($user->active)
-                                <span class="badge bg-success fs-6">Ativo</span>
-                            @else
-                                <span class="badge bg-secondary fs-6">Inativo</span>
-                            @endif
-                        </p>
-                    </div>
+                <div class="mb-1 d-flex align-items-center">
+                    <strong class="me-3" style="min-width: 90px;">Status:</strong>
+                    <span class="flex-grow-1">
+                        @if($user->active)
+                            <span>Ativo</span>
+                        @else
+                            <span>Inativo</span>
+                        @endif
+                    </span>
                 </div>
                 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Empresa:</label>
-                        <p class="form-control-plaintext">
-                            @if($user->company)
+                <div class="mb-1 d-flex align-items-center">
+                    <strong class="me-3" style="min-width: 90px;">Empresa:</strong>
+                    <span class="flex-grow-1">
+                        @if($user->company)
+                            @if(in_array($user->role, ['admin', 'super_admin']))
                                 <a href="{{ route('companies.show', $user->company) }}" class="text-decoration-none">
                                     {{ $user->company->fantasy_name ?? $user->company->corporate_name }}
                                 </a>
                             @else
-                                <span class="text-muted">Nenhuma empresa associada</span>
+                                {{ $user->company->fantasy_name ?? $user->company->corporate_name }}
                             @endif
-                        </p>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Data de Cadastro:</label>
-                        <p class="form-control-plaintext">{{ $user->created_at->format('d/m/Y H:i') }}</p>
-                    </div>
+                        @else
+                            <span class="text-muted">Nenhuma empresa associada</span>
+                        @endif
+                    </span>
+                </div>
+                
+                <div class="mb-1 d-flex align-items-center">
+                    <strong class="me-3" style="min-width: 90px;">Cadastro:</strong>
+                    <span class="flex-grow-1">{{ $user->created_at->format('d/m/Y H:i') }}</span>
                 </div>
                 
                 @if($user->email_verified_at)
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">E-mail Verificado:</label>
-                        <p class="form-control-plaintext">
-                            <span class="badge bg-success">Verificado em {{ $user->email_verified_at->format('d/m/Y H:i') }}</span>
-                        </p>
-                    </div>
+                <div class="mb-1 d-flex align-items-center">
+                    <strong class="me-3" style="min-width: 90px;">E-mail Verificado:</strong>
+                    <span class="flex-grow-1">
+                        <span class="badge bg-success">Verificado em {{ $user->email_verified_at->format('d/m/Y H:i') }}</span>
+                    </span>
                 </div>
                 @endif
             </div>
@@ -162,27 +154,35 @@
                 <p class="text-muted mb-2">{{ $user->company->email }}</p>
                 <p class="text-muted mb-2">{{ $user->company->phone }}</p>
                 <a href="{{ route('companies.show', $user->company) }}" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-eye"></i> Ver Empresa
+                    <i class="bi bi-eye"></i> Detalhes da Empresa
                 </a>
             </div>
         </div>
         @endif
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up"></i> Resumo de Atividades
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Perfil desde:</span>
+                    <strong>{{ $user->created_at->format('M/Y') }}</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Último acesso:</span>
+                    <strong>{{ $user->updated_at->format('d/m/Y H:i') }}</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Status da conta:</span>
+                    <span class="badge {{ $user->active ? 'bg-success' : 'bg-secondary' }}">{{ $user->active ? 'Ativa' : 'Inativa' }}</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<style>
-.avatar-circle-large {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background-color: #6c757d;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 1.5rem;
-    margin: 0 auto;
-}
-</style>
+
 @endsection

@@ -123,7 +123,7 @@
                             <div class="col-md-12 mb-3">
                                 <div class="card h-100">
                                     <div class="card-body">
-                                        <table class="table table-borderless mb-0">
+                                        <table class="table table-borderless table-sm mb-0">
                                             <tr>
                                                 <td class="fw-bold" style="width: 30%;">Nome:</td>
                                                 <td>

@@ -28,10 +28,11 @@
                 </h5>
             </div>
             <div class="card-body">
+                
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="d-flex align-items-center text-start">
-                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center p-4 fw-bold me-3">
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center p-4 fw-bold me-4">
                                 {{ strtoupper(substr($user->name, 0, 2)) }}
                             </div>
                             <div>
@@ -44,9 +45,9 @@
                 
                 
                 
-                <div class="mb-3 d-flex align-items-center">
-                    <strong class="me-3" style="min-width: 150px;">Função:</strong>
-                    <span>
+                <div class="mb-1 d-flex align-items-center">
+                    <strong class="me-1" style="min-width: 90px;">Função:</strong>
+                    <span class="flex-grow-1">
                         @if($user->role === 'super_admin')
                             <span>Super Administrador</span>
                         @elseif($user->role === 'admin')
@@ -57,9 +58,9 @@
                     </span>
                 </div>
                 
-                <div class="mb-3 d-flex align-items-center">
-                    <strong class="me-3" style="min-width: 150px;">Status:</strong>
-                    <span>
+                <div class="mb-1 d-flex align-items-center">
+                    <strong class="me-1" style="min-width: 90px;">Status:</strong>
+                    <span class="flex-grow-1">
                         @if($user->active)
                             <span>Ativo</span>
                         @else
@@ -68,9 +69,9 @@
                     </span>
                 </div>
                 
-                <div class="mb-3 d-flex align-items-center">
-                    <strong class="me-3" style="min-width: 150px;">Empresa:</strong>
-                    <span>
+                <div class="mb-1 d-flex align-items-center">
+                    <strong class="me-1" style="min-width: 90px;">Empresa:</strong>
+                    <span class="flex-grow-1">
                         @if($user->company)
                             @if(in_array($user->role, ['admin', 'super_admin']))
                                 <a href="{{ route('companies.show', $user->company) }}" class="text-decoration-none">
@@ -85,15 +86,15 @@
                     </span>
                 </div>
                 
-                <div class="mb-3 d-flex align-items-center">
-                    <strong class="me-3" style="min-width: 150px;">Data de Cadastro:</strong>
-                    <span>{{ $user->created_at->format('d/m/Y H:i') }}</span>
+                <div class="mb-1 d-flex align-items-center">
+                    <strong class="me-1" style="min-width: 90px;">Cadastro:</strong>
+                    <span class="flex-grow-1">{{ $user->created_at->format('d/m/Y H:i') }}</span>
                 </div>
                 
                 @if($user->email_verified_at)
-                <div class="mb-3 d-flex align-items-center">
-                    <strong class="me-3" style="min-width: 150px;">E-mail Verificado:</strong>
-                    <span>
+                <div class="mb-1 d-flex align-items-center">
+                    <strong class="me-1" style="min-width: 90px;">E-mail Verificado:</strong>
+                    <span class="flex-grow-1">
                         <span class="badge bg-success">Verificado em {{ $user->email_verified_at->format('d/m/Y H:i') }}</span>
                     </span>
                 </div>
@@ -142,7 +143,7 @@
                 </p>
                 @if(in_array($user->role, ['admin', 'super_admin']))
                     <a href="{{ route('companies.show', $user->company) }}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-eye"></i> Ver Detalhes da Empresa
+                        <i class="bi bi-eye"></i> Detalhes da Empresa
                     </a>
                 @endif
             </div>
