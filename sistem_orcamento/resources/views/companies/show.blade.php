@@ -83,9 +83,28 @@
                     </div>
                 </div>
                 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Endereço:</label>
-                    <p class="form-control-plaintext">{{ $company->address ?: 'Não informado' }}</p>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Endereço:</label>
+                        <p class="form-control-plaintext">{{ $company->address ?: 'Não informado' }}</p>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Bairro:</label>
+                        <p class="form-control-plaintext">{{ $company->district ?: 'Não informado' }}</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label fw-bold">Cidade:</label>
+                        <p class="form-control-plaintext">{{ $company->city ?: 'Não informado' }}</p>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">UF:</label>
+                        <p class="form-control-plaintext">{{ $company->state ?: 'Não informado' }}</p>
+                    </div>
                 </div>
                 
                 <div class="row">

@@ -95,7 +95,20 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="district" class="form-label">Bairro</label>
+                                    <input type="text" class="form-control @error('district') is-invalid @enderror" 
+                                           id="district" name="district" value="{{ old('district', $company->district) }}">
+                                    @error('district')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
                                 <div class="mb-3">
                                     <label for="city" class="form-label">Cidade *</label>
                                     <input type="text" class="form-control @error('city') is-invalid @enderror" 
@@ -105,7 +118,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="state" class="form-label">UF *</label>
                                     <input type="text" class="form-control @error('state') is-invalid @enderror" 

@@ -78,15 +78,35 @@
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-4 mb-1">
+                    <div class="col-md-6 mb-1">
                         <label class="form-label fw-bold">Endereço:</label>
                         <p class="my-0">
-                            {{ $client->address ?: 'Não informado' }}, 
-                            {{ $client->city ?: 'Não informado' }} - 
+                            {{ $client->address ?: 'Não informado' }}
+                        </p>
+                    </div>
+                    
+                    <div class="col-md-6 mb-1">
+                        <label class="form-label fw-bold">Bairro:</label>
+                        <p class="my-0">
+                            {{ $client->district ?: 'Não informado' }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-8 mb-1">
+                        <label class="form-label fw-bold">Cidade:</label>
+                        <p class="my-0">
+                            {{ $client->city ?: 'Não informado' }}
+                        </p>
+                    </div>
+                    
+                    <div class="col-md-4 mb-1">
+                        <label class="form-label fw-bold">UF:</label>
+                        <p class="my-0">
                             {{ $client->state ?: 'Não informado' }}
                         </p>
                     </div>
-
                 </div>
             
                 

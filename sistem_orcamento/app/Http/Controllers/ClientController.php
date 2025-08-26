@@ -62,6 +62,7 @@ class ClientController extends Controller
             'phone' => 'required|string|max:20',
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
+            'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
         ];
@@ -175,6 +176,7 @@ class ClientController extends Controller
             'phone' => 'required|string|max:20',
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
+            'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
         ];

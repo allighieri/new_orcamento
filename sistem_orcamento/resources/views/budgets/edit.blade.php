@@ -743,7 +743,7 @@ $(document).ready(function() {
             $('.product-row:first').find('.product-select').html('<option value="">Selecione um produto</option>');
             // Adiciona as opções da API para a primeira linha
             productsFromApi.forEach(function(product) {
-                const newOption = `<option value="${product.id}" data-price="${product.price}" data-description="${product.description}">${product.name} - ${product.category_name}</option>`;
+                const newOption = `<option value="${product.id}" data-price="${product.price}" data-description="${product.description}">${product.name}</option>`;
                 $('.product-row:first').find('.product-select').append(newOption);
             });
             updateAddButtonVisibility();
@@ -768,7 +768,7 @@ $(document).ready(function() {
             // Adiciona todas as opções da API ao select da linha atual
             let productOptions = '<option value="">Selecione um produto</option>';
             productsFromApi.forEach(function(product) {
-                productOptions += `<option value="${product.id}" data-price="${product.price}" data-description="${product.description}">${product.name} - ${product.category_name}</option>`;
+                productOptions += `<option value="${product.id}" data-price="${product.price}" data-description="${product.description}">${product.name}</option>`;
             });
             productRow.find('.product-select').html(productOptions);
 

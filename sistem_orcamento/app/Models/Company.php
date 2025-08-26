@@ -15,6 +15,7 @@ class Company extends Model
         'phone',
         'email',
         'address',
+        'district',
         'city',
         'state',
         'logo'
