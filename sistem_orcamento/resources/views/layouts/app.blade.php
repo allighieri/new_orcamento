@@ -20,7 +20,7 @@
 <body class="d-flex flex-column min-vh-100">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
+        <div class="container mx-auto">
             <a class="navbar-brand" href="{{ route('dashboard') }}">
                 <i class="bi bi-calculator"></i> Orça Fácil
             </a>
@@ -96,11 +96,6 @@
                                 </a>
                             </li>
                             
-                            <li>
-                                <a class="dropdown-item" href="{{ route('google.settings') }}">
-                                    <i class="bi bi-envelope-at"></i> Config Gmail
-                                </a>
-                            </li>
                             @if(Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin']) && Auth::user()->company)
                             <li>
                                 <a class="dropdown-item" href="{{ route('companies.show', Auth::user()->company) }}">
@@ -115,7 +110,7 @@
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{{ route('google.settings') }}">
-                                    <i class="bi bi-envelope-paper"></i> Configurar Gmail</a>
+                                    <i class="bi bi-envelope-paper"></i> Config Gmail</a>
                             </li>
 
                             @endif
@@ -186,7 +181,8 @@
     <!-- Footer -->
     <footer class="bg-light text-center text-muted py-3 mt-5">
         <div class="container">
-            <p>&copy; {{ date('Y') }} Sistema de Orçamento. Todos os direitos reservados.</p>
+            <p class="my-0">&copy; {{ date('Y') }} Todos os direitos reservados - Orça Fácil | Sistema de Orçamento Digital.</p>
+            <p class="my-0">By Agência OLHAR DIGITAL</p>
         </div>
     </footer>
 
