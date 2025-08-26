@@ -175,7 +175,7 @@
                                                     
                                                     <div class="col-md-1">
                                                         <label class="form-label">Qtde*</label>
-                                                        <input type="number" class="form-control quantity-input" name="products[0][quantity]" value="1" required min="1" step="0.01">
+                                                        <input type="number" class="form-control quantity-input" name="products[0][quantity]" value="1" required min="1" step="1">
                                                     </div>
                                                     
                                                     <div class="col-md-2">
@@ -246,13 +246,26 @@
                                                 </div>
                                                 <hr>
                                                 <div class="d-flex justify-content-between">
-                                                    <strong>Total:</strong>
-                                                    <strong id="total">R$ 0,00</strong>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <strong>Total:</strong>
+                                    <strong id="total">R$ 0,00</strong>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Campo de Valor Restante -->
+                    <div class="col-md-4 mt-3">
+                        <div class="card bg-warning bg-opacity-10 border-warning">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Valor Restante:</span>
+                                    <span id="remainingAmount" class="fw-bold text-warning fs-5">R$ 0,00</span>
+                                </div>
+                                <small class="text-muted">Valor que ainda precisa ser pago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                             
                         </div>
 
@@ -287,7 +300,7 @@
                                                 <select class="form-select" name="payment_methods[0][payment_method_id]">
                                                     <option value="">Selecione um método</option>
                                                     @foreach($paymentMethods as $method)
-                                                        <option value="{{ $method->id }}">{{ $method->name }}</option>
+                                                        <option value="{{ $method->id }}" data-allows-installments="{{ $method->allows_installments ? 'true' : 'false' }}">{{ $method->name }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -521,7 +534,7 @@
             
             <div class="col-md-1">
                 <label class="form-label">Qtde*</label>
-                <input type="number" class="form-control quantity-input" name="products[INDEX][quantity]" value="1" required min="1" step="0.01">
+                <input type="number" class="form-control quantity-input" name="products[INDEX][quantity]" value="1" required min="1" step="1">
             </div>
 
            
@@ -607,26 +620,73 @@ $(document).ready(function() {
     }
 
     // Atualiza os totais globais (subtotal, desconto e total final)
-    function updateTotals() {
-        let subtotal = calculateSubtotal();
-        let discount = parseMoney($('#total_discount').val());
-        
-        // Recalcular desconto se o campo de porcentagem estiver preenchido
-        let percentage = parseFloat($('#total_discount_perc').val()) || 0;
-        if (percentage > 0 && $('#total_discount').val() === '') {
-            discount = (subtotal * percentage) / 100;
-            $('#total_discount').val(formatMoney(discount));
-        } else if (percentage === 0) {
-            // Se a porcentagem for zerada, garante que o valor também seja zerado
-            discount = parseMoney($('#total_discount').val());
-        }
+    function updateTotals() {
+        let subtotal = calculateSubtotal();
+        let discount = parseMoney($('#total_discount').val());
+        
+        // Recalcular desconto se o campo de porcentagem estiver preenchido
+        let percentage = parseFloat($('#total_discount_perc').val()) || 0;
+        if (percentage > 0 && $('#total_discount').val() === '') {
+            discount = (subtotal * percentage) / 100;
+            $('#total_discount').val(formatMoney(discount));
+        } else if (percentage === 0) {
+            // Se a porcentagem for zerada, garante que o valor também seja zerado
+            discount = parseMoney($('#total_discount').val());
+        }
 
-        let total = subtotal - discount;
-        
-        $('#subtotal').text('R$ ' + formatMoney(subtotal));
-        $('#discountDisplay').text('R$ ' + formatMoney(discount));
-        $('#total').text('R$ ' + formatMoney(total));
-    }
+        let total = subtotal - discount;
+        
+        $('#subtotal').text('R$ ' + formatMoney(subtotal));
+        $('#discountDisplay').text('R$ ' + formatMoney(discount));
+        $('#total').text('R$ ' + formatMoney(total));
+        
+        // Atualizar valor restante
+        updateRemainingAmount(total);
+    }
+    
+    // Calcula o total dos métodos de pagamento
+    function calculatePaymentMethodsTotal() {
+        let paymentTotal = 0;
+        $('.payment-method-row input[name*="[amount]"]').each(function() {
+            let amount = parseMoney($(this).val());
+            paymentTotal += amount;
+        });
+        return paymentTotal;
+    }
+    
+    // Atualiza o valor restante
+    function updateRemainingAmount(budgetTotal = null) {
+        if (budgetTotal === null) {
+            let subtotal = calculateSubtotal();
+            let discount = parseMoney($('#total_discount').val());
+            budgetTotal = subtotal - discount;
+        }
+        
+        let paymentTotal = calculatePaymentMethodsTotal();
+        let remaining = budgetTotal - paymentTotal;
+        
+        $('#remainingAmount').text('R$ ' + formatMoney(remaining));
+        
+        // Alterar cor baseado no valor restante
+        const remainingElement = $('#remainingAmount');
+        const cardElement = remainingElement.closest('.card');
+        
+        if (remaining < 0) {
+            remainingElement.removeClass('text-warning text-success').addClass('text-danger');
+            cardElement.removeClass('bg-warning bg-success border-warning border-success').addClass('bg-danger border-danger');
+            cardElement.addClass('bg-opacity-10');
+        } else if (remaining === 0) {
+            remainingElement.removeClass('text-warning text-danger').addClass('text-success');
+            cardElement.removeClass('bg-warning bg-danger border-warning border-danger').addClass('bg-success border-success');
+            cardElement.addClass('bg-opacity-10');
+        } else {
+            remainingElement.removeClass('text-danger text-success').addClass('text-warning');
+            cardElement.removeClass('bg-danger bg-success border-danger border-success').addClass('bg-warning border-warning');
+            cardElement.addClass('bg-opacity-10');
+        }
+        
+        return remaining;
+    }
 
     // Função para mostrar apenas o botão '+' da última linha de produto
     function updateAddButtons() {
@@ -745,16 +805,39 @@ $(document).ready(function() {
     });
     
     // Recalcular totais quando o desconto muda
-    $('#total_discount').on('input', function() {
-        $('#total_discount_perc').val('');
-        updateTotals();
-    });
-    
-    // Recalcular desconto em reais quando a porcentagem muda
-    $('#total_discount_perc').on('input', function() {
-        $('#total_discount').val('');
-        updateTotals();
-    });
+    $('#total_discount').on('input', function() {
+        $('#total_discount_perc').val('');
+        updateTotals();
+    });
+    
+    // Recalcular desconto em reais quando a porcentagem muda
+    $('#total_discount_perc').on('input', function() {
+        $('#total_discount').val('');
+        updateTotals();
+    });
+    
+    // Monitorar mudanças nos valores dos métodos de pagamento
+    $(document).on('input', 'input[name*="[amount]"]', function() {
+        const currentValue = parseMoney($(this).val());
+        const budgetTotal = calculateSubtotal() - parseMoney($('#total_discount').val());
+        const otherPaymentsTotal = calculatePaymentMethodsTotal() - currentValue;
+        const maxAllowed = budgetTotal - otherPaymentsTotal;
+        
+        if (currentValue > maxAllowed && maxAllowed >= 0) {
+            // Valor ultrapassa o permitido
+            Swal.fire({
+                icon: 'warning',
+                title: 'Valor Excedido!',
+                text: `O valor máximo permitido para este pagamento é R$ ${formatMoney(maxAllowed)}.`,
+                confirmButtonText: 'OK'
+            });
+            
+            // Define o valor máximo permitido
+            $(this).val(formatMoney(maxAllowed));
+        }
+        
+        updateRemainingAmount();
+    });
 
     // --- Lógica de Modais (Produto e Categoria) ---
     
@@ -1039,6 +1122,29 @@ $(document).ready(function() {
             customDateField.hide();
         }
     });
+    
+    // Controle de exibição do campo Parcelas baseado no método de pagamento
+    $(document).on('change', 'select[name*="[payment_method_id]"]', function() {
+        const paymentMethodId = $(this).val();
+        const installmentsField = $(this).closest('.row').find('input[name*="[installments]"]').closest('.col-md-2');
+        
+        if (paymentMethodId) {
+            // Buscar informações do método de pagamento
+            const paymentMethods = @json($paymentMethods);
+            const selectedMethod = paymentMethods.find(method => method.id == paymentMethodId);
+            
+            if (selectedMethod && selectedMethod.allows_installments) {
+                installmentsField.show();
+            } else {
+                installmentsField.hide();
+                // Definir parcelas como 1 se não permite parcelamento
+                installmentsField.find('input').val(1);
+            }
+        } else {
+            // Se nenhum método selecionado, mostrar o campo
+            installmentsField.show();
+        }
+    });
 
     function addPaymentRow() {
         const template = `
@@ -1049,7 +1155,7 @@ $(document).ready(function() {
                         <select class="form-select" name="payment_methods[${paymentMethodIndex}][payment_method_id]">
                             <option value="">Selecione um método</option>
                             @foreach($paymentMethods as $method)
-                                <option value="{{ $method->id }}">{{ $method->name }}</option>
+                                <option value="{{ $method->id }}" data-allows-installments="{{ $method->allows_installments ? 'true' : 'false' }}">{{ $method->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -1141,32 +1247,64 @@ $(document).ready(function() {
         updatePaymentAddButtons();
     });
 
-    // --- Funções de Notificação (opcional, requer SweetAlert2) ---
+    // --- Validação do Formulário ---
+    
+    $('#budgetForm').on('submit', function(e) {
+        const includePayments = $('input[name="include_payment_methods"]:checked').val();
+        
+        if (includePayments === 'yes') {
+            const budgetTotal = calculateSubtotal() - parseMoney($('#total_discount').val());
+            const paymentTotal = calculatePaymentMethodsTotal();
+            const remaining = budgetTotal - paymentTotal;
+            
+            if (remaining !== 0) {
+                e.preventDefault();
+                
+                let message = '';
+                if (remaining > 0) {
+                    message = `Ainda falta pagar R$ ${formatMoney(remaining)}. Os métodos de pagamento devem totalizar o valor do orçamento.`;
+                } else {
+                    message = `Os métodos de pagamento excedem o valor do orçamento em R$ ${formatMoney(Math.abs(remaining))}.`;
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Valores Inconsistentes!',
+                    text: message,
+                    confirmButtonText: 'OK'
+                });
+                
+                return false;
+            }
+        }
+    });
 
-    function showSuccessToast(text) {
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Sucesso!',
-                text: text,
-                timer: 2000,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
-            });
-        }
-    }
+    // --- Funções de Notificação (opcional, requer SweetAlert2) ---
 
-    function showErrorAlert(text) {
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Erro!',
-                text: text,
-                confirmButtonText: 'OK'
-            });
-        }
-    }
+    function showSuccessToast(text) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Sucesso!',
+                text: text,
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
+    }
+
+    function showErrorAlert(text) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro!',
+                text: text,
+                confirmButtonText: 'OK'
+            });
+        }
+    }
 
 });
 </script>

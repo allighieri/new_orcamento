@@ -60,8 +60,7 @@ class PaymentMethodController extends Controller
         // Definir valores padrão
         $validated['company_id'] = $user->company_id;
         $validated['slug'] = $slug;
-        $validated['allows_installments'] = $request->has('allows_installments');
-        $validated['is_active'] = $request->has('is_active') ? true : true; // Ativo por padrão
+        // Os valores de is_active e allows_installments já foram processados pelo Request
         
         // Se não permite parcelamento, max_installments deve ser 1
         if (!$validated['allows_installments']) {
@@ -140,9 +139,7 @@ class PaymentMethodController extends Controller
             $validated['slug'] = $slug;
         }
 
-        // Definir valores
-        $validated['allows_installments'] = $request->has('allows_installments');
-        $validated['is_active'] = $request->has('is_active');
+        // Os valores de is_active e allows_installments já foram processados pelo Request
         
         // Se não permite parcelamento, max_installments deve ser 1
         if (!$validated['allows_installments']) {

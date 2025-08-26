@@ -339,7 +339,7 @@
                                                         <select class="form-select" name="payment_methods[{{ $index }}][payment_method_id]">
                                                             <option value="">Selecione um método</option>
                                                             @foreach($paymentMethods as $method)
-                                                                <option value="{{ $method->id }}" {{ $payment->payment_method_id == $method->id ? 'selected' : '' }}>
+                                                                <option value="{{ $method->id }}" data-allows-installments="{{ $method->allows_installments ? 'true' : 'false' }}" {{ $payment->payment_method_id == $method->id ? 'selected' : '' }}>
                                                                     {{ $method->name }}
                                                                 </option>
                                                             @endforeach
@@ -403,7 +403,7 @@
                                                     <select class="form-select" name="payment_methods[0][payment_method_id]">
                                                         <option value="">Selecione um método</option>
                                                         @foreach($paymentMethods as $method)
-                                                            <option value="{{ $method->id }}">{{ $method->name }}</option>
+                                                            <option value="{{ $method->id }}" data-allows-installments="{{ $method->allows_installments ? 'true' : 'false' }}">{{ $method->name }}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>
@@ -444,6 +444,25 @@
                                             </div>
                                         </div>
                                     @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo de Valor Restante -->
+                        <div class="card mt-4" id="remainingAmountCard" style="border-left: 4px solid #28a745;">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1"><i class="bi bi-calculator"></i> Valor Restante</h5>
+                                                <small class="text-muted">Valor que ainda precisa ser pago</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <h3 class="mb-0" id="remainingAmount">R$ 0,00</h3>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -684,6 +703,57 @@ $(document).ready(function() {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }));
+        
+        // Atualizar valor restante
+        updateRemainingAmount();
+    }
+    
+    // Função para calcular total dos métodos de pagamento
+    function calculatePaymentMethodsTotal() {
+        let total = 0;
+        $('input[name*="[amount]"]').each(function() {
+            const value = parseMoney($(this).val());
+            total += value;
+        });
+        return total;
+    }
+    
+    // Função para converter valor monetário para número
+    function parseMoney(value) {
+        if (!value) return 0;
+        return parseFloat(value.toString().replace(/\./g, '').replace(',', '.')) || 0;
+    }
+    
+    // Função para formatar número como moeda
+    function formatMoney(value) {
+        return value.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+    
+    // Função para atualizar valor restante
+    function updateRemainingAmount() {
+        const budgetTotal = calculateSubtotal() - parseMoney($('#total_discount').val());
+        const paymentTotal = calculatePaymentMethodsTotal();
+        const remaining = budgetTotal - paymentTotal;
+        
+        $('#remainingAmount').text('R$ ' + formatMoney(remaining));
+        
+        // Alterar cor baseado no valor
+        const remainingElement = $('#remainingAmount');
+        const cardElement = $('#remainingAmountCard');
+        
+        if (remaining < 0) {
+            remainingElement.css('color', '#dc3545'); // Vermelho
+            cardElement.css('border-left-color', '#dc3545');
+        } else if (remaining === 0) {
+            remainingElement.css('color', '#28a745'); // Verde
+            cardElement.css('border-left-color', '#28a745');
+        } else {
+            remainingElement.css('color', '#ffc107'); // Amarelo
+            cardElement.css('border-left-color', '#ffc107');
+        }
     }
     
     // Adicionar produto
@@ -1295,7 +1365,7 @@ $(document).ready(function() {
                         <select class="form-select" name="payment_methods[${paymentMethodIndex}][payment_method_id]">
                             <option value="">Selecione um método</option>
                             @foreach($paymentMethods as $method)
-                                <option value="{{ $method->id }}">{{ $method->name }}</option>
+                                <option value="{{ $method->id }}" data-allows-installments="{{ $method->allows_installments ? 'true' : 'false' }}">{{ $method->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -1382,12 +1452,52 @@ $(document).ready(function() {
             customDateField.hide();
         }
     });
+    
+    // Controle de exibição do campo Parcelas baseado no método de pagamento
+    $(document).on('change', 'select[name*="[payment_method_id]"]', function() {
+        const paymentMethodId = $(this).val();
+        const installmentsField = $(this).closest('.row').find('input[name*="[installments]"]').closest('.col-md-2');
+        
+        if (paymentMethodId) {
+            // Buscar informações do método de pagamento
+            const paymentMethods = @json($paymentMethods);
+            const selectedMethod = paymentMethods.find(method => method.id == paymentMethodId);
+            
+            if (selectedMethod && selectedMethod.allows_installments) {
+                installmentsField.show();
+            } else {
+                installmentsField.hide();
+                // Definir parcelas como 1 se não permite parcelamento
+                installmentsField.find('input').val(1);
+            }
+        } else {
+            // Se nenhum método selecionado, mostrar o campo
+            installmentsField.show();
+        }
+    });
+    
+    // Verificar campos de parcelas no carregamento da página
+    $('select[name*="[payment_method_id]"]').each(function() {
+        const paymentMethodId = $(this).val();
+        const installmentsField = $(this).closest('.row').find('input[name*="[installments]"]').closest('.col-md-2');
+        
+        if (paymentMethodId) {
+            const paymentMethods = @json($paymentMethods);
+            const selectedMethod = paymentMethods.find(method => method.id == paymentMethodId);
+            
+            if (selectedMethod && !selectedMethod.allows_installments) {
+                installmentsField.hide();
+                installmentsField.find('input').val(1);
+            }
+        }
+    });
 
     // Remover método de pagamento
     $(document).on('click', '.remove-payment-method', function() {
         const paymentRows = $('.payment-method-row');
         if (paymentRows.length > 1) {
             $(this).closest('.payment-method-row').remove();
+            updateRemainingAmount(); // Atualizar valor restante após remoção
         } else {
             Swal.fire({
                 icon: 'warning',
@@ -1395,6 +1505,68 @@ $(document).ready(function() {
                 text: 'Deve haver pelo menos um método de pagamento.',
                 confirmButtonText: 'OK'
             });
+        }
+    });
+    
+    // Validação dos valores dos métodos de pagamento
+    $(document).on('input', 'input[name*="[amount]"]', function() {
+        const currentValue = parseMoney($(this).val());
+        const budgetTotal = calculateSubtotal() - parseMoney($('#total_discount').val());
+        
+        // Calcular total dos outros métodos de pagamento (excluindo o atual)
+        let otherPaymentsTotal = 0;
+        $('input[name*="[amount]"]').not(this).each(function() {
+            otherPaymentsTotal += parseMoney($(this).val());
+        });
+        
+        const maxAllowed = budgetTotal - otherPaymentsTotal;
+        
+        if (currentValue > maxAllowed && maxAllowed >= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Valor Excedido!',
+                text: `O valor máximo permitido para este pagamento é R$ ${formatMoney(maxAllowed)}`,
+                confirmButtonText: 'OK'
+            });
+            
+            // Definir o valor máximo permitido
+            $(this).val(maxAllowed.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }));
+        }
+        
+        updateRemainingAmount();
+    });
+    
+    // Validação do formulário antes da submissão
+    $('#budgetForm').on('submit', function(e) {
+        const includePaymentMethods = $('input[name="include_payment_methods"]:checked').val();
+        
+        if (includePaymentMethods === 'yes') {
+            const budgetTotal = calculateSubtotal() - parseMoney($('#total_discount').val());
+            const paymentTotal = calculatePaymentMethodsTotal();
+            const remaining = budgetTotal - paymentTotal;
+            
+            if (remaining !== 0) {
+                e.preventDefault();
+                
+                let message = '';
+                if (remaining > 0) {
+                    message = `Ainda falta pagar R$ ${formatMoney(remaining)}. Os métodos de pagamento devem totalizar exatamente o valor do orçamento.`;
+                } else {
+                    message = `Os métodos de pagamento excedem o valor do orçamento em R$ ${formatMoney(Math.abs(remaining))}. Ajuste os valores.`;
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro nos Métodos de Pagamento!',
+                    text: message,
+                    confirmButtonText: 'OK'
+                });
+                
+                return false;
+            }
         }
     });
 });
