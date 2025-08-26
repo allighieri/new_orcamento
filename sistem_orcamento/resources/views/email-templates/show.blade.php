@@ -11,7 +11,7 @@
             </h1>
             
            <div>
-                <a href="{{ route('email-templates.index') }}" class="btn btn-outline-secondary me-2">
+                <a href="{{ url()->previous() }}" class="btn btn-outline-secondary me-2">
                     <i class="bi bi-arrow-left"></i> Voltar
                 </a>
                 <a href="{{ route('email-templates.create') }}" class="btn btn-primary">

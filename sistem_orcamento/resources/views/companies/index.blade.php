@@ -10,7 +10,7 @@
                 <i class="bi bi-building-add"></i> Empresas
             </h1>
             <div>
-                <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary me-2">
+                <a href="{{ url()->previous() }}" class="btn btn-outline-secondary me-2">
                     <i class="bi bi-arrow-left"></i> Voltar
                 </a>
                 <a href="{{ route('companies.create') }}" class="btn btn-primary">

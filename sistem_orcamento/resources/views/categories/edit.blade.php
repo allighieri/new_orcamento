@@ -10,7 +10,7 @@
                 <h5 class="mb-0">
                     <i class="bi bi-tags"></i> Editar Categoria
                 </h5>
-                <a href="{{ route('categories.index') }}" class="btn btn-secondary btn-sm">
+                <a href="{{ url()->previous() }}" class="btn btn-secondary btn-sm">
                     <i class="bi bi-arrow-left"></i> Voltar
                 </a>
             </div>

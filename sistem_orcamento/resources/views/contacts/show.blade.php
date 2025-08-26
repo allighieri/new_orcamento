@@ -9,7 +9,7 @@
             <h1>
                 <i class="bi bi-person-lines-fill"></i> Detalhes do Contato
             </h1>
-            <a href="{{ route('contacts.index') }}" class="btn btn-outline-secondary me-2">
+            <a href="{{ url()->previous() }}" class="btn btn-outline-secondary me-2">
                     <i class="bi bi-arrow-left"></i> Voltar
                 </a>
         </div>

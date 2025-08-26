@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0"><i class="bi bi-people"></i> Novo Cliente</h4>
-                    <a href="{{ route('clients.index') }}" class="btn btn-secondary btn-sm">
+                    <a href="{{ url()->previous() }}" class="btn btn-secondary btn-sm">
                         <i class="bi bi-arrow-left"></i> Voltar
                     </a>
                 </div>

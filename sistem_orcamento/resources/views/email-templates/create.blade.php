@@ -10,7 +10,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title"><i class="bi bi-envelope-paper-heart-fill"></i> Criar Novo Template de Email</h4>
                     
-                    <a href="{{ route('email-templates.index') }}" class="btn btn-secondary btn-sm">
+                    <a href="{{ url()->previous() }}" class="btn btn-secondary btn-sm">
                         <i class="bi bi-arrow-left"></i> Voltar
                     </a>
                 </div>

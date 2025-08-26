@@ -11,7 +11,7 @@
                     <h3 class="card-title"><i class="bi bi-envelope-paper-heart-fill"></i> Editar Template: {{ $emailTemplate->name }}</h3>
                     <div>
                         
-                        <a href="{{ route('email-templates.index') }}" class="btn btn-secondary btn-sm">
+                        <a href="{{ url()->previous() }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> Voltar
                         </a>
                     </div>

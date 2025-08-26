@@ -282,7 +282,7 @@
                     </div>
                     
                     <div class="mt-4">
-                        <a href="{{ route('budgets.index') }}" class="btn btn-secondary">
+                        <a href="{{ url()->previous() }}" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Voltar para Lista
                         </a>
                     </div>

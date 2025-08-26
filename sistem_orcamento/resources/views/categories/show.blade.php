@@ -9,7 +9,7 @@
                     <i class="bi bi-tags"></i>
                     Detalhes da Categoria
                 </h1>
-                <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary me-2">
+                <a href="{{ url()->previous() }}" class="btn btn-outline-secondary me-2">
                     <i class="bi bi-arrow-left"></i> Voltar
                 </a>
             </div>
