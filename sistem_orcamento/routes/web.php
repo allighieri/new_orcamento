@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailTemplateController;
+use App\Http\Controllers\PaymentMethodController;
 
 // Rotas de Autenticação
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -69,6 +70,11 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     // Rotas para Templates de Email (todos os usuários autenticados)
     Route::resource('email-templates', EmailTemplateController::class);
     Route::get('email-templates/{emailTemplate}/preview', [EmailTemplateController::class, 'preview'])->name('email-templates.preview');
+    
+    // Rotas para Métodos de Pagamento - admin e super_admin podem gerenciar
+    Route::middleware('role:admin,super_admin')->group(function () {
+        Route::resource('payment-methods', PaymentMethodController::class);
+    });
     
     // Rotas para autenticação com Google
     Route::get('/google/settings', function() { return view('google.settings'); })->name('google.settings');

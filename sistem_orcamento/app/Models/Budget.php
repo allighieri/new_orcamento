@@ -60,4 +60,36 @@ class Budget extends Model
     {
         return $this->hasMany(PdfFile::class);
     }
+
+    /**
+     * Relacionamento com formas de pagamento
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(BudgetPayment::class)->ordered();
+    }
+
+    /**
+     * Retorna o total de pagamentos configurados
+     */
+    public function getTotalPaymentsAmountAttribute()
+    {
+        return $this->payments->sum('amount');
+    }
+
+    /**
+     * Verifica se o orçamento tem pagamentos configurados
+     */
+    public function getHasPaymentsAttribute()
+    {
+        return $this->payments->count() > 0;
+    }
+
+    /**
+     * Verifica se os pagamentos estão balanceados com o valor final
+     */
+    public function getPaymentsBalancedAttribute()
+    {
+        return abs($this->final_amount - $this->total_payments_amount) < 0.01;
+    }
 }
