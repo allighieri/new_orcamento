@@ -115,7 +115,7 @@
                                                         
                                                         <div class="col-md-1">
                                                             <label class="form-label">Qtde*</label>
-                                                            <input type="number" class="form-control quantity-input" name="products[{{ $index }}][quantity]" value="{{ old('products.'.$index.'.quantity', 1) }}" required min="1" step="0.01">
+                                                            <input type="number" class="form-control quantity-input" name="products[{{ $index }}][quantity]" value="{{ old('products.'.$index.'.quantity', 1) }}" required min="1" step="1">
                                                         </div>
                                                         
                                                         <div class="col-md-2">

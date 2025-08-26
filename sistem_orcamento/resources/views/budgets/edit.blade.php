@@ -152,7 +152,7 @@
                                         
                                         <div class="col-md-1">
                                             <label class="form-label">Qtde*</label>
-                                            <input type="text" class="form-control quantity-input" name="items[{{ $index }}][quantity]" value="{{ $item->quantity }}" required>
+                                            <input type="number" class="form-control quantity-input" name="items[{{ $index }}][quantity]" value="{{ $item->quantity }}" required min="1" step="1">
                                         </div>
 
                                         <div class="col-md-2">
@@ -214,7 +214,7 @@
                                             
                                             <div class="col-md-1">
                                                 <label class="form-label">Qtde*</label>
-                                                <input type="text" class="form-control quantity-input" name="items[0][quantity]" value="1" required>
+                                                <input type="number" class="form-control quantity-input" name="items[0][quantity]" value="1" required step="1">
                                             </div>
 
                                             <div class="col-md-2">
@@ -782,7 +782,7 @@ $(document).ready(function() {
                 </div>
                 <div class="col-md-1">
                     <label class="form-label">Qtde*</label>
-                    <input type="text" class="form-control quantity-input" name="items[${newIndex}][quantity]" value="1" required min="1">
+                    <input type="number" class="form-control quantity-input" name="items[${newIndex}][quantity]" value="1" required min="1" step="1">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Pç. Unit.</label>
