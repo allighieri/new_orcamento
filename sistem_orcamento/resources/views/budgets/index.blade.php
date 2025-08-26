@@ -76,7 +76,7 @@
                                     </td>
                                     <td>{{ $budget->issue_date->format('d/m/Y') }}</td>
                                     <td>
-                                        <span class="badge status-clickable
+                                        <span class="badge status-clickable info-status-badge-{{ $budget->id }}
                                             @if($budget->status == 'Pendente') bg-warning
                                             @elseif($budget->status == 'Enviado') bg-info
                                             @elseif($budget->status == 'Em negociação') bg-primary
@@ -370,7 +370,9 @@ function sendWhatsAppToClient(budgetId) {
                 showConfirmButton: false
             });
 
-            location.reload();
+            $('.info-status-badge-' + budgetId).text('Enviado');
+            $('.info-status-badge-' + budgetId).removeClass('bg-warning');
+            $('.info-status-badge-' + budgetId).addClass('bg-info');
 
         } else {
             Swal.fire({
@@ -433,7 +435,11 @@ function sendWhatsAppToContact(budgetId, contactId) {
                 timer: 2000,
                 showConfirmButton: false
             });
-            location.reload();
+            
+            $('.info-status-badge-' + budgetId).text('Enviado');
+            $('.info-status-badge-' + budgetId).removeClass('bg-warning');
+            $('.info-status-badge-' + budgetId).addClass('bg-info');
+            
         } else {
             Swal.fire({
                 title: 'Erro',
@@ -628,7 +634,10 @@ function sendEmailToClient(budgetId) {
                 position: 'top-end'
             });
 
-            location.reload();
+            $('.info-status-badge-' + budgetId).text('Enviado');
+            $('.info-status-badge-' + budgetId).removeClass('bg-warning');
+            $('.info-status-badge-' + budgetId).addClass('bg-info');
+
         } else {
             if (data.auth_required) {
                 Swal.fire({
@@ -702,7 +711,9 @@ function sendEmailToContact(budgetId, contactId) {
                     toast: true,
                     position: 'top-end'
                 });
-                location.reload();
+                $('.info-status-badge-' + budgetId).text('Enviado');
+                $('.info-status-badge-' + budgetId).removeClass('bg-warning');
+                $('.info-status-badge-' + budgetId).addClass('bg-info');
         } else {
             if (data.auth_required) {
                 Swal.fire({
