@@ -280,7 +280,7 @@
                                                 @endif
                                             </div>
                                             <div class="col-md-6">
-                                                @if($payment->installments()->count() > 0)
+                                                @if($payment->paymentInstallments->count() > 0)
                                                 <h6 class="text-secondary">Parcelas</h6>
                                                 <div class="table-responsive">
                                                     <table class="table table-sm table-striped">
@@ -293,7 +293,7 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            @foreach($payment->installments() as $installment)
+                                                            @foreach($payment->paymentInstallments as $installment)
                                                             <tr>
                                                                 <td>{{ $installment->installment_number }}/{{ $payment->installments }}</td>
                                                                 <td>R$ {{ number_format($installment->amount, 2, ',', '.') }}</td>

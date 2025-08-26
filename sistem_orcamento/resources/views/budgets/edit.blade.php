@@ -312,7 +312,24 @@
                                 <h5 class="mb-0"><i class="bi bi-credit-card"></i> Métodos de Pagamento</h5>
                             </div>
                             <div class="card-body">
-                                <div id="payment-methods-container">
+                                <!-- Radio buttons para controlar exibição dos métodos de pagamento -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Incluir forma de pagamento no orçamento?</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="include_payment_methods" id="include_payment_no" value="no" {{ $budget->budgetPayments->count() == 0 ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="include_payment_no">
+                                            Não
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="include_payment_methods" id="include_payment_yes" value="yes" {{ $budget->budgetPayments->count() > 0 ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="include_payment_yes">
+                                            Sim
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="payment-methods-container" style="{{ $budget->budgetPayments->count() == 0 ? 'display: none;' : '' }}">
                                     @if($budget->budgetPayments->count() > 0)
                                         @foreach($budget->budgetPayments as $index => $payment)
                                             <div class="payment-method-row mb-3">
@@ -1329,6 +1346,41 @@ $(document).ready(function() {
         $('.money').mask('#.##0,00', {reverse: true});
         
         paymentMethodIndex++;
+    });
+
+    // Controlar exibição dos métodos de pagamento com radio buttons
+    $('input[name="include_payment_methods"]').change(function() {
+        if ($(this).val() === 'yes') {
+            $('#payment-methods-container').show();
+        } else {
+            $('#payment-methods-container').hide();
+        }
+    });
+
+    // Controlar exibição do campo Data Personalizada
+    $(document).on('change', 'select[name*="[payment_moment]"]', function() {
+        const customDateField = $(this).closest('.payment-method-row').find('input[name*="[custom_date]"]').closest('.col-md-2');
+        
+        if ($(this).val() === 'custom') {
+            customDateField.show();
+            // Preencher com a data atual se estiver vazio
+            const dateInput = customDateField.find('input[name*="[custom_date]"]');
+            if (!dateInput.val()) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.val(today);
+            }
+        } else {
+            customDateField.hide();
+        }
+    });
+
+    // Verificar campos de data personalizada no carregamento da página
+    $('select[name*="[payment_moment]"]').each(function() {
+        const customDateField = $(this).closest('.payment-method-row').find('input[name*="[custom_date]"]').closest('.col-md-2');
+        
+        if ($(this).val() !== 'custom') {
+            customDateField.hide();
+        }
     });
 
     // Remover método de pagamento

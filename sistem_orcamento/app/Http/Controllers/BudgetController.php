@@ -222,8 +222,8 @@ class BudgetController extends Controller
                 'final_amount' => $finalAmount
             ]);
 
-            // Processar métodos de pagamento se fornecidos
-            if ($request->has('payment_methods') && is_array($request->payment_methods)) {
+            // Processar métodos de pagamento se fornecidos e se o usuário optou por incluí-los
+            if ($request->include_payment_methods === 'yes' && $request->has('payment_methods') && is_array($request->payment_methods)) {
                 foreach ($request->payment_methods as $index => $paymentData) {
                     // Verificar se os campos obrigatórios estão preenchidos
                     $hasPaymentMethodId = !empty($paymentData['payment_method_id']);
@@ -281,7 +281,7 @@ class BudgetController extends Controller
             }
         }
         
-        $budget->load(['client', 'company', 'items.product', 'pdfFiles']);
+        $budget->load(['client', 'company', 'items.product', 'pdfFiles', 'budgetPayments.paymentMethod', 'budgetPayments.paymentInstallments']);
         return view('budgets.show', compact('budget'));
     }
 
@@ -485,8 +485,8 @@ class BudgetController extends Controller
             // Remover pagamentos antigos
             $budget->budgetPayments()->delete();
             
-            // Processar novos métodos de pagamento se fornecidos
-            if ($request->has('payment_methods') && is_array($request->payment_methods)) {
+            // Processar novos métodos de pagamento se fornecidos e se o usuário optou por incluí-los
+            if ($request->include_payment_methods === 'yes' && $request->has('payment_methods') && is_array($request->payment_methods)) {
                 foreach ($request->payment_methods as $paymentData) {
                     if (!empty($paymentData['payment_method_id']) && !empty($paymentData['amount'])) {
                         $budgetPayment = $budget->budgetPayments()->create([

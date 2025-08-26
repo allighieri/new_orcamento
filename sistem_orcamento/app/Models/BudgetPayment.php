@@ -48,7 +48,7 @@ class BudgetPayment extends Model
     /**
      * Relacionamento com parcelas
      */
-    public function installments(): HasMany
+    public function paymentInstallments(): HasMany
     {
         return $this->hasMany(PaymentInstallment::class)->orderBy('installment_number');
     }
@@ -105,7 +105,7 @@ class BudgetPayment extends Model
     public function createInstallments($pickupDate = null)
     {
         // Remove parcelas existentes
-        $this->installments()->delete();
+        $this->paymentInstallments()->delete();
 
         // Se for apenas 1 parcela, cria uma única parcela
         if ($this->installments <= 1) {

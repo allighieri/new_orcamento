@@ -262,7 +262,24 @@
                                 <h5 class="mb-0"><i class="bi bi-credit-card"></i> Métodos de Pagamento</h5>
                             </div>
                             <div class="card-body">
-                                <div id="payment-methods-container">
+                                <!-- Radio buttons para controlar exibição dos métodos de pagamento -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Incluir forma de pagamento no orçamento?</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="include_payment_methods" id="include_payment_no" value="no" checked>
+                                        <label class="form-check-label" for="include_payment_no">
+                                            Não
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="include_payment_methods" id="include_payment_yes" value="yes">
+                                        <label class="form-check-label" for="include_payment_yes">
+                                            Sim
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="payment-methods-container" style="display: none;">
                                     <div class="payment-method-row mb-3">
                                         <div class="row">
                                             <div class="col-md-3">
@@ -293,7 +310,7 @@
                                                     <option value="custom">Data Personalizada</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-2">
+                                            <div class="col-md-2 custom-date-field" style="display: none;">
                                                 <label class="form-label">Data Personalizada</label>
                                                 <input type="date" class="form-control" name="payment_methods[0][custom_date]">
                                             </div>
@@ -998,8 +1015,30 @@ $(document).ready(function() {
     @endif
 
     // --- Gerenciamento de Métodos de Pagamento ---
-    
-    let paymentMethodIndex = $('#payment-methods-container .payment-method-row').length;
+    
+    let paymentMethodIndex = $('#payment-methods-container .payment-method-row').length;
+    
+    // Controle de exibição dos métodos de pagamento
+    $('input[name="include_payment_methods"]').on('change', function() {
+        if ($(this).val() === 'yes') {
+            $('#payment-methods-container').show();
+        } else {
+            $('#payment-methods-container').hide();
+        }
+    });
+    
+    // Controle de exibição do campo Data Personalizada
+    $(document).on('change', 'select[name*="[payment_moment]"]', function() {
+        const customDateField = $(this).closest('.row').find('.custom-date-field');
+        if ($(this).val() === 'custom') {
+            customDateField.show();
+            // Preenche com a data atual
+            const today = new Date().toISOString().split('T')[0];
+            customDateField.find('input[type="date"]').val(today);
+        } else {
+            customDateField.hide();
+        }
+    });
 
     function addPaymentRow() {
         const template = `
@@ -1033,10 +1072,10 @@ $(document).ready(function() {
                             <option value="custom">Data Personalizada</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Data Personalizada</label>
-                        <input type="date" class="form-control" name="payment_methods[${paymentMethodIndex}][custom_date]">
-                    </div>
+                    <div class="col-md-2 custom-date-field" style="display: none;">
+                         <label class="form-label">Data Personalizada</label>
+                         <input type="date" class="form-control" name="payment_methods[${paymentMethodIndex}][custom_date]">
+                     </div>
                     <div class="col-md-1 d-flex align-items-end">
                         <button type="button" class="btn btn-danger btn-sm remove-payment-method me-1">
                             <i class="bi bi-trash"></i>
