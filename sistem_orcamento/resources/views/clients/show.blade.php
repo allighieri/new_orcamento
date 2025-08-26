@@ -25,105 +25,57 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-1">
-                        <label class="form-label fw-bold">Nome Fantasia:</label>
-                        <p class="form-control-plaintext">{{ $client->fantasy_name }}</p>
-                    </div>
-                    
-                    <div class="col-md-6 mb-1">
-                        <label class="form-label fw-bold">Razão Social:</label>
-                        <p class="form-control-plaintext">{{ $client->corporate_name ?: 'Não informado' }}</p>
-                    </div>
+                <div class="mb-2">
+                    <span class="fw-bold">Nome Fantasia:</span> {{ $client->fantasy_name }}
                 </div>
                 
-                <div class="row">
-                    <div class="col-md-6 mb-1">
-                        <label class="form-label fw-bold">CPF/CNPJ:</label>
-                        <p class="form-control-plaintext">{{ $client->document_number }}</p>
-                    </div>
-                    
-                    <div class="col-md-6 mb-1">
-                        <label class="form-label fw-bold">Inscrição Estadual:</label>
-                        <p class="form-control-plaintext">{{ $client->state_registration ?: 'Não informado' }}</p>
-                    </div>
+                <div class="mb-2">
+                    <span class="fw-bold">Razão Social:</span> {{ $client->corporate_name ?: 'Não informado' }}
                 </div>
                 
-                <div class="row">
-                    <div class="col-md-6 mb-1">
-                        <label class="form-label fw-bold">Telefone:</label>
-                        <p class="form-control-plaintext">
-                            @if($client->phone)
-                                <a href="tel:{{ $client->phone }}" class="text-decoration-none">
-                                    <i class="bi bi-telephone"></i> {{ $client->phone }}
-                                </a>
-                            @else
-                                Não informado
-                            @endif
-                        </p>
-                    </div>
-                    
-                    <div class="col-md-6 mb-1">
-                        <label class="form-label fw-bold">Email:</label>
-                        <p class="form-control-plaintext">
-                            @if($client->email)
-                                <a href="mailto:{{ $client->email }}" class="text-decoration-none">
-                                    <i class="bi bi-envelope"></i> {{ $client->email }}
-                                </a>
-                            @else
-                                Não informado
-                            @endif
-                        </p>
-                    </div>
+                <div class="mb-2">
+                    <span class="fw-bold">CPF/CNPJ:</span> {{ $client->document_number }}
                 </div>
                 
-                <div class="row">
-                    <div class="col-md-6 mb-1">
-                        <label class="form-label fw-bold">Endereço:</label>
-                        <p class="my-0">
-                            {{ $client->address ?: 'Não informado' }}
-                        </p>
-                    </div>
-                    
-                    <div class="col-md-6 mb-1">
-                        <label class="form-label fw-bold">Bairro:</label>
-                        <p class="my-0">
-                            {{ $client->district ?: 'Não informado' }}
-                        </p>
-                    </div>
+                <div class="mb-2">
+                    <span class="fw-bold">Inscrição Estadual:</span> {{ $client->state_registration ?: 'Não informado' }}
                 </div>
                 
-                <div class="row">
-                    <div class="col-md-8 mb-1">
-                        <label class="form-label fw-bold">Cidade:</label>
-                        <p class="my-0">
-                            {{ $client->city ?: 'Não informado' }}
-                        </p>
-                    </div>
-                    
-                    <div class="col-md-4 mb-1">
-                        <label class="form-label fw-bold">UF:</label>
-                        <p class="my-0">
-                            {{ $client->state ?: 'Não informado' }}
-                        </p>
-                    </div>
+                <div class="mb-2">
+                    <span class="fw-bold">Telefone:</span> 
+                    @if($client->phone)
+                        <a href="tel:{{ preg_replace('/\D/', '', $client->phone) }}" class="text-decoration-none">
+                            <i class="bi bi-telephone"></i> {{ $client->phone }}
+                        </a>
+                    @else
+                        Não informado
+                    @endif
                 </div>
-            
                 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Cadastrado em:</label>
-                        <p class="form-control-plaintext">
-                            <i class="bi bi-calendar"></i> {{ $client->created_at->format('d/m/Y H:i') }}
-                        </p>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Última atualização:</label>
-                        <p class="form-control-plaintext">
-                            <i class="bi bi-clock"></i> {{ $client->updated_at->format('d/m/Y H:i') }}
-                        </p>
-                    </div>
+                <div class="mb-2">
+                    <span class="fw-bold">Email:</span> 
+                    @if($client->email)
+                        <a href="mailto:{{ $client->email }}" class="text-decoration-none">
+                            <i class="bi bi-envelope"></i> {{ $client->email }}
+                        </a>
+                    @else
+                        Não informado
+                    @endif
+                </div>
+                
+                <div class="mb-2">
+                    <span class="fw-bold">Endereço:</span> {{ $client->address ?: 'Não informado' }}, {{ $client->district ?: 'Não informado' }}, {{ $client->city ?: 'Não informado' }} - {{ $client->state ?: 'Não informado' }}
+                </div>
+                
+                
+                <div class="mb-2">
+                    <span class="fw-bold">Cadastrado em:</span> 
+                    {{ $client->created_at->format('d/m/Y H:i') }}
+                </div>
+                
+                <div class="mb-2">
+                    <span class="fw-bold">Última atualização:</span> 
+                    {{ $client->updated_at->format('d/m/Y H:i') }}
                 </div>
             </div>
         </div>
