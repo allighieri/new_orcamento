@@ -80,7 +80,7 @@
                         </div>
                         
                         <div class="text-center mt-4">
-                            <button id="disconnect-btn" class="btn btn-outline-danger">
+                            <button id="disconnect-btn" class="btn btn-outline-danger" onclick="confirmDeleteTemplate()">
                                 <i class="fas fa-unlink me-2"></i>
                                 Desconectar Google
                             </button>
@@ -98,11 +98,32 @@ $(document).ready(function() {
     checkGoogleStatus();
     
     $('#disconnect-btn').click(function() {
-        if (confirm('Tem certeza que deseja desconectar a integração com Google?')) {
-            disconnectGoogle();
-        }
+        //if (confirm('Tem certeza que deseja desconectar a integração com Google?')) {
+          //  disconnectGoogle();
+        //}
+
+        confirmDeleteTemplate();
     });
 });
+
+function confirmDeleteTemplate() {
+    Swal.fire({
+        title: 'Atenção!',
+        html: 'Ao desconectar, não será mais possível enviar Orçamento via E-mail!<br /><br />' +
+              'Tem certeza que deseja desconectar a integração com Google?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, desconectar!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            disconnectGoogle();
+            location.reload();
+        }
+    });
+}
 
 function checkGoogleStatus() {
     $.get('{{ route("google.status") }}')
@@ -139,6 +160,9 @@ function disconnectGoogle() {
         toastr.error('Erro ao desconectar integração.');
     });
 }
+
+
+
 </script>
 @endpush
 @endsection
