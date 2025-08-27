@@ -310,6 +310,13 @@
                                                 <label class="form-label">Parcelas</label>
                                                 <input type="number" class="form-control" name="payment_methods[0][installments]" value="1" min="1">
                                             </div>
+                                            <div class="col-md-2 payment-installment-value-field" style="display: none;">
+                                                <label class="form-label">Valor da Parcela</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">R$</span>
+                                                    <input type="text" class="form-control" name="payment_methods[0][installment_value]" placeholder="0,00" readonly>
+                                                </div>
+                                            </div>
                                             <div class="col-md-2 payment-moment-field" style="display: none;">
                                                 <label class="form-label">Momento</label>
                                                 <select class="form-select" name="payment_methods[0][payment_moment]">
@@ -669,6 +676,48 @@ $(document).ready(function() {
             let amount = parseMoney($(this).val());
             paymentTotal += amount;
         });
+
+    // Função para calcular e atualizar o valor da parcela
+    function updateInstallmentValue(paymentRow) {
+        const amountInput = paymentRow.find('.payment-amount-field input');
+        const installmentsInput = paymentRow.find('.payment-installments-field input');
+        const installmentValueInput = paymentRow.find('.payment-installment-value-field input');
+        
+        const amount = parseFloat(amountInput.val().replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+        const installments = parseInt(installmentsInput.val()) || 1;
+        
+        if (amount > 0 && installments > 0) {
+            const installmentValue = amount / installments;
+            const formattedValue = installmentValue.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            installmentValueInput.val(formattedValue);
+        } else {
+            installmentValueInput.val('');
+        }
+    }
+
+    // Event listeners para atualizar valor da parcela quando valor ou parcelas mudarem
+    $(document).on('input keyup', 'input[name*="[amount]"]', function() {
+        const paymentRow = $(this).closest('.payment-method-row');
+        const installmentValueField = paymentRow.find('.payment-installment-value-field');
+        
+        // Só calcular se o campo valor da parcela estiver visível
+        if (installmentValueField.is(':visible')) {
+            updateInstallmentValue(paymentRow);
+        }
+    });
+
+    $(document).on('input change', 'input[name*="[installments]"]', function() {
+        const paymentRow = $(this).closest('.payment-method-row');
+        const installmentValueField = paymentRow.find('.payment-installment-value-field');
+        
+        // Só calcular se o campo valor da parcela estiver visível
+        if (installmentValueField.is(':visible')) {
+            updateInstallmentValue(paymentRow);
+        }
+    });
         return paymentTotal;
     }
     
@@ -1131,6 +1180,7 @@ $(document).ready(function() {
         const currentRow = $(this).closest('.payment-method-row');
         const amountField = currentRow.find('.payment-amount-field');
         const installmentsField = currentRow.find('.payment-installments-field');
+        const installmentValueField = currentRow.find('.payment-installment-value-field');
         const momentField = currentRow.find('.payment-moment-field');
         
         if (paymentMethodId) {
@@ -1144,6 +1194,7 @@ $(document).ready(function() {
             
             if (selectedMethod && selectedMethod.allows_installments) {
                 installmentsField.show();
+                installmentValueField.show();
                 // Definir o valor máximo de parcelas baseado no método
                 const installmentsInput = installmentsField.find('input');
                 installmentsInput.attr('max', selectedMethod.max_installments);
@@ -1161,18 +1212,23 @@ $(document).ready(function() {
                 }
             } else {
                 installmentsField.hide();
+                installmentValueField.hide();
                 // Definir parcelas como 1 se não permite parcelamento
                 installmentsField.find('input').val(1).attr('max', 1);
+                // Limpar valor da parcela
+                installmentValueField.find('input').val('');
             }
         } else {
             // Se nenhum método selecionado, esconder todos os campos
             amountField.hide();
             installmentsField.hide();
+            installmentValueField.hide();
             momentField.hide();
             
             // Limpar valores dos campos
             amountField.find('input').val('');
             installmentsField.find('input').val(1);
+            installmentValueField.find('input').val('');
             momentField.find('select').val('approval');
         }
     });
@@ -1226,6 +1282,13 @@ $(document).ready(function() {
                     <div class="col-md-2 payment-installments-field" style="display: none;">
                         <label class="form-label">Parcelas</label>
                         <input type="number" class="form-control" name="payment_methods[${paymentMethodIndex}][installments]" value="1" min="1">
+                    </div>
+                    <div class="col-md-2 payment-installment-value-field" style="display: none;">
+                        <label class="form-label">Valor da Parcela</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" class="form-control" name="payment_methods[${paymentMethodIndex}][installment_value]" placeholder="0,00" readonly>
+                        </div>
                     </div>
                     <div class="col-md-2 payment-moment-field" style="display: none;">
                         <label class="form-label">Momento</label>

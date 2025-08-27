@@ -367,6 +367,15 @@
                                                                value="{{ $payment->installments }}" min="1" 
                                                                max="{{ $payment->paymentMethod->max_installments ?? 1 }}">
                                                     </div>
+                                                    <div class="col-md-2 payment-installment-value-field" style="{{ $payment->paymentMethod && $payment->paymentMethod->allows_installments ? '' : 'display: none;' }}">
+                                                        <label class="form-label">Valor da Parcela</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">R$</span>
+                                                            <input type="text" class="form-control" name="payment_methods[{{ $index }}][installment_value_display]" 
+                                                                   value="{{ $payment->installments > 0 ? number_format($payment->amount / $payment->installments, 2, ',', '.') : '0,00' }}" 
+                                                                   readonly style="background-color: #f8f9fa;">
+                                                        </div>
+                                                    </div>
                                                     <div class="col-md-2 payment-moment-field">
                                                         <label class="form-label">Momento</label>
                                                         <select class="form-select" name="payment_methods[{{ $index }}][payment_moment]">
@@ -426,6 +435,14 @@
                                                 <div class="col-md-2 payment-installments-field" style="display: none;">
                                                     <label class="form-label">Parcelas</label>
                                                     <input type="number" class="form-control" name="payment_methods[0][installments]" value="1" min="1" max="1">
+                                                </div>
+                                                <div class="col-md-2 payment-installment-value-field" style="display: none;">
+                                                    <label class="form-label">Valor da Parcela</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">R$</span>
+                                                        <input type="text" class="form-control" name="payment_methods[0][installment_value_display]" 
+                                                               value="0,00" readonly style="background-color: #f8f9fa;">
+                                                    </div>
                                                 </div>
                                                 <div class="col-md-2 payment-moment-field" style="display: none;">
                                                     <label class="form-label">Momento</label>
@@ -1383,6 +1400,14 @@ $(document).ready(function() {
                         <label class="form-label">Parcelas</label>
                         <input type="number" class="form-control" name="payment_methods[${paymentMethodIndex}][installments]" value="1" min="1">
                     </div>
+                    <div class="col-md-2 payment-installment-value-field" style="display: none;">
+                        <label class="form-label">Valor da Parcela</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" class="form-control" name="payment_methods[${paymentMethodIndex}][installment_value_display]" 
+                                   value="0,00" readonly style="background-color: #f8f9fa;">
+                        </div>
+                    </div>
                     <div class="col-md-2 payment-moment-field" style="display: none;">
                         <label class="form-label">Momento</label>
                         <select class="form-select" name="payment_methods[${paymentMethodIndex}][payment_moment]">
@@ -1464,6 +1489,7 @@ $(document).ready(function() {
         const currentRow = $(this).closest('.payment-method-row');
         const amountField = currentRow.find('.payment-amount-field');
         const installmentsField = currentRow.find('.payment-installments-field');
+        const installmentValueField = currentRow.find('.payment-installment-value-field');
         const momentField = currentRow.find('.payment-moment-field');
         
         if (paymentMethodId) {
@@ -1477,6 +1503,7 @@ $(document).ready(function() {
             
             if (selectedMethod && selectedMethod.allows_installments) {
                 installmentsField.show();
+                installmentValueField.show();
                 // Definir o valor máximo de parcelas baseado no método
                 const installmentsInput = installmentsField.find('input');
                 installmentsInput.attr('max', selectedMethod.max_installments);
@@ -1494,18 +1521,23 @@ $(document).ready(function() {
                 }
             } else {
                 installmentsField.hide();
+                installmentValueField.hide();
                 // Definir parcelas como 1 se não permite parcelamento
                 installmentsField.find('input').val(1).attr('max', 1);
+                // Limpar valor da parcela
+                installmentValueField.find('input').val('0,00');
             }
         } else {
             // Se nenhum método selecionado, esconder todos os campos
             amountField.hide();
             installmentsField.hide();
+            installmentValueField.hide();
             momentField.hide();
             
             // Limpar valores dos campos
             amountField.find('input').val('');
             installmentsField.find('input').val(1);
+            installmentValueField.find('input').val('0,00');
             momentField.find('select').val('approval');
         }
     });
@@ -1513,6 +1545,46 @@ $(document).ready(function() {
     // Verificar campos no carregamento da página
     $('select[name*="[payment_method_id]"]').each(function() {
         $(this).trigger('change');
+    });
+    
+    // Função para atualizar o valor da parcela
+    function updateInstallmentValue(paymentRow) {
+        const amountInput = paymentRow.find('input[name*="[amount]"]');
+        const installmentsInput = paymentRow.find('input[name*="[installments]"]');
+        const installmentValueInput = paymentRow.find('input[name*="[installment_value_display]"]');
+        const installmentValueField = paymentRow.find('.payment-installment-value-field');
+        
+        // Só calcular se o campo estiver visível
+        if (installmentValueField.is(':visible')) {
+            const amount = parseMoney(amountInput.val());
+            const installments = parseInt(installmentsInput.val()) || 1;
+            
+            if (amount > 0 && installments > 0) {
+                const installmentValue = amount / installments;
+                installmentValueInput.val(installmentValue.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }));
+            } else {
+                installmentValueInput.val('0,00');
+            }
+        }
+    }
+    
+    // Event listeners para atualizar valor da parcela dinamicamente
+    $(document).on('input keyup', 'input[name*="[amount]"]', function() {
+        const paymentRow = $(this).closest('.payment-method-row');
+        updateInstallmentValue(paymentRow);
+    });
+    
+    $(document).on('input change', 'input[name*="[installments]"]', function() {
+        const paymentRow = $(this).closest('.payment-method-row');
+        updateInstallmentValue(paymentRow);
+    });
+    
+    // Atualizar valores das parcelas no carregamento da página
+    $('.payment-method-row').each(function() {
+        updateInstallmentValue($(this));
     });
     
     // Validação em tempo real do campo parcelas
