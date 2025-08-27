@@ -329,14 +329,17 @@
         <tr>
             <td>
                 <div class="total-section" style="margin-top: 30px;">   
-                    <div class="total-row">
-                        <strong>Subtotal: R$ {{ number_format($budget->items->sum('total_price'), 2, ',', '.') }}</strong>
-                    </div>
-                    @if($budget->total_discount > 0)
-                    <div class="total-row">
-                        Desconto: R$ {{ number_format($budget->total_discount, 2, ',', '.') }}
-                    </div>
-                    @endif
+                    
+                     @if($budget->total_discount > 0)
+                        <div class="total-row">
+                            <strong>Subtotal: R$ {{ number_format($budget->items->sum('total_price'), 2, ',', '.') }}</strong>
+                        </div>
+                       
+                        <div class="total-row">
+                            Desconto: R$ {{ number_format($budget->total_discount, 2, ',', '.') }}
+                        </div>
+                        @endif
+
                     <div class="total-row total-final">
                         <strong>TOTAL: R$ {{ number_format($budget->final_amount, 2, ',', '.') }}</strong>
                     </div>
