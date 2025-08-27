@@ -271,7 +271,12 @@
                             <tr style="border-bottom: 1px solid #ddd;">
                                 <td style="padding: 8px; border: 1px solid #ddd;">{{ $payment->paymentMethod->name }}</td>
                                 <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">R$ {{ number_format($payment->amount, 2, ',', '.') }}</td>
-                                <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">{{ $payment->installments }}x</td>
+                                <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
+                                    {{ $payment->installments }}x
+                                    @if($payment->installments > 1 && $payment->paymentInstallments->count() > 0)
+                                        R$ {{ number_format($payment->paymentInstallments->first()->amount, 2, ',', '.') }}
+                                    @endif
+                                </td>
                                 <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
                                     @if($payment->payment_moment == 'approval')
                                         Na aprovação

@@ -602,7 +602,7 @@ class BudgetController extends Controller
             }
         }
         
-        $budget->load(['client', 'items.product', 'budgetPayments.paymentMethod']);
+        $budget->load(['client', 'items.product', 'budgetPayments.paymentMethod', 'budgetPayments.paymentInstallments']);
         
         // Sistema de limpeza: comparar arquivos na pasta com registros na tabela
         $this->cleanupOrphanedPdfFiles();
@@ -1228,7 +1228,7 @@ class BudgetController extends Controller
      */
     private function generatePdfAutomatically(Budget $budget)
     {
-        $budget->load(['client', 'items.product', 'budgetPayments.paymentMethod']);
+        $budget->load(['client', 'items.product', 'budgetPayments.paymentMethod', 'budgetPayments.paymentInstallments']);
         
         // Limpar arquivos PDF órfãos antes de gerar um novo
         $this->cleanupOrphanedPdfFiles();
