@@ -399,12 +399,11 @@
                                                     <option value="">Selecione uma conta</option>
                                                     @foreach($bankAccounts as $account)
                                                         <option value="{{ $account->id }}">
-                                                            {{ $account->compe->name ?? 'Banco' }} - 
-                                                            {{ $account->type }} - 
-                                                            Ag: {{ $account->branch }} - 
-                                                            Conta: {{ $account->account }}
-                                                            @if($account->description)
-                                                                ({{ $account->description }})
+                                                            {{ $account->type }} - {{ $account->compe->bank_name ?? 'Banco' }}
+                                                            @if($account->type === 'Conta' && $account->branch && $account->account)
+                                                                - Ag: {{ $account->branch }} Cc: {{ $account->account }}
+                                                            @elseif($account->type === 'PIX' && $account->key && $account->key_desc)
+                                                                - {{ ucfirst($account->key) }}: {{ $account->key_desc }}
                                                             @endif
                                                         </option>
                                                     @endforeach
@@ -1445,12 +1444,11 @@ $(document).ready(function() {
                             <option value="">Selecione uma conta</option>
                             @foreach($bankAccounts as $account)
                                 <option value="{{ $account->id }}">
-                                    {{ $account->compe->name ?? 'Banco' }} - 
-                                    {{ $account->type }} - 
-                                    Ag: {{ $account->branch }} - 
-                                    Conta: {{ $account->account }}
-                                    @if($account->description)
-                                        ({{ $account->description }})
+                                    {{ $account->type }} - {{ $account->compe->bank_name ?? 'Banco' }}
+                                    @if($account->type === 'Conta' && $account->branch && $account->account)
+                                        - Ag: {{ $account->branch }} Cc: {{ $account->account }}
+                                    @elseif($account->type === 'PIX' && $account->key && $account->key_desc)
+                                        - {{ ucfirst($account->key) }}: {{ $account->key_desc }}
                                     @endif
                                 </option>
                             @endforeach
