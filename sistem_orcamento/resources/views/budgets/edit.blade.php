@@ -474,6 +474,25 @@
                             </div>
                         </div>
 
+                        <!-- Campo de Valor Restante -->
+                        <div class="card mt-4" id="remainingAmountCard" style="border-left: 4px solid #28a745;{{ $budget->budgetPayments->count() == 0 ? ' display: none;' : '' }}">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1"><i class="bi bi-calculator"></i> Valor Restante</h5>
+                                                <small class="text-muted">Valor que ainda precisa ser pago</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <h3 class="mb-0" id="remainingAmount">R$ 0,00</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Seção de Dados Bancários -->
                         <div class="card mt-4">
                             <div class="card-header">
@@ -566,24 +585,7 @@
                             </div>
                         </div>
 
-                        <!-- Campo de Valor Restante -->
-                        <div class="card mt-4" id="remainingAmountCard" style="border-left: 4px solid #28a745;{{ $budget->budgetPayments->count() == 0 ? ' display: none;' : '' }}">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <h5 class="mb-1"><i class="bi bi-calculator"></i> Valor Restante</h5>
-                                                <small class="text-muted">Valor que ainda precisa ser pago</small>
-                                            </div>
-                                            <div class="text-end">
-                                                <h3 class="mb-0" id="remainingAmount">R$ 0,00</h3>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        
 
                         <hr class="my-4" />
 
