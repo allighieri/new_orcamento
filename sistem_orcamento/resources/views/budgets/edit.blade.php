@@ -266,34 +266,29 @@
                                 </button>
                             </div>
 
-                            <div class="my-3">
-                                <label for="observations" class="form-label">Obs.:</label>
-                                <textarea class="form-control" id="observations" name="observations" rows="3">{{ old('observations', $budget->observations) }}</textarea>
-                            </div>
 
-                            <div class="row mt-3">
+                            <div class="row mt-4">
                                 <div class="col-md-8 d-flex justify-content-end">
                                      <div class="col-md-2">
                                         <div class="mb-3">
                                             <label for="total_discount" class="form-label">Desconto</label>
+                                               
                                                 <div class="input-group">
-                                                    <div class="input-group-text">R$</div>
-                                                    <input type="text" placeholder="0,00" class="form-control money" id="total_discount" name="total_discount" value="{{ old('total_discount', number_format($budget->total_discount, 2, ',', '.')) }}">
-                                                </div>
-                                                <div class="input-group mt-2">
                                                     <div class="input-group-text">&nbsp;%</div>
                                                     <input type="text" class="form-control perc" placeholder="0" id="total_discount_perc" name="total_discount_perc" value="{{ old('total_discount_perc') }}">
                                                     @error('total_discount_perc')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
+                                                 <div class="input-group mt-2">
+                                                    <div class="input-group-text">R$</div>
+                                                    <input type="text" placeholder="0,00" class="form-control money" id="total_discount" name="total_discount" value="{{ old('total_discount', number_format($budget->total_discount, 2, ',', '.')) }}">
+                                                </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
 
-                                                        
-
+                                <div class="col-md-4 my-2">
                                     <div class="card bg-light">
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between">
@@ -584,6 +579,12 @@
                                 </div>
                             </div>
                         </div>
+
+                       <div class="my-3">
+                            <label for="observations" class="form-label">Obs.:</label>
+                            <textarea class="form-control" id="observations" name="observations" rows="3">{{ old('observations', $budget->observations) }}</textarea>
+                        </div>
+
 
                         
 
@@ -1261,11 +1262,59 @@ $(document).ready(function() {
         placeholder: '0,00'
     });
     
-    // Calcular automaticamente a data de validade (igual à previsão de entrega)
-    $('#issue_date, #delivery_date').on('change', function() {
-        const deliveryDate = $('#delivery_date').val();
-        if (deliveryDate) {
-            $('#valid_until').val(deliveryDate);
+    // Função para adicionar dias a uma data
+    function addDays(dateString, days) {
+        const date = new Date(dateString);
+        date.setDate(date.getDate() + days);
+        return date.toISOString().split('T')[0];
+    }
+
+    // Função para validar se uma data não é anterior à data do orçamento
+    function validateDateNotBefore(dateToValidate, issueDate) {
+        return new Date(dateToValidate) >= new Date(issueDate);
+    }
+
+    // Quando a data do orçamento mudar, calcular automaticamente +15 dias para validade e previsão de entrega
+    $('#issue_date').on('change', function() {
+        const issueDate = $(this).val();
+        if (issueDate) {
+            const validUntilDate = addDays(issueDate, 15);
+            const deliveryDate = addDays(issueDate, 15);
+            
+            $('#valid_until').val(validUntilDate);
+            $('#delivery_date').val(deliveryDate);
+        }
+    });
+
+    // Validação quando a data de validade for alterada manualmente
+    $('#valid_until').on('change', function() {
+        const validUntilDate = $(this).val();
+        const issueDate = $('#issue_date').val();
+        
+        if (validUntilDate && issueDate && !validateDateNotBefore(validUntilDate, issueDate)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Data Inválida',
+                text: 'A data de validade não pode ser anterior à data do orçamento.',
+                confirmButtonText: 'OK'
+            });
+            $(this).val(addDays(issueDate, 15));
+        }
+    });
+
+    // Validação quando a data de previsão de entrega for alterada manualmente
+    $('#delivery_date').on('change', function() {
+        const deliveryDate = $(this).val();
+        const issueDate = $('#issue_date').val();
+        
+        if (deliveryDate && issueDate && !validateDateNotBefore(deliveryDate, issueDate)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Data Inválida',
+                text: 'A data de previsão de entrega não pode ser anterior à data do orçamento.',
+                confirmButtonText: 'OK'
+            });
+            $(this).val(addDays(issueDate, 15));
         }
     });
 
