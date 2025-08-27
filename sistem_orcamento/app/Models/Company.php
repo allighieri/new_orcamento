@@ -36,4 +36,12 @@ class Company extends Model
     {
         return $this->hasMany(PdfFile::class);
     }
+
+    /**
+     * Relacionamento com usuários
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
 }

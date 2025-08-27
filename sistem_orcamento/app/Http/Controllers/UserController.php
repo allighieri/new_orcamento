@@ -295,11 +295,24 @@ class UserController extends Controller
         }
         
         try {
+            $companyId = $user->company_id;
             $user->delete();
+            
+            // Se veio da página de detalhes da empresa, redirecionar de volta
+            if ($companyId && request()->has('from_company')) {
+                return redirect()->route('companies.show', $companyId)
+                    ->with('success', 'Usuário excluído com sucesso!');
+            }
             
             return redirect()->route('users.index')
                 ->with('success', 'Usuário excluído com sucesso!');
         } catch (\Exception $e) {
+            // Se veio da página de detalhes da empresa, redirecionar de volta
+            if ($user->company_id && request()->has('from_company')) {
+                return redirect()->route('companies.show', $user->company_id)
+                    ->with('error', 'Erro ao excluir usuário. Verifique se não há registros relacionados.');
+            }
+            
             return redirect()->route('users.index')
                 ->with('error', 'Erro ao excluir usuário. Verifique se não há registros relacionados.');
         }

@@ -32,7 +32,6 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Nome</th>
-                                    <th>Tipo</th>
                                     <th>Parcelamento</th>
                                     <th>Máx. Parcelas</th>
                                     <th>Status</th>
@@ -49,17 +48,7 @@
                                             {{ $method->name }}
                                         </div>
                                     </td>
-                                    <td>
-                                        @if($method->is_global)
-                                            <span class="badge bg-info">
-                                                <i class="bi bi-globe"></i> Global
-                                            </span>
-                                        @else
-                                            <span class="badge bg-secondary">
-                                                <i class="bi bi-building"></i> Empresa
-                                            </span>
-                                        @endif
-                                    </td>
+                                    
                                     <td>
                                         @if($method->allows_installments)
                                             <span class="badge bg-success">
@@ -122,20 +111,6 @@
                     </div>
                 @endif
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Informações sobre métodos globais -->
-<div class="container mx-auto row mt-4">
-    <div class="col-12">
-        <div class="alert alert-info">
-            <h6><i class="bi bi-info-circle"></i> Informações sobre Métodos de Pagamento</h6>
-            <ul class="mb-0">
-                <li><strong>Métodos Globais:</strong> São métodos padrão do sistema, disponíveis para todas as empresas. Apenas Super Administradores podem editá-los.</li>
-                <li><strong>Métodos da Empresa:</strong> São métodos específicos criados pela sua empresa. Administradores podem criar, editar e excluir estes métodos.</li>
-                <li><strong>Parcelamento:</strong> Define se o método permite dividir o pagamento em parcelas.</li>
-            </ul>
         </div>
     </div>
 </div>

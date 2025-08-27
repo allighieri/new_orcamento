@@ -82,7 +82,7 @@ class CompanyController extends Controller
      */
     public function show(Company $company): View
     {
-        $company->load('contacts');
+        $company->load('contacts', 'users');
         return view('companies.show', compact('company'));
     }
 

@@ -6,7 +6,7 @@
 <div class="container mx-auto row dashboard-page">
     <div class="col-12">
         <h1 class="mb-4">
-            <i class="bi bi-speedometer2"></i> Dashboard
+            <i class="bi bi-speedometer2"></i>  {{ $user->company->fantasy_name ?? $user->company->corporate_name }}
         </h1>
     </div>
 </div>

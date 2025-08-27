@@ -45,7 +45,7 @@
                     <span class="fw-bold">Telefone:</span> 
                     @if($client->phone)
                         <a href="tel:{{ preg_replace('/\D/', '', $client->phone) }}" class="text-decoration-none">
-                            <i class="bi bi-telephone"></i> {{ $client->phone }}
+                            {{ $client->phone }}
                         </a>
                     @else
                         Não informado
@@ -56,7 +56,7 @@
                     <span class="fw-bold">Email:</span> 
                     @if($client->email)
                         <a href="mailto:{{ $client->email }}" class="text-decoration-none">
-                            <i class="bi bi-envelope"></i> {{ $client->email }}
+                            {{ $client->email }}
                         </a>
                     @else
                         Não informado

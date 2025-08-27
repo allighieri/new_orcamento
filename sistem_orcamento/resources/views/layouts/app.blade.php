@@ -31,20 +31,7 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <!--
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-building"></i> Cadastros
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ route('companies.index') }}"><i class="bi bi-building-add"></i> Empresas</a></li>
-                                <li><a class="dropdown-item" href="{{ route('categories.index') }}"><i class="bi bi-tags"></i> Categorias</a></li>
-                                <li><a class="dropdown-item" href="{{ route('products.index') }}"><i class="bi bi-box-seam"></i> Produtos</a></li>
-                                <li><a class="dropdown-item" href="{{ route('clients.index') }}"><i class="bi bi-people"></i> Clientes</a></li>
-                                <li><a class="dropdown-item" href="{{ route('contacts.index') }}"><i class="bi bi-person-rolodex"></i> Contatos</a></li>
-                            </ul>
-                        </li>
-                    -->
+                    
                         
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('budgets.*') ? 'active' : '' }}" href="{{ route('budgets.index') }}">
@@ -76,10 +63,6 @@
                     
                     @if(Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin']))
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('payment-methods.*') ? 'active' : '' }}" href="{{ route('payment-methods.index') }}">
-                            <i class="bi bi-credit-card"></i> Métodos de Pagamento</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
                             <i class="bi bi-people"></i> Usuários</a>
                     </li>
@@ -96,14 +79,19 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li>
-                                <a class="dropdown-item" href="{{ route('profile') }}">
+                                <a class="dropdown-item {{ request()->routeIs('profile') ? 'active' : '' }}" href="{{ route('profile') }}">
                                     <i class="bi bi-person"></i> Perfil
                                 </a>
                             </li>
                             
                             @if(Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin']) && Auth::user()->company)
+                            
                             <li>
-                                <a class="dropdown-item" href="{{ route('companies.show', Auth::user()->company) }}">
+                                <a class="dropdown-item {{ request()->routeIs('payment-methods.*') ? 'active' : '' }}" href="{{ route('payment-methods.index') }}">
+                                    <i class="bi bi-credit-card"></i> Pagamento</a>
+                            </li>   
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('companies.show', Auth::user()->company) ? 'active' : '' }}" href="{{ route('companies.show', Auth::user()->company) }}">
                                     <i class="bi bi-building-add"></i> Dados da Empresa
                                 </a>
                             </li>
@@ -114,7 +102,7 @@
                                     <i class="bi bi-envelope-paper"></i> Templates Email</a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="{{ route('google.settings') }}">
+                                <a class="dropdown-item {{ request()->routeIs('google.settings') ? 'active' : '' }}" href="{{ route('google.settings') }}">
                                     <i class="bi bi-envelope-paper"></i> Config Gmail</a>
                             </li>
 

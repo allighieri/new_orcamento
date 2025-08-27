@@ -31,20 +31,7 @@
                 <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informações do Método</h5>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label text-muted">ID</label>
-                            <p class="fw-bold">{{ $paymentMethod->id }}</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label text-muted">Slug</label>
-                            <p class="fw-bold"><code>{{ $paymentMethod->slug }}</code></p>
-                        </div>
-                    </div>
-                </div>
+               
                 
                 <div class="row">
                     <div class="col-md-6">
@@ -53,22 +40,7 @@
                             <p class="fw-bold fs-5">{{ $paymentMethod->name }}</p>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label text-muted">Tipo</label>
-                            <p>
-                                @if($paymentMethod->is_global)
-                                    <span class="badge bg-info fs-6">
-                                        <i class="bi bi-globe"></i> Método Global
-                                    </span>
-                                @else
-                                    <span class="badge bg-secondary fs-6">
-                                        <i class="bi bi-building"></i> Método da Empresa
-                                    </span>
-                                @endif
-                            </p>
-                        </div>
-                    </div>
+                   
                 </div>
                 
                 <div class="row">
