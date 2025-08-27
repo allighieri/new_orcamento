@@ -1150,17 +1150,11 @@ $(document).ready(function() {
         placeholder: '0,00'
     });
     
-    // Calcular automaticamente a data de validade (15 dias após a data de emissão)
-    $('#issue_date').on('change', function() {
-        const issueDate = $(this).val();
-        if (issueDate) {
-            const date = new Date(issueDate);
-            date.setDate(date.getDate() + 15);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const validUntilDate = `${year}-${month}-${day}`;
-            $('#valid_until').val(validUntilDate);
+    // Calcular automaticamente a data de validade (igual à previsão de entrega)
+    $('#issue_date, #delivery_date').on('change', function() {
+        const deliveryDate = $('#delivery_date').val();
+        if (deliveryDate) {
+            $('#valid_until').val(deliveryDate);
         }
     });
 

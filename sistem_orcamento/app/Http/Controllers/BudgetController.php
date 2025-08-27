@@ -1187,7 +1187,8 @@ class BudgetController extends Controller
                 'budgetNumber' => $budget->number,
                 'budgetValue' => number_format($budget->final_amount, 2, ',', '.'),
                 'budgetDate' => $budget->created_at->format('d/m/Y'),
-                'budgetValidity' => $budget->created_at->addDays(30)->format('d/m/Y'), // 30 dias de validade
+                'budgetValidity' => $budget->valid_until->format('d/m/Y'), // Data de validade do formulário
+                'deliveryDate' => $budget->delivery_date ? $budget->delivery_date->format('d/m/Y') : null,
                 'budgetStatus' => 'Aguardando Aprovação',
                 'companyName' => $budget->company->fantasy_name ?? 'Empresa',
                 'companyPhone' => $budget->company->phone ?? '(00) 0000-0000',

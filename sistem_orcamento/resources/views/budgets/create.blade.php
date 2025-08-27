@@ -73,7 +73,7 @@
                                 <label for="valid_until" class="form-label">Validade*</label>
                                 <input type="date" class="form-control" 
                     id="valid_until" name="valid_until" 
-                    value="{{ old('valid_until') }}" required>
+                    value="{{ old('valid_until', date('Y-m-d', strtotime('+15 days'))) }}" required>
                             </div>
                         </div>
                     </div>
@@ -967,27 +967,19 @@ $(document).ready(function() {
     
     // --- Lógica de Datas ---
 
-    // Calcula automaticamente a data de validade (15 dias após a data de emissão)
-    $('#issue_date').on('change', function() {
-        const issueDate = $(this).val();
-        if (issueDate) {
-            const date = new Date(issueDate);
-            date.setDate(date.getDate() + 15);
-            
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            
-            const validUntilDate = `${year}-${month}-${day}`;
-            $('#valid_until').val(validUntilDate);
-        }
-    });
-    
-    // Definir data de validade inicial se já houver data de emissão
-    const initialIssueDate = $('#issue_date').val();
-    if (initialIssueDate) {
-        $('#issue_date').trigger('change');
-    }
+    // Calcula automaticamente a data de validade (igual à previsão de entrega)
+    $('#issue_date, #delivery_date').on('change', function() {
+        const deliveryDate = $('#delivery_date').val();
+        if (deliveryDate) {
+            $('#valid_until').val(deliveryDate);
+        }
+    });
+    
+    // Definir data de validade inicial igual à previsão de entrega
+    const initialDeliveryDate = $('#delivery_date').val();
+    if (initialDeliveryDate) {
+        $('#valid_until').val(initialDeliveryDate);
+    }
     
     @if(auth()->guard('web')->user()->role === 'super_admin')
     // --- Lógica de Carregamento Dinâmico (Super Admin) ---

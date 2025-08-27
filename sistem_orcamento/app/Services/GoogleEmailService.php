@@ -24,9 +24,9 @@ class GoogleEmailService
     private function initializeClient()
     {
         // Verificar se as variáveis de ambiente estão configuradas
-        $clientId = env('GOOGLE_CLIENT_ID');
-        $clientSecret = env('GOOGLE_CLIENT_SECRET');
-        $redirectUri = env('GOOGLE_REDIRECT_URI');
+        $clientId = config('services.google.client_id', env('GOOGLE_CLIENT_ID'));
+        $clientSecret = config('services.google.client_secret', env('GOOGLE_CLIENT_SECRET'));
+        $redirectUri = config('services.google.redirect_uri', env('GOOGLE_REDIRECT_URI'));
         
         if (empty($clientId) || empty($clientSecret) || empty($redirectUri)) {
             throw new \Exception('Credenciais do Google não configuradas. Verifique as variáveis GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET e GOOGLE_REDIRECT_URI no arquivo .env');

@@ -80,6 +80,7 @@
                                     <code>@{{budgetNumber}}</code><br>
                                     <code>@{{budgetValue}}</code><br>
                                     <code>@{{budgetDate}}</code><br>
+                                    <code>@{{deliveryDate}}</code><br>
                                     <code>@{{budgetValidity}}</code><br>
                                     <code>@{{budgetStatus}}</code><br>
                                     <code>@{{companyName}}</code><br>
@@ -404,6 +405,11 @@ function loadSampleTemplate() {
                 <div class="info-row">
                     <span class="info-label">Data de emissão:</span>
                     <span class="info-value">\{\{budgetDate\}\}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Previsão de Entrega:</span>
+                    <span class="info-value">\{\{deliveryDate\}\}</span>
                 </div>
                 
                 <div class="info-row">

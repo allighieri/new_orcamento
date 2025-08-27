@@ -258,6 +258,11 @@
                     <span class="info-label">Data de emissão:</span>
                     <span class="info-value">{{ $budgetDate }}</span>
                 </div>
+
+                <div class="info-row">
+                    <span class="info-label">Previsão de Entrega:</span>
+                    <span class="info-value">{{ $deliveryDate }}</span>
+                </div>
                 
                 <div class="info-row">
                     <span class="info-label">Validade:</span>

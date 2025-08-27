@@ -83,9 +83,11 @@ class BudgetPayment extends Model
      */
     public function calculateDueDate($pickupDate = null)
     {
+        $deliveryDate = $this->budget->delivery_date ?? now();
+        
         return match($this->payment_moment) {
-            'approval' => now()->toDateString(),
-            'pickup' => $pickupDate ?? now()->toDateString(),
+            'approval' => $deliveryDate->toDateString(),
+            'pickup' => $deliveryDate->toDateString(),
             'custom' => $this->custom_date?->toDateString(),
             default => now()->toDateString()
         };
@@ -151,9 +153,11 @@ class BudgetPayment extends Model
      */
     private function calculateInstallmentDueDate($installmentNumber, $pickupDate = null)
     {
+        $deliveryDate = $this->budget->delivery_date ?? now();
+        
         $baseDate = match($this->payment_moment) {
-            'approval' => now(),
-            'pickup' => $pickupDate ? Carbon::parse($pickupDate) : now(),
+            'approval' => Carbon::parse($deliveryDate),
+            'pickup' => Carbon::parse($deliveryDate),
             'custom' => $this->custom_date ? Carbon::parse($this->custom_date) : now(),
             default => now()
         };
