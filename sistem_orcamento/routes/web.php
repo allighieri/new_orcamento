@@ -80,6 +80,9 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     // Rotas para Contas Bancárias - todos os usuários autenticados podem gerenciar
     Route::resource('bank-accounts', BankAccountController::class);
     
+    // Rota para autocomplete de bancos
+    Route::get('compes/autocomplete', [App\Http\Controllers\CompeController::class, 'autocomplete'])->name('compes.autocomplete');
+    
     // Rotas para autenticação com Google
     Route::get('/google/settings', function() { return view('google.settings'); })->name('google.settings');
     Route::get('/google/auth', [App\Http\Controllers\GoogleAuthController::class, 'redirectToGoogle'])->name('google.auth');

@@ -13,6 +13,8 @@ class BankAccount extends Model
         'type',
         'branch',
         'account',
+        'key',
+        'key_desc',
         'description',
         'active'
     ];
@@ -54,6 +56,8 @@ class BankAccount extends Model
         
         if ($this->type === 'Conta' && $this->branch && $this->account) {
             $info .= " - Ag: {$this->branch} Cc: {$this->account}";
+        } elseif ($this->type === 'PIX' && $this->key && $this->key_desc) {
+            $info .= " - PIX ({$this->key}): {$this->key_desc}";
         }
         
         if ($this->compe) {
@@ -61,5 +65,18 @@ class BankAccount extends Model
         }
         
         return $info;
+    }
+
+    /**
+     * Accessor para exibir o tipo de chave PIX formatado
+     */
+    public function getPixKeyTypeAttribute()
+    {
+        return match($this->key) {
+            'CPF' => 'CPF',
+            'email' => 'E-mail',
+            'telefone' => 'Telefone',
+            default => null
+        };
     }
 }

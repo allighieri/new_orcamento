@@ -61,10 +61,12 @@ class BankAccountController extends Controller
         
         $rules = [
             'type' => 'required|in:PIX,Conta',
-            'description' => 'required|string|max:255',
+            'description' => 'nullable|string|max:255',
             'compe_id' => 'nullable|exists:compes,id',
             'branch' => 'nullable|string|max:10',
             'account' => 'nullable|string|max:20',
+            'key' => 'nullable|in:CPF,email,telefone',
+            'key_desc' => 'nullable|string|max:255',
             'active' => 'boolean'
         ];
         
@@ -89,6 +91,26 @@ class BankAccountController extends Controller
                     'compe_id' => 'Para contas bancárias, o banco, agência e conta são obrigatórios.',
                     'branch' => 'Para contas bancárias, o banco, agência e conta são obrigatórios.',
                     'account' => 'Para contas bancárias, o banco, agência e conta são obrigatórios.'
+                ])->withInput();
+            }
+        }
+        
+        // Validação condicional para tipo PIX
+        if ($validated['type'] === 'PIX') {
+            if (empty($validated['key']) || empty($validated['key_desc'])) {
+                return back()->withErrors([
+                    'key' => 'Para PIX, o tipo de chave e a chave são obrigatórios.',
+                    'key_desc' => 'Para PIX, o tipo de chave e a chave são obrigatórios.'
+                ])->withInput();
+            }
+        }
+        
+        // Validação condicional para tipo PIX
+        if ($validated['type'] === 'PIX') {
+            if (empty($validated['key']) || empty($validated['key_desc'])) {
+                return back()->withErrors([
+                    'key' => 'Para PIX, o tipo de chave e a chave são obrigatórios.',
+                    'key_desc' => 'Para PIX, o tipo de chave e a chave são obrigatórios.'
                 ])->withInput();
             }
         }
@@ -160,10 +182,12 @@ class BankAccountController extends Controller
         
         $rules = [
             'type' => 'required|in:PIX,Conta',
-            'description' => 'required|string|max:255',
+            'description' => 'nullable|string|max:255',
             'compe_id' => 'nullable|exists:compes,id',
             'branch' => 'nullable|string|max:10',
             'account' => 'nullable|string|max:20',
+            'key' => 'nullable|in:CPF,email,telefone',
+            'key_desc' => 'nullable|string|max:255',
             'active' => 'boolean'
         ];
         

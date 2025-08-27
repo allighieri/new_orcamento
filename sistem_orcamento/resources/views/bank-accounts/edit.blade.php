@@ -55,15 +55,11 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="compe_id" class="form-label">Banco</label>
-                                    <select class="form-select @error('compe_id') is-invalid @enderror" id="compe_id" name="compe_id">
-                                        <option value="">Selecione um banco</option>
-                                        @foreach($compes as $compe)
-                                            <option value="{{ $compe->id }}" 
-                                                {{ (old('compe_id') ?? $bankAccount->compe_id) == $compe->id ? 'selected' : '' }}>
-                                                {{ $compe->code }} - {{ $compe->bank_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <input type="text" class="form-control @error('compe_id') is-invalid @enderror" 
+                                           id="bank_search" placeholder="Digite o código ou nome do banco..."
+                                           value="{{ $bankAccount->compe ? $bankAccount->compe->code . ' - ' . $bankAccount->compe->bank_name : '' }}">
+                                    <input type="hidden" id="compe_id" name="compe_id" value="{{ old('compe_id') ?? $bankAccount->compe_id }}">
+                                    <div id="bank_results" class="dropdown-menu" style="display: none; width: 100%; max-height: 200px; overflow-y: auto;"></div>
                                     @error('compe_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -94,13 +90,44 @@
                             </div>
                         </div>
 
+                        <div class="row" id="pix-type-field">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="key" class="form-label">Tipo de Chave PIX</label>
+                                    <select class="form-select @error('key') is-invalid @enderror" id="key" name="key" onchange="togglePixKeyField()">
+                                        <option value="">Selecione o tipo de chave</option>
+                                        <option value="CPF" {{ (old('key') ?? $bankAccount->key) == 'CPF' ? 'selected' : '' }}>CPF</option>
+                                        <option value="email" {{ (old('key') ?? $bankAccount->key) == 'email' ? 'selected' : '' }}>E-mail</option>
+                                        <option value="telefone" {{ (old('key') ?? $bankAccount->key) == 'telefone' ? 'selected' : '' }}>Telefone</option>
+                                    </select>
+                                    @error('key')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row" id="pix-key-field">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="key_desc" class="form-label">Chave PIX</label>
+                                    <input type="text" class="form-control @error('key_desc') is-invalid @enderror" 
+                                           id="key_desc" name="key_desc" value="{{ old('key_desc') ?? $bankAccount->key_desc }}" 
+                                           placeholder="">
+                                    @error('key_desc')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label for="description" class="form-label">Descrição *</label>
+                                    <label for="description" class="form-label">Descrição</label>
                                     <input type="text" class="form-control @error('description') is-invalid @enderror" 
                                            id="description" name="description" value="{{ old('description') ?? $bankAccount->description }}" 
-                                           placeholder="Ex: Conta principal, PIX para recebimentos, etc." required>
+                                           placeholder="Ex: Conta principal, PIX para recebimentos, etc.">
                                     @error('description')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -141,27 +168,180 @@
 function toggleBankFields() {
     const type = document.getElementById('type').value;
     const accountFields = document.getElementById('account-fields');
+    const pixTypeField = document.getElementById('pix-type-field');
+    const pixKeyField = document.getElementById('pix-key-field');
     const branchField = document.getElementById('branch');
     const accountField = document.getElementById('account');
+    const keyField = document.getElementById('key');
+    const keyDescField = document.getElementById('key_desc');
     
     if (type === 'Conta') {
         accountFields.style.display = 'block';
+        pixTypeField.style.display = 'none';
+        pixKeyField.style.display = 'none';
         branchField.required = true;
         accountField.required = true;
-    } else {
+        keyField.required = false;
+        keyDescField.required = false;
+        // Limpar campos PIX
+        keyField.value = '';
+        keyDescField.value = '';
+    } else if (type === 'PIX') {
         accountFields.style.display = 'none';
+        pixTypeField.style.display = 'block';
+        // Verificar se já há um tipo selecionado
+        if (keyField.value) {
+            pixKeyField.style.display = 'block';
+            keyDescField.required = true;
+        } else {
+            pixKeyField.style.display = 'none';
+            keyDescField.required = false;
+        }
         branchField.required = false;
         accountField.required = false;
-        if (type === 'PIX') {
-            branchField.value = '';
-            accountField.value = '';
-        }
+        keyField.required = true;
+        // Limpar campos de conta
+        branchField.value = '';
+        accountField.value = '';
+    } else {
+        accountFields.style.display = 'none';
+        pixTypeField.style.display = 'none';
+        pixKeyField.style.display = 'none';
+        branchField.required = false;
+        accountField.required = false;
+        keyField.required = false;
+        keyDescField.required = false;
     }
 }
 
-// Executar na inicialização da página
+function togglePixKeyField() {
+    const keyType = document.getElementById('key').value;
+    const pixKeyField = document.getElementById('pix-key-field');
+    const keyDescField = document.getElementById('key_desc');
+    
+    if (keyType) {
+        pixKeyField.style.display = 'block';
+        keyDescField.required = true;
+        
+        // Aplicar máscaras e placeholders baseados no tipo
+        switch(keyType) {
+            case 'CPF':
+                keyDescField.placeholder = '999.999.999-99';
+                keyDescField.setAttribute('data-mask', '999.999.999-99');
+                applyMask(keyDescField, '999.999.999-99');
+                break;
+            case 'telefone':
+                keyDescField.placeholder = '99 99999-9999';
+                keyDescField.setAttribute('data-mask', '99 99999-9999');
+                applyMask(keyDescField, '99 99999-9999');
+                break;
+            case 'email':
+                keyDescField.placeholder = 'email@email.com';
+                keyDescField.removeAttribute('data-mask');
+                removeMask(keyDescField);
+                break;
+        }
+        
+        // Limpar o campo ao trocar de tipo
+        keyDescField.value = '';
+    } else {
+        pixKeyField.style.display = 'none';
+        keyDescField.required = false;
+        keyDescField.placeholder = '';
+        keyDescField.removeAttribute('data-mask');
+        removeMask(keyDescField);
+    }
+}
+
+function applyMask(element, mask) {
+    element.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        let maskedValue = '';
+        let valueIndex = 0;
+        
+        for (let i = 0; i < mask.length && valueIndex < value.length; i++) {
+            if (mask[i] === '9') {
+                maskedValue += value[valueIndex];
+                valueIndex++;
+            } else {
+                maskedValue += mask[i];
+            }
+        }
+        
+        e.target.value = maskedValue;
+    });
+}
+
+function removeMask(element) {
+    // Remove todos os event listeners de máscara
+    const newElement = element.cloneNode(true);
+    element.parentNode.replaceChild(newElement, element);
+}
+
+// Autocomplete para bancos
 document.addEventListener('DOMContentLoaded', function() {
+    const bankSearch = document.getElementById('bank_search');
+    const compeId = document.getElementById('compe_id');
+    const bankResults = document.getElementById('bank_results');
+    let searchTimeout;
+
+    bankSearch.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        clearTimeout(searchTimeout);
+        
+        if (query.length < 2) {
+            bankResults.style.display = 'none';
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            fetch(`{{ route('compes.autocomplete') }}?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    bankResults.innerHTML = '';
+                    
+                    if (data.length > 0) {
+                        data.forEach(bank => {
+                            const item = document.createElement('a');
+                            item.className = 'dropdown-item';
+                            item.href = '#';
+                            item.textContent = `${bank.code} - ${bank.bank_name}`;
+                            item.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                bankSearch.value = `${bank.code} - ${bank.bank_name}`;
+                                compeId.value = bank.id;
+                                bankResults.style.display = 'none';
+                            });
+                            bankResults.appendChild(item);
+                        });
+                        bankResults.style.display = 'block';
+                    } else {
+                        bankResults.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro na busca:', error);
+                    bankResults.style.display = 'none';
+                });
+        }, 300);
+    });
+
+    // Fechar dropdown ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!bankSearch.contains(e.target) && !bankResults.contains(e.target)) {
+            bankResults.style.display = 'none';
+        }
+    });
+
+    // Executar na inicialização da página
     toggleBankFields();
+    
+    // Verificar se há tipo de chave PIX selecionado na inicialização
+    const currentKeyType = document.getElementById('key').value;
+    if (currentKeyType) {
+        togglePixKeyField();
+    }
 });
 </script>
 
