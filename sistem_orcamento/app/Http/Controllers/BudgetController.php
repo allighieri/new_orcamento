@@ -9,6 +9,8 @@ use App\Models\Company;
 use App\Models\Product;
 use App\Models\Contact;
 use App\Models\PaymentMethod;
+use App\Models\BankAccount;
+use App\Models\BudgetBankAccount;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
@@ -71,6 +73,7 @@ class BudgetController extends Controller
             $companies = Company::orderBy('fantasy_name')->get();
             $products = Product::with(['category'])->orderBy('name')->get();
             $paymentMethods = PaymentMethod::active()->orderBy('name')->get();
+            $bankAccounts = BankAccount::with('compe')->active()->orderBy('description')->get();
         } else {
             // Admin e user veem apenas da sua empresa
             $companyId = session('tenant_company_id');
@@ -78,9 +81,10 @@ class BudgetController extends Controller
             $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
             $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
             $paymentMethods = PaymentMethod::forCompany($companyId)->active()->orderBy('name')->get();
+            $bankAccounts = BankAccount::where('company_id', $companyId)->with('compe')->active()->orderBy('description')->get();
         }
         
-        return view('budgets.create', compact('clients', 'companies', 'products', 'paymentMethods'));
+        return view('budgets.create', compact('clients', 'companies', 'products', 'paymentMethods', 'bankAccounts'));
     }
 
     /**
@@ -250,6 +254,20 @@ class BudgetController extends Controller
                 }
             }
             
+            // Processar contas bancárias se fornecidas e se o usuário optou por incluí-las
+            if ($request->include_bank_data === 'yes' && $request->has('bank_accounts') && is_array($request->bank_accounts)) {
+                foreach ($request->bank_accounts as $index => $bankData) {
+                    // Verificar se a conta bancária foi selecionada
+                    if (!empty($bankData['bank_account_id'])) {
+                        BudgetBankAccount::create([
+                            'budget_id' => $budget->id,
+                            'bank_account_id' => $bankData['bank_account_id'],
+                            'order' => $index + 1
+                        ]);
+                    }
+                }
+            }
+            
             DB::commit();
             
             // Gerar PDF automaticamente após criar o orçamento
@@ -308,6 +326,7 @@ class BudgetController extends Controller
             $companies = Company::orderBy('fantasy_name')->get();
             $products = Product::with(['category'])->orderBy('name')->get();
             $paymentMethods = PaymentMethod::forCompany($budget->company_id)->orderBy('name')->get();
+            $bankAccounts = BankAccount::with('compe')->active()->where('company_id', $budget->company_id)->orderBy('description')->get();
         } else {
             // Admin e user veem apenas da sua empresa
             $companyId = session('tenant_company_id');
@@ -315,11 +334,12 @@ class BudgetController extends Controller
             $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
             $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
             $paymentMethods = PaymentMethod::forCompany($companyId)->orderBy('name')->get();
+            $bankAccounts = BankAccount::with('compe')->active()->where('company_id', $companyId)->orderBy('description')->get();
         }
         
-        $budget->load(['items.product', 'budgetPayments.paymentMethod']);
+        $budget->load(['items.product', 'budgetPayments.paymentMethod', 'bankAccounts']);
         
-        return view('budgets.edit', compact('budget', 'clients', 'companies', 'products', 'paymentMethods'));
+        return view('budgets.edit', compact('budget', 'clients', 'companies', 'products', 'paymentMethods', 'bankAccounts'));
     }
 
     /**
@@ -506,6 +526,23 @@ class BudgetController extends Controller
                         
                         // Criar parcelas automaticamente
                         $budgetPayment->createInstallments();
+                    }
+                }
+            }
+
+            // Processar dados bancários
+            // Remover associações antigas
+            $budget->bankAccounts()->detach();
+            
+            // Processar novas contas bancárias se fornecidas e se o usuário optou por incluí-las
+            if ($request->include_bank_data === 'yes' && $request->has('bank_accounts') && is_array($request->bank_accounts)) {
+                foreach ($request->bank_accounts as $index => $bankData) {
+                    if (!empty($bankData['bank_account_id'])) {
+                        $budget->bankAccounts()->attach($bankData['bank_account_id'], [
+                            'order' => $index + 1,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
                     }
                 }
             }

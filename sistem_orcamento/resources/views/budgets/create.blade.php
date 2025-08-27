@@ -346,6 +346,59 @@
                             </div>
                         </div>
                         
+                        <!-- Seção de Dados Bancários -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="bi bi-bank"></i> Dados Bancários</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Radio buttons para controlar exibição dos dados bancários -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Incluir dados bancários?</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="include_bank_data" id="include_bank_no" value="no" checked>
+                                        <label class="form-check-label" for="include_bank_no">
+                                            Não
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="include_bank_data" id="include_bank_yes" value="yes">
+                                        <label class="form-check-label" for="include_bank_yes">
+                                            Sim
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="bank-data-container" style="display: none;">
+                                    <div class="bank-account-row mb-3">
+                                        <div class="row">
+                                            <div class="col-md-10">
+                                                <label class="form-label">Conta Bancária</label>
+                                                <select class="form-select" name="bank_accounts[0][bank_account_id]">
+                                                    <option value="">Selecione uma conta</option>
+                                                    @foreach($bankAccounts as $account)
+                                                        <option value="{{ $account->id }}">
+                                                            {{ $account->compe->name ?? 'Banco' }} - 
+                                                            {{ $account->type }} - 
+                                                            Ag: {{ $account->branch }} - 
+                                                            Conta: {{ $account->account }}
+                                                            @if($account->description)
+                                                                ({{ $account->description }})
+                                                            @endif
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-end">
+                                                <button type="button" class="btn btn-success btn-sm add-bank-account">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Campo de Valor Restante -->
                         <div class="card mt-4" id="remainingAmountCard" style="border-left: 4px solid #28a745; display: none;">
@@ -1367,7 +1420,98 @@ $(document).ready(function() {
         updatePaymentAddButtons();
     });
 
-    // --- Validação do Formulário ---
+    // --- Gerenciamento de Dados Bancários ---
+    
+    let bankAccountIndex = $('#bank-data-container .bank-account-row').length;
+    
+    // Controle de exibição dos dados bancários
+    $('input[name="include_bank_data"]').on('change', function() {
+        if ($(this).val() === 'yes') {
+            $('#bank-data-container').show();
+        } else {
+            $('#bank-data-container').hide();
+        }
+    });
+    
+    function addBankAccountRow() {
+        const template = `
+            <div class="bank-account-row mb-3">
+                <div class="row">
+                    <div class="col-md-10">
+                        <label class="form-label">Conta Bancária</label>
+                        <select class="form-select" name="bank_accounts[${bankAccountIndex}][bank_account_id]">
+                            <option value="">Selecione uma conta</option>
+                            @foreach($bankAccounts as $account)
+                                <option value="{{ $account->id }}">
+                                    {{ $account->compe->name ?? 'Banco' }} - 
+                                    {{ $account->type }} - 
+                                    Ag: {{ $account->branch }} - 
+                                    Conta: {{ $account->account }}
+                                    @if($account->description)
+                                        ({{ $account->description }})
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-bank-account me-1">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm add-bank-account">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        $('#bank-data-container').append(template);
+        bankAccountIndex++;
+        updateBankAccountAddButtons();
+    }
+    
+    // Reindexa as contas bancárias após uma remoção
+    function reindexBankAccounts() {
+        $('#bank-data-container .bank-account-row').each(function(index) {
+            $(this).find('select').each(function() {
+                const newName = $(this).attr('name').replace(/\[\d+\]/g, `[${index}]`);
+                $(this).attr('name', newName);
+            });
+        });
+        bankAccountIndex = $('#bank-data-container .bank-account-row').length;
+    }
+    
+    // Mostra apenas o botão de adicionar na última linha de conta bancária
+    function updateBankAccountAddButtons() {
+        $('.add-bank-account').hide();
+        $('#bank-data-container .bank-account-row:last .add-bank-account').show();
+    }
+    
+    // Adiciona a primeira linha de conta bancária se a container estiver vazia
+    if ($('#bank-data-container .bank-account-row').length === 0) {
+        addBankAccountRow();
+    } else {
+        // Reindexa as linhas existentes ao carregar a página
+        reindexBankAccounts();
+    }
+    
+    $(document).on('click', '.add-bank-account', function() {
+        addBankAccountRow();
+    });
+    
+    $(document).on('click', '.remove-bank-account', function() {
+        const rowCount = $('.bank-account-row').length;
+        if (rowCount > 1) {
+            $(this).closest('.bank-account-row').remove();
+            reindexBankAccounts();
+        } else {
+            // Se for a última linha, apenas limpa os campos
+            $(this).closest('.bank-account-row').find('select').val('');
+        }
+        updateBankAccountAddButtons();
+    });
+
+    // --- Validação do Formulário ---
     
     $('#budgetForm').on('submit', function(e) {
         const includePayments = $('input[name="include_payment_methods"]:checked').val();

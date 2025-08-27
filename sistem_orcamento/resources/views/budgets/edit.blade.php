@@ -474,6 +474,98 @@
                             </div>
                         </div>
 
+                        <!-- Seção de Dados Bancários -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="bi bi-bank"></i> Dados Bancários</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Radio buttons para controlar exibição dos dados bancários -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Incluir dados bancários?</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="include_bank_data" id="include_bank_no" value="no" {{ $budget->bankAccounts->count() == 0 ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="include_bank_no">
+                                            Não
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="include_bank_data" id="include_bank_yes" value="yes" {{ $budget->bankAccounts->count() > 0 ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="include_bank_yes">
+                                            Sim
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="bank-data-container" style="{{ $budget->bankAccounts->count() == 0 ? 'display: none;' : '' }}">
+                                    @if($budget->bankAccounts->count() > 0)
+                                        @foreach($budget->bankAccounts as $index => $bankAccount)
+                                            <div class="bank-account-row mb-3">
+                                                <div class="row">
+                                                    <div class="col-md-10">
+                                                        <label class="form-label">Conta Bancária</label>
+                                                        <select class="form-select" name="bank_accounts[{{ $index }}][bank_account_id]">
+                                                            <option value="">Selecione uma conta</option>
+                                                            @foreach($bankAccounts as $account)
+                                                                <option value="{{ $account->id }}" {{ $account->id == $bankAccount->id ? 'selected' : '' }}>
+                                                                    {{ $account->compe->name ?? 'Banco' }} - 
+                                                                    {{ $account->type }} - 
+                                                                    Ag: {{ $account->branch }} - 
+                                                                    Conta: {{ $account->account }}
+                                                                    @if($account->description)
+                                                                        ({{ $account->description }})
+                                                                    @endif
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-2 d-flex align-items-end">
+                                                        @if($loop->count > 1)
+                                                            <button type="button" class="btn btn-danger btn-sm remove-bank-account me-1">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        @endif
+                                                        @if($loop->last)
+                                                            <button type="button" class="btn btn-success btn-sm add-bank-account">
+                                                                <i class="bi bi-plus"></i>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <div class="bank-account-row mb-3">
+                                            <div class="row">
+                                                <div class="col-md-10">
+                                                    <label class="form-label">Conta Bancária</label>
+                                                    <select class="form-select" name="bank_accounts[0][bank_account_id]">
+                                                        <option value="">Selecione uma conta</option>
+                                                        @foreach($bankAccounts as $account)
+                                                            <option value="{{ $account->id }}">
+                                                                {{ $account->compe->name ?? 'Banco' }} - 
+                                                                {{ $account->type }} - 
+                                                                Ag: {{ $account->branch }} - 
+                                                                Conta: {{ $account->account }}
+                                                                @if($account->description)
+                                                                    ({{ $account->description }})
+                                                                @endif
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 d-flex align-items-end">
+                                                    <button type="button" class="btn btn-success btn-sm add-bank-account">
+                                                        <i class="bi bi-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Campo de Valor Restante -->
                         <div class="card mt-4" id="remainingAmountCard" style="border-left: 4px solid #28a745;{{ $budget->budgetPayments->count() == 0 ? ' display: none;' : '' }}">
                             <div class="card-body">
@@ -1685,6 +1777,103 @@ $(document).ready(function() {
             }
         }
     });
+
+    // --- Controle de Dados Bancários ---
+    // Controlar exibição do container de dados bancários
+    $('input[name="include_bank_data"]').change(function() {
+        const bankDataContainer = $('#bank-data-container');
+        const addBankAccountBtn = $('#add-bank-account');
+        
+        if ($(this).val() === 'yes') {
+            bankDataContainer.show();
+            addBankAccountBtn.show();
+        } else {
+            bankDataContainer.hide();
+            addBankAccountBtn.hide();
+            // Limpar todas as linhas de conta bancária exceto a primeira
+            const bankRows = $('.bank-account-row');
+            if (bankRows.length > 1) {
+                bankRows.slice(1).remove();
+            }
+            // Limpar o select da primeira linha
+            bankRows.first().find('select').val('');
+        }
+    });
+
+    // Adicionar nova linha de conta bancária
+    $('#add-bank-account').click(function() {
+        const bankContainer = $('#bank-data-container');
+        const bankRows = $('.bank-account-row');
+        const newIndex = bankRows.length;
+        
+        // Clonar a primeira linha
+        const firstRow = bankRows.first();
+        const newRow = firstRow.clone();
+        
+        // Atualizar os atributos name e id
+        newRow.find('select').attr('name', `bank_accounts[${newIndex}][bank_account_id]`);
+        newRow.find('select').attr('id', `bank_account_${newIndex}`);
+        newRow.find('select').val(''); // Limpar seleção
+        
+        // Adicionar botão de remover se não existir
+        if (newRow.find('.remove-bank-account').length === 0) {
+            newRow.find('.col-md-10').removeClass('col-md-10').addClass('col-md-8');
+            newRow.append(`
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-danger btn-sm remove-bank-account" title="Remover conta">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `);
+        }
+        
+        // Adicionar a nova linha
+        bankContainer.append(newRow);
+        
+        // Atualizar visibilidade do botão adicionar
+        updateAddBankAccountButton();
+    });
+
+    // Remover linha de conta bancária
+    $(document).on('click', '.remove-bank-account', function() {
+        const bankRows = $('.bank-account-row');
+        if (bankRows.length > 1) {
+            $(this).closest('.bank-account-row').remove();
+            reindexBankAccounts();
+            updateAddBankAccountButton();
+        }
+    });
+
+    // Reindexar campos de conta bancária após remoção
+    function reindexBankAccounts() {
+        $('.bank-account-row').each(function(index) {
+            $(this).find('select').attr('name', `bank_accounts[${index}][bank_account_id]`);
+            $(this).find('select').attr('id', `bank_account_${index}`);
+        });
+    }
+
+    // Atualizar visibilidade do botão adicionar
+    function updateAddBankAccountButton() {
+        const bankRows = $('.bank-account-row');
+        const addBtn = $('#add-bank-account');
+        
+        if (bankRows.length >= 10) { // Limite máximo de contas
+            addBtn.hide();
+        } else {
+            addBtn.show();
+        }
+    }
+
+    // Verificar estado inicial dos dados bancários
+    const initialBankData = $('input[name="include_bank_data"]:checked').val();
+    if (initialBankData === 'yes') {
+        $('#bank-data-container').show();
+        $('#add-bank-account').show();
+        updateAddBankAccountButton();
+    } else {
+        $('#bank-data-container').hide();
+        $('#add-bank-account').hide();
+    }
 });
 </script>
 @endpush

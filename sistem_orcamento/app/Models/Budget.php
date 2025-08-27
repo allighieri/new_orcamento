@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Budget extends Model
 {
@@ -80,6 +81,25 @@ class Budget extends Model
     }
 
     /**
+     * Relacionamento com contas bancárias do orçamento
+     */
+    public function budgetBankAccounts(): HasMany
+    {
+        return $this->hasMany(BudgetBankAccount::class);
+    }
+
+    /**
+     * Relacionamento many-to-many com contas bancárias
+     */
+    public function bankAccounts(): BelongsToMany
+    {
+        return $this->belongsToMany(BankAccount::class, 'budget_bank_accounts')
+                    ->withPivot('order')
+                    ->withTimestamps()
+                    ->orderBy('budget_bank_accounts.order');
+    }
+
+    /**
      * Retorna o total de pagamentos configurados
      */
     public function getTotalPaymentsAmountAttribute()
@@ -101,5 +121,13 @@ class Budget extends Model
     public function getPaymentsBalancedAttribute()
     {
         return abs($this->final_amount - $this->total_payments_amount) < 0.01;
+    }
+
+    /**
+     * Verifica se o orçamento tem contas bancárias configuradas
+     */
+    public function getHasBankAccountsAttribute()
+    {
+        return $this->bankAccounts->count() > 0;
     }
 }

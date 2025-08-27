@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class BankAccount extends Model
 {
@@ -78,5 +80,24 @@ class BankAccount extends Model
             'telefone' => 'Telefone',
             default => null
         };
+    }
+
+    /**
+     * Relacionamento com orçamentos através da tabela pivot
+     */
+    public function budgetBankAccounts(): HasMany
+    {
+        return $this->hasMany(BudgetBankAccount::class);
+    }
+
+    /**
+     * Relacionamento many-to-many com orçamentos
+     */
+    public function budgets(): BelongsToMany
+    {
+        return $this->belongsToMany(Budget::class, 'budget_bank_accounts')
+                    ->withPivot('order')
+                    ->withTimestamps()
+                    ->orderBy('budget_bank_accounts.order');
     }
 }
