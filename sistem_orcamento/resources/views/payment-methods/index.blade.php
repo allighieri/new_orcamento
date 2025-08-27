@@ -45,7 +45,7 @@
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <i class="bi bi-credit-card me-2 text-primary"></i>
-                                            {{ $method->name }}
+                                            {{ $method->paymentOptionMethod ? $method->paymentOptionMethod->method : 'N/A' }}
                                         </div>
                                     </td>
                                     

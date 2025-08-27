@@ -19,14 +19,20 @@
                     <div class="row">
                         <div class="col-md-8">
                             <div class="mb-3">
-                                <label for="name" class="form-label">Nome do Método *</label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                       id="name" name="name" value="{{ old('name') }}" required
-                                       placeholder="Ex: PIX, Cartão de Crédito, Dinheiro...">
-                                @error('name')
+                                <label for="payment_option_method_id" class="form-label">Método de Pagamento *</label>
+                                <select class="form-select @error('payment_option_method_id') is-invalid @enderror" 
+                                        id="payment_option_method_id" name="payment_option_method_id" required>
+                                    <option value="">Selecione um método...</option>
+                                    @foreach($paymentOptionMethods as $option)
+                                        <option value="{{ $option->id }}" {{ old('payment_option_method_id') == $option->id ? 'selected' : '' }}>
+                                            {{ $option->method }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('payment_option_method_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <div class="form-text">Digite um nome descritivo para o método de pagamento.</div>
+                                <div class="form-text">Selecione o tipo de método de pagamento.</div>
                             </div>
                         </div>
                         
@@ -83,7 +89,6 @@
                     <div class="alert alert-info">
                         <h6><i class="bi bi-info-circle"></i> Informações Importantes</h6>
                         <ul class="mb-0">
-                            <li>Este método será específico da sua empresa e não será visível para outras empresas.</li>
                             <li>Métodos inativos não aparecerão como opção ao criar orçamentos.</li>
                             <li>Se o método não permitir parcelamento, será considerado apenas pagamento à vista.</li>
                             <li>Você pode editar essas configurações a qualquer momento.</li>

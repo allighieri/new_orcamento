@@ -10,7 +10,7 @@ class PaymentMethod extends Model
 {
     protected $fillable = [
         'company_id',
-        'name',
+        'payment_option_method_id',
         'slug',
         'allows_installments',
         'max_installments',
@@ -29,6 +29,14 @@ class PaymentMethod extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * Relacionamento com PaymentOptionMethod
+     */
+    public function paymentOptionMethod(): BelongsTo
+    {
+        return $this->belongsTo(PaymentOptionMethod::class);
     }
 
     /**

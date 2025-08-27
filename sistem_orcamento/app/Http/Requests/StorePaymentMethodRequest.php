@@ -25,13 +25,10 @@ class StorePaymentMethodRequest extends FormRequest
         $companyId = auth()->user()->role === 'super_admin' ? null : auth()->user()->company_id;
         
         return [
-            'name' => [
+            'payment_option_method_id' => [
                 'required',
-                'string',
-                'max:100',
-                Rule::unique('payment_methods')->where(function ($query) use ($companyId) {
-                    return $query->where('company_id', $companyId);
-                })
+                'integer',
+                'exists:payment_option_methods,id'
             ],
             'is_active' => 'boolean',
             'allows_installments' => 'boolean',
@@ -53,10 +50,9 @@ class StorePaymentMethodRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'O nome do método de pagamento é obrigatório.',
-            'name.string' => 'O nome deve ser um texto válido.',
-            'name.max' => 'O nome não pode ter mais de 100 caracteres.',
-            'name.unique' => 'Já existe um método de pagamento com este nome.',
+            'payment_option_method_id.required' => 'O método de pagamento é obrigatório.',
+            'payment_option_method_id.integer' => 'O método de pagamento deve ser um número válido.',
+            'payment_option_method_id.exists' => 'O método de pagamento selecionado não existe.',
             'is_active.boolean' => 'O status ativo deve ser verdadeiro ou falso.',
             'allows_installments.boolean' => 'A permissão de parcelamento deve ser verdadeira ou falsa.',
             'max_installments.integer' => 'O número máximo de parcelas deve ser um número inteiro.',

@@ -27,24 +27,28 @@
                     @csrf
                     @method('PUT')
                     
-                    <!-- Nome -->
+                    <!-- Método de Pagamento -->
                     <div class="mb-3">
-                        <label for="name" class="form-label">Nome do Método <span class="text-danger">*</span></label>
-                        <input type="text" 
-                               class="form-control @error('name') is-invalid @enderror" 
-                               id="name" 
-                               name="name" 
-                               value="{{ old('name', $paymentMethod->name) }}" 
-                               required 
-                               maxlength="100"
-                               placeholder="Ex: Cartão de Crédito, PIX, Dinheiro">
-                        @error('name')
+                        <label for="payment_option_method_id" class="form-label">Método de Pagamento <span class="text-danger">*</span></label>
+                        <select class="form-select @error('payment_option_method_id') is-invalid @enderror" 
+                                id="payment_option_method_id" 
+                                name="payment_option_method_id" 
+                                required>
+                            <option value="">Selecione um método...</option>
+                            @foreach($paymentOptionMethods as $option)
+                                <option value="{{ $option->id }}" 
+                                        {{ old('payment_option_method_id', $paymentMethod->payment_option_method_id) == $option->id ? 'selected' : '' }}>
+                                    {{ $option->method }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('payment_option_method_id')
                             <div class="invalid-feedback">
                                 {{ $message }}
                             </div>
                         @enderror
                         <div class="form-text">
-                            Nome que será exibido nos orçamentos e relatórios.
+                            Tipo de método de pagamento que será exibido nos orçamentos.
                         </div>
                     </div>
                     

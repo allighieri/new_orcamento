@@ -22,7 +22,10 @@ class PaymentMethodController extends Controller
         
         // Obter métodos de pagamento disponíveis para a empresa do usuário
         $paymentMethods = PaymentMethod::forCompany($user->company_id)
-            ->orderBy('name')
+            ->with('paymentOptionMethod')
+            ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
+            ->orderBy('payment_option_methods.method')
+            ->select('payment_methods.*')
             ->paginate(10);
             
         return view('payment-methods.index', compact('paymentMethods'));
@@ -33,7 +36,8 @@ class PaymentMethodController extends Controller
      */
     public function create(): View
     {
-        return view('payment-methods.create');
+        $paymentOptionMethods = \App\Models\PaymentOptionMethod::orderBy('method')->get();
+        return view('payment-methods.create', compact('paymentOptionMethods'));
     }
 
     /**
@@ -45,8 +49,9 @@ class PaymentMethodController extends Controller
         
         $validated = $request->validated();
 
-        // Gerar slug único para a empresa
-        $baseSlug = Str::slug($validated['name']);
+        // Buscar o método de pagamento selecionado para gerar o slug
+        $paymentOptionMethod = \App\Models\PaymentOptionMethod::find($validated['payment_option_method_id']);
+        $baseSlug = Str::slug($paymentOptionMethod->method);
         $slug = $baseSlug;
         $counter = 1;
         
@@ -87,8 +92,9 @@ class PaymentMethodController extends Controller
             abort(403, 'Acesso negado.');
         }
         
-        // Carregar estatísticas de uso
+        // Carregar estatísticas de uso e relacionamento
         $paymentMethod->loadCount('budgetPayments');
+        $paymentMethod->load('paymentOptionMethod');
         
         return view('payment-methods.show', compact('paymentMethod'));
     }
@@ -105,7 +111,8 @@ class PaymentMethodController extends Controller
             abort(403, 'Acesso negado.');
         }
         
-        return view('payment-methods.edit', compact('paymentMethod'));
+        $paymentOptionMethods = \App\Models\PaymentOptionMethod::orderBy('method')->get();
+        return view('payment-methods.edit', compact('paymentMethod', 'paymentOptionMethods'));
     }
 
     /**
@@ -122,9 +129,10 @@ class PaymentMethodController extends Controller
         
         $validated = $request->validated();
 
-        // Gerar novo slug se o nome mudou
-        if ($validated['name'] !== $paymentMethod->name) {
-            $baseSlug = Str::slug($validated['name']);
+        // Gerar novo slug se o método de pagamento mudou
+        if ($validated['payment_option_method_id'] !== $paymentMethod->payment_option_method_id) {
+            $paymentOptionMethod = \App\Models\PaymentOptionMethod::find($validated['payment_option_method_id']);
+            $baseSlug = Str::slug($paymentOptionMethod->method);
             $slug = $baseSlug;
             $counter = 1;
             

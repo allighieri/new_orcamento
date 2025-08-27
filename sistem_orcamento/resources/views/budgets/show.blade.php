@@ -262,7 +262,7 @@
                                     <div class="mb-4">
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <h6 class="text-primary">{{ $payment->paymentMethod->name }}</h6>
+                                                <h6 class="text-primary">{{ $payment->paymentMethod->paymentOptionMethod->method ?? 'N/A' }}</h6>
                                                 <p class="mb-1"><strong>Valor:</strong> R$ {{ number_format($payment->amount, 2, ',', '.') }}</p>
                                                 <p class="mb-1"><strong>Parcelas:</strong> {{ $payment->installments }}x</p>
                                                 <p class="mb-1"><strong>Momento:</strong> {{ $payment->payment_moment_description }}</p>

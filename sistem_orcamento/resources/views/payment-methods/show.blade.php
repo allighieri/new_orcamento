@@ -7,7 +7,7 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>
-                <i class="bi bi-credit-card"></i> {{ $paymentMethod->name }}
+                <i class="bi bi-credit-card"></i> {{ $paymentMethod->paymentOptionMethod ? $paymentMethod->paymentOptionMethod->method : 'N/A' }}
             </h1>
             <div>
                 <a href="{{ url()->previous() }}" class="btn btn-outline-secondary me-2">
@@ -36,8 +36,8 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label text-muted">Nome</label>
-                            <p class="fw-bold fs-5">{{ $paymentMethod->name }}</p>
+                            <label class="form-label text-muted">Método de Pagamento</label>
+                            <p class="fw-bold fs-5">{{ $paymentMethod->paymentOptionMethod ? $paymentMethod->paymentOptionMethod->method : 'N/A' }}</p>
                         </div>
                     </div>
                    

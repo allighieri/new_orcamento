@@ -72,7 +72,11 @@ class BudgetController extends Controller
             $clients = Client::orderBy('fantasy_name')->get();
             $companies = Company::orderBy('fantasy_name')->get();
             $products = Product::with(['category'])->orderBy('name')->get();
-            $paymentMethods = PaymentMethod::active()->orderBy('name')->get();
+            $paymentMethods = PaymentMethod::with('paymentOptionMethod')->active()
+                ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
+                ->orderBy('payment_option_methods.method')
+                ->select('payment_methods.*')
+                ->get();
             $bankAccounts = BankAccount::with('compe')->active()->orderBy('description')->get();
         } else {
             // Admin e user veem apenas da sua empresa
@@ -80,7 +84,11 @@ class BudgetController extends Controller
             $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
             $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
             $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
-            $paymentMethods = PaymentMethod::forCompany($companyId)->active()->orderBy('name')->get();
+            $paymentMethods = PaymentMethod::forCompany($companyId)->active()
+                ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
+                ->orderBy('payment_option_methods.method')
+                ->select('payment_methods.*')
+                ->get();
             $bankAccounts = BankAccount::where('company_id', $companyId)->with('compe')->active()->orderBy('description')->get();
         }
         
@@ -325,7 +333,11 @@ class BudgetController extends Controller
             $clients = Client::where('company_id', $budget->company_id)->orderBy('fantasy_name')->get();
             $companies = Company::orderBy('fantasy_name')->get();
             $products = Product::with(['category'])->orderBy('name')->get();
-            $paymentMethods = PaymentMethod::forCompany($budget->company_id)->orderBy('name')->get();
+            $paymentMethods = PaymentMethod::forCompany($budget->company_id)
+                ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
+                ->orderBy('payment_option_methods.method')
+                ->select('payment_methods.*')
+                ->get();
             $bankAccounts = BankAccount::with('compe')->active()->where('company_id', $budget->company_id)->orderBy('description')->get();
         } else {
             // Admin e user veem apenas da sua empresa
@@ -333,7 +345,11 @@ class BudgetController extends Controller
             $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
             $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
             $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
-            $paymentMethods = PaymentMethod::forCompany($companyId)->orderBy('name')->get();
+            $paymentMethods = PaymentMethod::forCompany($companyId)
+                ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
+                ->orderBy('payment_option_methods.method')
+                ->select('payment_methods.*')
+                ->get();
             $bankAccounts = BankAccount::with('compe')->active()->where('company_id', $companyId)->orderBy('description')->get();
         }
         

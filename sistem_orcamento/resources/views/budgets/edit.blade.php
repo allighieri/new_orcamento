@@ -345,7 +345,7 @@
                                                             <option value="">Selecione um método</option>
                                                             @foreach($paymentMethods as $method)
                                                                 <option value="{{ $method->id }}" data-allows-installments="{{ $method->allows_installments ? 'true' : 'false' }}" {{ $payment->payment_method_id == $method->id ? 'selected' : '' }}>
-                                                                    {{ $method->name }}{{ !$method->is_active ? ' (Inativo)' : '' }}
+                                                                    {{ $method->paymentOptionMethod->method ?? 'N/A' }}{{ !$method->is_active ? ' (Inativo)' : '' }}
                                                                 </option>
                                                             @endforeach
                                                         </select>
@@ -418,7 +418,7 @@
                                                     <select class="form-select" name="payment_methods[0][payment_method_id]">
                                                         <option value="">Selecione um método</option>
                                                         @foreach($paymentMethods as $method)
-                                                            <option value="{{ $method->id }}" data-allows-installments="{{ $method->allows_installments ? 'true' : 'false' }}">{{ $method->name }}{{ !$method->is_active ? ' (Inativo)' : '' }}</option>
+                                                            <option value="{{ $method->id }}" data-allows-installments="{{ $method->allows_installments ? 'true' : 'false' }}">{{ $method->paymentOptionMethod->method ?? 'N/A' }}{{ !$method->is_active ? ' (Inativo)' : '' }}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>
@@ -1528,7 +1528,7 @@ $(document).ready(function() {
                         <select class="form-select" name="payment_methods[${paymentMethodIndex}][payment_method_id]">
                             <option value="">Selecione um método</option>
                             @foreach($paymentMethods as $method)
-                                <option value="{{ $method->id }}" data-allows-installments="{{ $method->allows_installments ? 'true' : 'false' }}">{{ $method->name }}{{ !$method->is_active ? ' (Inativo)' : '' }}</option>
+                                <option value="{{ $method->id }}" data-allows-installments="{{ $method->allows_installments ? 'true' : 'false' }}">{{ $method->paymentOptionMethod->method ?? 'N/A' }}{{ !$method->is_active ? ' (Inativo)' : '' }}</option>
                             @endforeach
                         </select>
                     </div>

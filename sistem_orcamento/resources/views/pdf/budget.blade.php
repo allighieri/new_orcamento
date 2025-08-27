@@ -265,7 +265,7 @@
         <tbody>
             @foreach($budget->budgetPayments as $payment)
             <tr style="border-bottom: 1px solid #ddd;">
-                <td style="border: 1px solid #ddd;">{{ $payment->paymentMethod->name }}</td>
+                <td style="border: 1px solid #ddd;">{{ $payment->paymentMethod->paymentOptionMethod->method ?? 'N/A' }}</td>
                 <td style="text-align: center; border: 1px solid #ddd;">R$ {{ number_format($payment->amount, 2, ',', '.') }}</td>
                 <td style="text-align: center; border: 1px solid #ddd;">
                     {{ $payment->installments }}x
@@ -298,17 +298,17 @@
         <h3 style="margin-bottom: 10px; font-size: 14px;">Dados Bancários:</h3>
         @foreach($budget->bankAccounts as $bankAccount)
         <div style="margin:0;">
-            <h4 style="margin:0; font-size: 12px; color: #333;">
+            <p style="margin:0; font-size: 12px; color: #333;">
                 {{ $bankAccount->type }}
                 @if($bankAccount->compe)
                     - ({{ $bankAccount->compe->code }}) {{ $bankAccount->compe->bank_name }}
                 @endif
-            </h4>
+            </p>
             @if($bankAccount->type === 'Conta')
-                <p style="margin: 0; font-size: 11px;">Agência: {{ $bankAccount->branch }}</p>
-                <p style="margin: 0 0 10px 0; font-size: 11px;">Conta: {{ $bankAccount->account }}</p>
+                <h4 style="margin: 0; font-size: 11px;">Agência: {{ $bankAccount->branch }}</h4>
+                <h4 style="margin: 0 0 10px 0; font-size: 11px;">Conta: {{ $bankAccount->account }}</h4>
             @elseif($bankAccount->type === 'PIX')
-                <p style="margin: 0 0 10px 0; font-size: 11px;">Chave: {{ ucfirst($bankAccount->key) }} - {{ $bankAccount->key_desc }}</p>
+                <h4 style="margin: 0 0 10px 0; font-size: 11px;">Chave: {{ ucfirst($bankAccount->key) }} - {{ $bankAccount->key_desc }}</h4>
             @endif
         </div>
         @endforeach

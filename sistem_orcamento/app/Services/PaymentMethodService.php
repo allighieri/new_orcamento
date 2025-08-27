@@ -15,7 +15,9 @@ class PaymentMethodService
     {
         return PaymentMethod::active()
             ->forCompany($companyId)
-            ->orderBy('name')
+            ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
+            ->orderBy('payment_option_methods.method')
+            ->select('payment_methods.*')
             ->get();
     }
 
@@ -26,7 +28,9 @@ class PaymentMethodService
     {
         return PaymentMethod::active()
             ->global()
-            ->orderBy('name')
+            ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
+            ->orderBy('payment_option_methods.method')
+            ->select('payment_methods.*')
             ->get();
     }
 
@@ -37,7 +41,9 @@ class PaymentMethodService
     {
         return PaymentMethod::active()
             ->where('company_id', $companyId)
-            ->orderBy('name')
+            ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
+            ->orderBy('payment_option_methods.method')
+            ->select('payment_methods.*')
             ->get();
     }
 
@@ -84,7 +90,9 @@ class PaymentMethodService
         return PaymentMethod::active()
             ->forCompany($companyId)
             ->allowsInstallments()
-            ->orderBy('name')
+            ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
+            ->orderBy('payment_option_methods.method')
+            ->select('payment_methods.*')
             ->get();
     }
 
