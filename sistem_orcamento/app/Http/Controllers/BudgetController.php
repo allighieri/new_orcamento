@@ -118,6 +118,7 @@ class BudgetController extends Controller
         // Validação condicional: empresa obrigatória se não tiver cliente, cliente obrigatório se não tiver empresa
         $rules = [
             'issue_date' => 'required|date',
+            'delivery_date' => 'nullable|date',
             'valid_until' => 'required|date|after_or_equal:issue_date',
             'total_discount' => 'nullable|numeric|min:0',
             'total_discount_perc' => 'nullable|numeric|min:0|max:100',
@@ -181,6 +182,7 @@ class BudgetController extends Controller
                 'client_id' => $clientId,
                 'company_id' => $companyId,
                 'issue_date' => $request->issue_date,
+                'delivery_date' => $request->delivery_date,
                 'valid_until' => $request->valid_until,
                 'status' => 'Pendente',
                 'total_discount' => $request->total_discount ?? 0,
@@ -355,6 +357,7 @@ class BudgetController extends Controller
         // Validação condicional: empresa obrigatória se não tiver cliente, cliente obrigatório se não tiver empresa
         $rules = [
             'issue_date' => 'required|date',
+            'delivery_date' => 'nullable|date',
             'valid_until' => 'required|date|after_or_equal:issue_date',
             'total_discount' => 'nullable|numeric|min:0',
             'total_discount_perc' => 'nullable|numeric|min:0|max:100',
@@ -424,6 +427,7 @@ class BudgetController extends Controller
                 'client_id' => $clientId,
                 'company_id' => $companyId,
                 'issue_date' => $request->issue_date,
+                'delivery_date' => $request->delivery_date,
                 'valid_until' => $request->valid_until,
                 'status' => 'Pendente',
                 'total_discount' => $request->total_discount ?? 0,

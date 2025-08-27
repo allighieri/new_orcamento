@@ -22,7 +22,7 @@
                             @if(auth()->user()->role === 'super_admin')
                                 <div class="col-md-4">
                             @else
-                                <div class="col-md-8">
+                                <div class="col-md-6">
                             @endif
                                 <div class="mb-3">
                                     <label for="client_id" class="form-label">Cliente @if(Auth::check() && Auth::user()->role === 'super_admin')*@endif</label>
@@ -76,6 +76,14 @@
                                     <input type="date" class="form-control" 
                                         id="issue_date" name="issue_date" 
                                         value="{{ old('issue_date', $budget->issue_date ? $budget->issue_date->format('Y-m-d') : '') }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="mb-3">
+                                    <label for="delivery_date" class="form-label">Previsão de Entrega</label>
+                                    <input type="date" class="form-control" 
+                                        id="delivery_date" name="delivery_date" 
+                                        value="{{ old('delivery_date', $budget->delivery_date ? $budget->delivery_date->format('Y-m-d') : '') }}">
                                 </div>
                             </div>
                             <div class="col-md-2">

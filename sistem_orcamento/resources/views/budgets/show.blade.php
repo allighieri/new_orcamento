@@ -98,6 +98,9 @@
                                 <div class="card-body text-center">
                                     <h4 class="text-primary mb-3">{{ $budget->number }}</h4>
                                     <p class="mb-2"><strong>Data:</strong><br>{{ $budget->issue_date->format('d/m/Y') }}</p>
+                                    @if($budget->delivery_date)
+                                    <p class="mb-2"><strong>Previsão de Entrega:</strong><br>{{ $budget->delivery_date->format('d/m/Y') }}</p>
+                                    @endif
                                     <p class="mb-2"><strong>Validade:</strong><br>{{ $budget->valid_until->format('d/m/Y') }}</p>
                                     <p class="mb-2"><strong>Status:</strong><br>
                                         <span class="badge status-clickable info-status-badge

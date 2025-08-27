@@ -16,6 +16,7 @@ class Budget extends Model
         'total_discount',
         'final_amount',
         'issue_date',
+        'delivery_date',
         'valid_until',
         'observations',
         'status'
@@ -26,6 +27,7 @@ class Budget extends Model
         'total_discount' => 'decimal:2',
         'final_amount' => 'decimal:2',
         'issue_date' => 'date',
+        'delivery_date' => 'date',
         'valid_until' => 'date'
     ];
 

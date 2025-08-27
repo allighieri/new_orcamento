@@ -6,7 +6,12 @@
 <div class="container mx-auto row dashboard-page">
     <div class="col-12">
         <h1 class="mb-4">
-            <i class="bi bi-speedometer2"></i>  {{ $user->company->fantasy_name ?? $user->company->corporate_name }}
+            <i class="bi bi-speedometer2"></i>  
+            @if($user->role === 'super_admin')
+                {{ explode(' ', Auth::user()->name)[0] }}
+            @else
+                {{ $user->company->fantasy_name ?? $user->company->corporate_name }}
+            @endif
         </h1>
     </div>
 </div>

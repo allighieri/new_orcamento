@@ -183,6 +183,9 @@
                 <p style="margin: 0 0 3px 0; padding: 0; font-weight: bold">Orçamento</p>
                 <p class="budget-number">Nº. {{ $budget->number }}</p>
                 <p style="margin: 0 0 5px 0; padding-bottom: 0"><strong>Data:</strong> {{ $budget->issue_date->format('d/m/Y') }}</p>
+                @if($budget->delivery_date)
+                <p style="margin: 0 0 5px 0; padding-bottom: 0"><strong>Previsão de Entrega:</strong> {{ $budget->delivery_date->format('d/m/Y') }}</p>
+                @endif
                 <p style="margin-top: 0; padding-top: 0"><strong>Validade:</strong> {{ $budget->valid_until->format('d/m/Y') }}</p>
             </div>
         </div>
@@ -259,7 +262,7 @@
                                 <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Método</th>
                                 <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Valor</th>
                                 <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Parcelas</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Momento</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Pagamento</th>
                                 <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Observações</th>
                             </tr>
                         </thead>
