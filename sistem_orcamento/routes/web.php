@@ -13,6 +13,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\BankAccountController;
 
 // Rotas de Autenticação
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -75,6 +76,9 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     Route::middleware('role:admin,super_admin')->group(function () {
         Route::resource('payment-methods', PaymentMethodController::class);
     });
+    
+    // Rotas para Contas Bancárias - todos os usuários autenticados podem gerenciar
+    Route::resource('bank-accounts', BankAccountController::class);
     
     // Rotas para autenticação com Google
     Route::get('/google/settings', function() { return view('google.settings'); })->name('google.settings');

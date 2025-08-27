@@ -85,7 +85,10 @@
                             </li>
                             
                             @if(Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin']) && Auth::user()->company)
-                            
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('email-templates.*') ? 'active' : '' }}" href="{{ route('bank-accounts.index') }}">
+                                    <i class="bi bi-envelope-paper"></i> Contas</a>
+                            </li>
                             <li>
                                 <a class="dropdown-item {{ request()->routeIs('payment-methods.*') ? 'active' : '' }}" href="{{ route('payment-methods.index') }}">
                                     <i class="bi bi-credit-card"></i> Pagamento</a>
