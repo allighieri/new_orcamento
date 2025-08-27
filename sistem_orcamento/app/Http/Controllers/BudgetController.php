@@ -70,14 +70,14 @@ class BudgetController extends Controller
             $clients = Client::orderBy('fantasy_name')->get();
             $companies = Company::orderBy('fantasy_name')->get();
             $products = Product::with(['category'])->orderBy('name')->get();
-            $paymentMethods = PaymentMethod::orderBy('name')->get();
+            $paymentMethods = PaymentMethod::active()->orderBy('name')->get();
         } else {
             // Admin e user veem apenas da sua empresa
             $companyId = session('tenant_company_id');
             $clients = Client::where('company_id', $companyId)->orderBy('fantasy_name')->get();
             $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
             $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
-            $paymentMethods = PaymentMethod::forCompany($companyId)->orderBy('name')->get();
+            $paymentMethods = PaymentMethod::forCompany($companyId)->active()->orderBy('name')->get();
         }
         
         return view('budgets.create', compact('clients', 'companies', 'products', 'paymentMethods'));
