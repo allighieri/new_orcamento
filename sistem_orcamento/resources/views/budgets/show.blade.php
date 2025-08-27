@@ -7,40 +7,39 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title mb-0">
+                <div class="card-header d-flex flex-column flex-lg-row justify-content-lg-between align-items-center">
+                    <h3 class="card-title mb-2 mb-lg-0">
                         {{ $budget->client->corporate_name ?? $budget->client->fantasy_name }} {{ $budget->number }}
                     </h3>
-                    <div>
+                    <div class="d-flex flex-wrap justify-content-start mt-2 mt-lg-0">
                         <a href="#" 
-                           class="btn btn-secondary mb-2 mb-lg-0 generate-pdf-btn" 
-                           title="Gerar PDF" 
-                           data-budget-id="{{ $budget->id }}"
-                           data-route="{{ route('budgets.pdf', $budget) }}">
+                            class="btn btn-secondary me-2 mb-2 generate-pdf-btn" 
+                            title="Gerar PDF" 
+                            data-budget-id="{{ $budget->id }}"
+                            data-route="{{ route('budgets.pdf', $budget) }}">
                             <i class="bi bi-file-earmark-pdf"></i> PDF
                         </a>
                         
-                        {{-- Grupo de botões de e-mail e WhatsApp (inicialmente ocultos) --}}
-                        <span class="budget-actions-{{ $budget->id }}" role="group" 
-                             @if($budget->pdfFiles->count() == 0) style="display:none;" @endif>
-                            <button type="button" class="btn btn-success mb-2 mb-lg-0" title="Enviar via WhatsApp" onclick="handleWhatsAppSend({{ $budget->id }})">
+                        <span class="budget-actions-{{ $budget->id }} d-flex me-2 mb-2" role="group" 
+                            @if($budget->pdfFiles->count() == 0) style="display:none;" @endif>
+                            <button type="button" class="btn btn-success me-2" title="Enviar via WhatsApp" onclick="handleWhatsAppSend({{ $budget->id }})">
                                 <i class="bi bi-whatsapp"></i> PDF
                             </button>
-                            <button type="button" class="btn btn-primary mb-2 mb-lg-0" title="Enviar por Email" onclick="handleEmailSend({{ $budget->id }})">
+                            <button type="button" class="btn btn-primary" title="Enviar por Email" onclick="handleEmailSend({{ $budget->id }})">
                                 <i class="bi bi-envelope"></i> Email
                             </button>
                         </span>
                         
-                        <a href="{{ route('contacts.create', ['client_id' => $budget->client_id]) }}" class="btn btn-info mb-2 mb-lg-0" title="Adicionar contato>
+                        <a href="{{ route('contacts.create', ['client_id' => $budget->client_id]) }}" class="btn btn-info me-2 mb-2" title="Adicionar contato">
                             <i class="bi bi-person-plus"></i> Contato
                         </a>
-                        <a href="{{ route('budgets.edit', $budget) }}" class="btn btn-warning mb-2 mb-lg-0">
+                        <a href="{{ route('budgets.edit', $budget) }}" class="btn btn-warning me-2 mb-2">
                             <i class="bi bi-pencil"></i> Editar
                         </a>
                         <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" id="delete-form-budget-{{ $budget->id }}">
                             @csrf
                             @method('DELETE')
-                            <button type="button" class="btn btn-danger" onclick="confirmDeleteBudget({{ $budget->id }})">
+                            <button type="button" class="btn btn-danger">
                                 <i class="bi bi-trash"></i> Excluir
                             </button>
                         </form>
@@ -50,7 +49,7 @@
                     <!-- Seção Empresa (75%) e Informações do Orçamento (25%) -->
                     <div class="row mb-4">
                         <!-- Empresa - 75% -->
-                        <div class="col-md-9">
+                        <div class="col-md-9 mb-4 mb-lg-0">
                             <div class="card h-100">
                                 <div class="card-header">
                                     <h5 class="mb-0">Empresa</h5>

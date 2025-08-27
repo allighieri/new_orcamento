@@ -323,7 +323,7 @@
                                             </div>
                                         </div>
                                         <div class="row mt-2">
-                                            <div class="col-md-11">
+                                            <div class="col-md-12">
                                                 <label class="form-label">Observações</label>
                                                 <input type="text" class="form-control" name="payment_methods[0][notes]" placeholder="Observações sobre este pagamento">
                                             </div>
@@ -1251,7 +1251,7 @@ $(document).ready(function() {
                     </div>
                 </div>
                 <div class="row mt-2">
-                    <div class="col-md-11">
+                    <div class="col-md-12">
                         <label class="form-label">Observações</label>
                         <input type="text" class="form-control" name="payment_methods[${paymentMethodIndex}][notes]" placeholder="Observações sobre este pagamento">
                     </div>
