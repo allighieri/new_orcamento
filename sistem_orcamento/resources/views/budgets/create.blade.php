@@ -57,23 +57,21 @@
                         </div>
                         
                         <div class="col-md-2">
-                        <div class="mb-3">
-                            <label for="issue_date" class="form-label">Data*</label>
-                            <input type="date" class="form-control" id="issue_date" name="issue_date" value="{{ old('issue_date', date('Y-m-d')) }}" required>
+                            <div class="mb-3">
+                                <label for="issue_date" class="form-label">Data*</label>
+                                <input type="date" class="form-control" id="issue_date" name="issue_date" value="{{ old('issue_date', date('Y-m-d')) }}" required>
+                            </div>
                         </div>
+                         <div class="col-md-2">
+                            <div class="mb-3">
+                                <label for="valid_until" class="form-label">Validade*</label>
+                                <input type="date" class="form-control" id="valid_until" name="valid_until" value="{{ old('valid_until', date('Y-m-d', strtotime('+15 days'))) }}" required>
+                            </div>
                         </div>
                         <div class="col-md-2">
                             <div class="mb-3">
                                 <label for="delivery_date" class="form-label">Previsão de Entrega</label>
                                 <input type="date" class="form-control" id="delivery_date" name="delivery_date" value="{{ old('delivery_date', date('Y-m-d', strtotime('+15 days'))) }}">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="mb-3">
-                                <label for="valid_until" class="form-label">Validade*</label>
-                                <input type="date" class="form-control" 
-                    id="valid_until" name="valid_until" 
-                    value="{{ old('valid_until', date('Y-m-d', strtotime('+15 days'))) }}" required>
                             </div>
                         </div>
                     </div>

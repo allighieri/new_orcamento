@@ -78,20 +78,22 @@
                                         value="{{ old('issue_date', $budget->issue_date ? $budget->issue_date->format('Y-m-d') : '') }}" required>
                                 </div>
                             </div>
-                            <div class="col-md-2">
-                                <div class="mb-3">
-                                    <label for="delivery_date" class="form-label">Previsão de Entrega</label>
-                                    <input type="date" class="form-control" 
-                                        id="delivery_date" name="delivery_date" 
-                                        value="{{ old('delivery_date', $budget->delivery_date ? $budget->delivery_date->format('Y-m-d') : '') }}">
-                                </div>
-                            </div>
+                            
                             <div class="col-md-2">
                                 <div class="mb-3">
                                     <label for="valid_until" class="form-label">Validade*</label>
                                     <input type="date" class="form-control" 
                                         id="valid_until" name="valid_until" 
                                         value="{{ old('valid_until', $budget->valid_until ? $budget->valid_until->format('Y-m-d') : '') }}" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-2">
+                                <div class="mb-3">
+                                    <label for="delivery_date" class="form-label">Previsão de Entrega</label>
+                                    <input type="date" class="form-control" 
+                                        id="delivery_date" name="delivery_date" 
+                                        value="{{ old('delivery_date', $budget->delivery_date ? $budget->delivery_date->format('Y-m-d') : '') }}">
                                 </div>
                             </div>
                         </div>
