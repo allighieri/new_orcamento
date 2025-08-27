@@ -301,7 +301,7 @@
             <h4 style="margin:0; font-size: 12px; color: #333;">
                 {{ $bankAccount->type }}
                 @if($bankAccount->compe)
-                    - {{ $bankAccount->compe->bank_name }}
+                    - ({{ $bankAccount->compe->code }}) {{ $bankAccount->compe->bank_name }}
                 @endif
             </h4>
             @if($bankAccount->type === 'Conta')

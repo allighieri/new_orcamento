@@ -76,7 +76,8 @@
                                 <div class="mb-3">
                                     <label for="branch" class="form-label">Agência</label>
                                     <input type="text" class="form-control @error('branch') is-invalid @enderror" 
-                                           id="branch" name="branch" value="{{ old('branch') }}" placeholder="Ex: 1234">
+                                           id="branch" name="branch" value="{{ old('branch') }}" placeholder="Ex: 1234" maxlength="10">
+
                                     @error('branch')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -86,7 +87,7 @@
                                 <div class="mb-3">
                                     <label for="account" class="form-label">Conta</label>
                                     <input type="text" class="form-control @error('account') is-invalid @enderror" 
-                                           id="account" name="account" value="{{ old('account') }}" placeholder="Ex: 12345-6">
+                                           id="account" name="account" value="{{ old('account') }}" placeholder="Ex: 12345-6" maxlength="20">
                                     @error('account')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

@@ -55,7 +55,7 @@
                                             <span class="badge bg-primary">Conta</span>
                                         @endif
                                     </td>
-                                    <td>{{ $account->compe->bank_name ?? 'N/A' }}</td>
+                                    <td>{{ $account->compe ? '(' . $account->compe->code . ') ' . $account->compe->bank_name : 'N/A' }}</td>
                                     <td>{{ $account->branch ?? '-' }}</td>
                                     <td>{{ $account->account ?? '-' }}</td>
                                     <td>{{ $account->description }}</td>

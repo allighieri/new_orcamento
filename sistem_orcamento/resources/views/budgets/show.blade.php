@@ -329,7 +329,7 @@
                                                 <h6 class="text-primary">
                                                     {{ $bankAccount->type }}
                                                     @if($bankAccount->compe)
-                                                        - {{ $bankAccount->compe->bank_name }}
+                                                        - ({{ $bankAccount->compe->code }}) {{ $bankAccount->compe->bank_name }}
                                                     @endif
                                                 </h6>
                                                 @if($bankAccount->type === 'Conta')

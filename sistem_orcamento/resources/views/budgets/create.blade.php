@@ -399,7 +399,7 @@
                                                     <option value="">Selecione uma conta</option>
                                                     @foreach($bankAccounts as $account)
                                                         <option value="{{ $account->id }}">
-                                                            {{ $account->type }} - {{ $account->compe->bank_name ?? 'Banco' }}
+                                                            {{ $account->type }} - ({{ $account->compe->code ?? '000' }}) {{ $account->compe->bank_name ?? 'Banco' }}
                                                             @if($account->type === 'Conta' && $account->branch && $account->account)
                                                                 - Ag: {{ $account->branch }} Cc: {{ $account->account }}
                                                             @elseif($account->type === 'PIX' && $account->key && $account->key_desc)
@@ -1490,7 +1490,7 @@ $(document).ready(function() {
                             <option value="">Selecione uma conta</option>
                             @foreach($bankAccounts as $account)
                                 <option value="{{ $account->id }}">
-                                    {{ $account->type }} - {{ $account->compe->bank_name ?? 'Banco' }}
+                                    {{ $account->type }} - ({{ $account->compe->code ?? '000' }}) {{ $account->compe->bank_name ?? 'Banco' }}
                                     @if($account->type === 'Conta' && $account->branch && $account->account)
                                         - Ag: {{ $account->branch }} Cc: {{ $account->account }}
                                     @elseif($account->type === 'PIX' && $account->key && $account->key_desc)
