@@ -301,7 +301,7 @@ class BudgetController extends Controller
             }
         }
         
-        $budget->load(['client', 'company', 'items.product', 'pdfFiles', 'budgetPayments.paymentMethod', 'budgetPayments.paymentInstallments']);
+        $budget->load(['client', 'company', 'items.product', 'pdfFiles', 'budgetPayments.paymentMethod', 'budgetPayments.paymentInstallments', 'bankAccounts.compe']);
         return view('budgets.show', compact('budget'));
     }
 
@@ -639,7 +639,7 @@ class BudgetController extends Controller
             }
         }
         
-        $budget->load(['client', 'items.product', 'budgetPayments.paymentMethod', 'budgetPayments.paymentInstallments']);
+        $budget->load(['client', 'items.product', 'budgetPayments.paymentMethod', 'budgetPayments.paymentInstallments', 'bankAccounts.compe']);
         
         // Sistema de limpeza: comparar arquivos na pasta com registros na tabela
         $this->cleanupOrphanedPdfFiles();
@@ -1265,7 +1265,7 @@ class BudgetController extends Controller
      */
     private function generatePdfAutomatically(Budget $budget)
     {
-        $budget->load(['client', 'items.product', 'budgetPayments.paymentMethod', 'budgetPayments.paymentInstallments']);
+        $budget->load(['client', 'items.product', 'budgetPayments.paymentMethod', 'budgetPayments.paymentInstallments', 'bankAccounts.compe']);
         
         // Limpar arquivos PDF órfãos antes de gerar um novo
         $this->cleanupOrphanedPdfFiles();

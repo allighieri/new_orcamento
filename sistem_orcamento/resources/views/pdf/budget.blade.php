@@ -81,7 +81,7 @@
         }
 
         .budget-number {
-            font-size: 18px;
+            font-size: 14px;
             font-weight: bold;
             color:rgb(255, 0, 0);
             margin-top: 0;
@@ -127,7 +127,7 @@
         }
         .observations {
             margin-top: 10px;
-            padding: 10px;
+            padding-bottom: 10px;
             border-bottom: 1px dotted #333;
         }
 
@@ -248,65 +248,87 @@
         </tbody>
     </table>
 
-    
+       
+    <!-- Formas de Pagamento -->    
+    @if($budget->budgetPayments->count() > 0)
+    <h4 style="text-align: center; margin-bottom: 5px">Formas de Pagamento:</h4>
+    <table class="items-table" style="width: 100%; border-collapse: collapse; font-size: 10px;">
+        <thead>
+            <tr style="border: 1px solid #ddd; text-align: left;">
+                <th style="border: 1px solid #ddd; text-align: left;">Método</th>
+                <th style="border: 1px solid #ddd; text-align: center;">Valor</th>
+                <th style="border: 1px solid #ddd; text-align: center;">Parcelas</th>
+                <th style="border: 1px solid #ddd; text-align: center;">Pagamento</th>
+                <th style="border: 1px solid #ddd; text-align: left;">Observações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($budget->budgetPayments as $payment)
+            <tr style="border-bottom: 1px solid #ddd;">
+                <td style="border: 1px solid #ddd;">{{ $payment->paymentMethod->name }}</td>
+                <td style="text-align: center; border: 1px solid #ddd;">R$ {{ number_format($payment->amount, 2, ',', '.') }}</td>
+                <td style="text-align: center; border: 1px solid #ddd;">
+                    {{ $payment->installments }}x
+                    @if($payment->installments > 1 && $payment->paymentInstallments->count() > 0)
+                        R$ {{ number_format($payment->paymentInstallments->first()->amount, 2, ',', '.') }}
+                    @endif
+                </td>
+                <td style="text-align: center; border: 1px solid #ddd;">
+                    @if($payment->payment_moment == 'approval')
+                        Na aprovação
+                    @elseif($payment->payment_moment == 'pickup')
+                        Na retirada
+                    @elseif($payment->payment_moment == 'days_after_pickup')
+                        {{ $payment->days_after_pickup }} dias após retirada
+                    @elseif($payment->payment_moment == 'custom')
+                        {{ $payment->custom_date ? $payment->custom_date->format('d/m/Y') : 'Data personalizada' }}
+                    @else
+                        -
+                    @endif
+                </td>
+                <td style="border: 1px solid #ddd;">{{ $payment->notes ?? '-' }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+     
+    @if($budget->bankAccounts->count() > 0)
+    <div class="bank-accounts-section" style="margin-bottom: 10px;">
+        <h3 style="margin-bottom: 10px; font-size: 14px;">Dados Bancários:</h3>
+        @foreach($budget->bankAccounts as $bankAccount)
+        <div style="margin:0;">
+            <h4 style="margin:0; font-size: 12px; color: #333;">
+                {{ $bankAccount->type }}
+                @if($bankAccount->compe)
+                    - {{ $bankAccount->compe->bank_name }}
+                @endif
+            </h4>
+            @if($bankAccount->type === 'Conta')
+                <p style="margin: 0; font-size: 11px;">Agência: {{ $bankAccount->branch }}</p>
+                <p style="margin: 0 0 10px 0; font-size: 11px;">Conta: {{ $bankAccount->account }}</p>
+            @elseif($bankAccount->type === 'PIX')
+                <p style="margin: 0 0 10px 0; font-size: 11px;">Chave: {{ ucfirst($bankAccount->key) }} - {{ $bankAccount->key_desc }}</p>
+            @endif
+        </div>
+        @endforeach
+    </div>
+    @endif
 
-    <table class="items-table" style="width: 100%; border: none; border-collapse: collapse; margin-bottom:160px;">
+
+    <table class="items-table" style="font-size: 10px; margin-bottom: 1px;">
+        @if($budget->observations)
+        <div class="observations">
+            <h4>Observações:</h4>
+            <p>{!! nl2br(e($budget->observations)) !!}</p>
+        </div>
+            @endif
+    </table>
+
+    <table class="" style="text-align: center; width: 100%; border: none; border-collapse: collapse;">
         <tr>
-            <td style="border: none; padding: 0;">
-                @if($budget->budgetPayments->count() > 0)
-                <div class="payment-methods-section" style="margin-bottom: 20px;">
-                    <h3 style="text-align: center; margin-bottom: 5px">Formas de Pagamento:</h3>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-                        <thead>
-                            <tr style="border: 1px solid #ddd; padding: 8px; text-align: left;">
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Método</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Valor</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Parcelas</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Pagamento</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Observações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($budget->budgetPayments as $payment)
-                            <tr style="border-bottom: 1px solid #ddd;">
-                                <td style="padding: 8px; border: 1px solid #ddd;">{{ $payment->paymentMethod->name }}</td>
-                                <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">R$ {{ number_format($payment->amount, 2, ',', '.') }}</td>
-                                <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
-                                    {{ $payment->installments }}x
-                                    @if($payment->installments > 1 && $payment->paymentInstallments->count() > 0)
-                                        R$ {{ number_format($payment->paymentInstallments->first()->amount, 2, ',', '.') }}
-                                    @endif
-                                </td>
-                                <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
-                                    @if($payment->payment_moment == 'approval')
-                                        Na aprovação
-                                    @elseif($payment->payment_moment == 'pickup')
-                                        Na retirada
-                                    @elseif($payment->payment_moment == 'days_after_pickup')
-                                        {{ $payment->days_after_pickup }} dias após retirada
-                                    @elseif($payment->payment_moment == 'custom')
-                                        {{ $payment->custom_date ? $payment->custom_date->format('d/m/Y') : 'Data personalizada' }}
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td style="padding: 8px; border: 1px solid #ddd;">{{ $payment->notes ?? '-' }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @endif
-
-
-                @if($budget->observations)
-                <div class="observations">
-                    <h4>Observações:</h4>
-                    <p>{!! nl2br(e($budget->observations)) !!}</p>
-                </div>
-                @endif
-
-                <div class="total-section" style="margin-top: 70px;">
+            <td>
+                <div class="total-section" style="margin-top: 30px;">   
                     <div class="total-row">
                         <strong>Subtotal: R$ {{ number_format($budget->items->sum('total_price'), 2, ',', '.') }}</strong>
                     </div>
@@ -320,21 +342,21 @@
                     </div>
                 </div>
             </td>
-        </tr>
-    </table>
+        </tr>   
+    </table>    
 
-    <table class="footer-table" style="text-align: center; width: 100%; border: none; border-collapse: collapse;">
+    <table style="text-align: center; width: 100%; border: none; border-collapse: collapse;">
         <tr>
             <td style="border: none; padding: 0; text-align: center;">
                 <div style="width: 90%; text-align: center; margin: 0 auto;">
-                    <div style="height: 80px; border-bottom: 1px solid #000; margin-bottom: 10px; text-align: center;"></div>
+                    <div style="height: 50px; border-bottom: 1px solid #000; margin-bottom: 10px; text-align: center;"></div>
                     <p style="margin: 0 !important;"><strong>Assinatura da Empresa</strong></p>
                     <small>{{ $budget->client->corporate_name ?? $budget->client->fantasy_name ?? 'Cliente' }}</small>
                 </div>
             </td>
              <td style="border: none; padding: 0; text-align: center;">
                 <div style="width: 90%; text-align: center; margin: 0 auto;">
-                    <div style="height: 80px; border-bottom: 1px solid #000; margin-bottom: 10px; text-align: center;"></div>
+                    <div style="height: 50px; border-bottom: 1px solid #000; margin-bottom: 10px; text-align: center;"></div>
                     <p style="margin: 0 !important;"><strong>Assinatura da Empresa</strong></p>
                     <small>{{ $budget->company->corporate_name }}</small>
                 </div>

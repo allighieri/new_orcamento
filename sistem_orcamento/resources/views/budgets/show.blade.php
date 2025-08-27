@@ -36,6 +36,9 @@
                         <a href="{{ route('budgets.edit', $budget) }}" class="btn btn-warning me-2 mb-2">
                             <i class="bi bi-pencil"></i> Editar
                         </a>
+                        <a href="{{ route('budgets.create', $budget) }}" class="btn btn-primary me-2 mb-2" title="Novo Orçamento">
+                            <i class="bi bi-plus"></i> Novo
+                        </a>
                         <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" id="delete-form-budget-{{ $budget->id }}">
                             @csrf
                             @method('DELETE')
@@ -94,7 +97,7 @@
                         
                         <!-- Informações do Orçamento - 25% -->
                         <div class="col-md-3">
-                            <div class="card h-100 border-primary">
+                            <div class="card h-100">
                                 <div class="card-body text-center">
                                     <h4 class="text-primary mb-3">{{ $budget->number }}</h4>
                                     <p class="mb-2"><strong>Data:</strong><br>{{ $budget->issue_date->format('d/m/Y') }}</p>
@@ -244,21 +247,7 @@
                         </div>
                     </div>
                     
-                    @if($budget->observations)
-                    <!-- Observações -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Observações</h5>
-                                </div>
-                                <div class="card-body">
-                                    <p class="mb-0">{!! nl2br(e($budget->observations)) !!}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
+                    
                     
                     @if($budget->budgetPayments->count() > 0)
                     <!-- Métodos de Pagamento -->
@@ -318,6 +307,60 @@
                                         @endif
                                     </div>
                                     @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    
+                    @if($budget->bankAccounts->count() > 0)
+                    <!-- Dados Bancários -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="bi bi-bank"></i> Dados Bancários</h5>
+                                </div>
+                                <div class="card-body">
+                                    @foreach($budget->bankAccounts as $bankAccount)
+                                    <div class="mb-3">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6 class="text-primary">
+                                                    {{ $bankAccount->type }}
+                                                    @if($bankAccount->compe)
+                                                        - {{ $bankAccount->compe->bank_name }}
+                                                    @endif
+                                                </h6>
+                                                @if($bankAccount->type === 'Conta')
+                                    <p class="mb-1">Agência: {{ $bankAccount->branch }}</p>
+                                    <p class="mb-1">Conta: {{ $bankAccount->account }}</p>
+                                @elseif($bankAccount->type === 'PIX')
+                                    <p class="mb-1">PIX: {{ ucfirst($bankAccount->key) }} - {{ $bankAccount->key_desc }}</p>
+                                @endif
+                                            </div>
+                                        </div>
+                                        @if(!$loop->last)
+                                        <hr>
+                                        @endif
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if($budget->observations)
+                    <!-- Observações -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Observações</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-0">{!! nl2br(e($budget->observations)) !!}</p>
                                 </div>
                             </div>
                         </div>

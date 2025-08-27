@@ -1782,7 +1782,7 @@ $(document).ready(function() {
     // Controlar exibição do container de dados bancários
     $('input[name="include_bank_data"]').change(function() {
         const bankDataContainer = $('#bank-data-container');
-        const addBankAccountBtn = $('#add-bank-account');
+        const addBankAccountBtn = $('.add-bank-account');
         
         if ($(this).val() === 'yes') {
             bankDataContainer.show();
@@ -1801,7 +1801,7 @@ $(document).ready(function() {
     });
 
     // Adicionar nova linha de conta bancária
-    $('#add-bank-account').click(function() {
+    $(document).on('click', '.add-bank-account', function() {
         const bankContainer = $('#bank-data-container');
         const bankRows = $('.bank-account-row');
         const newIndex = bankRows.length;
@@ -1855,7 +1855,7 @@ $(document).ready(function() {
     // Atualizar visibilidade do botão adicionar
     function updateAddBankAccountButton() {
         const bankRows = $('.bank-account-row');
-        const addBtn = $('#add-bank-account');
+        const addBtn = $('.add-bank-account');
         
         if (bankRows.length >= 10) { // Limite máximo de contas
             addBtn.hide();
@@ -1868,11 +1868,11 @@ $(document).ready(function() {
     const initialBankData = $('input[name="include_bank_data"]:checked').val();
     if (initialBankData === 'yes') {
         $('#bank-data-container').show();
-        $('#add-bank-account').show();
+        $('.add-bank-account').show();
         updateAddBankAccountButton();
     } else {
         $('#bank-data-container').hide();
-        $('#add-bank-account').hide();
+        $('.add-bank-account').hide();
     }
 });
 </script>
