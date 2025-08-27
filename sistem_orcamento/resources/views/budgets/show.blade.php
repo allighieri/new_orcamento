@@ -39,7 +39,7 @@
                         <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" id="delete-form-budget-{{ $budget->id }}">
                             @csrf
                             @method('DELETE')
-                            <button type="button" class="btn btn-danger">
+                            <button type="button" class="btn btn-danger" onclick="confirmDeleteBudget({{ $budget->id }})">
                                 <i class="bi bi-trash"></i> Excluir
                             </button>
                         </form>
