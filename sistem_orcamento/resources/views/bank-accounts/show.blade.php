@@ -20,12 +20,6 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label fw-bold">ID:</label>
-                                <p class="form-control-plaintext">{{ $bankAccount->id }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
                                 <label class="form-label fw-bold">Tipo:</label>
                                 <p class="form-control-plaintext">
                                     @if($bankAccount->type === 'PIX')

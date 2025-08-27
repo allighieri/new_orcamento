@@ -54,12 +54,19 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="compe_id" class="form-label">Banco</label>
-                                    <input type="text" class="form-control @error('compe_id') is-invalid @enderror" 
-                                           id="bank_search" placeholder="Digite o código ou nome do banco..."
-                                           value="{{ $bankAccount->compe ? $bankAccount->compe->code . ' - ' . $bankAccount->compe->bank_name : '' }}">
+                                    <label for="bank_search" class="form-label">Banco</label>
+                                    <input class="form-control @error('compe_id') is-invalid @enderror" 
+                                        list="bankOptions" 
+                                        id="bank_search" 
+                                        name="bank_name" 
+                                        placeholder="Digite o código ou nome do banco..."
+                                        value="{{ $bankAccount->compe ? $bankAccount->compe->code . ' - ' . $bankAccount->compe->bank_name : '' }}">
                                     <input type="hidden" id="compe_id" name="compe_id" value="{{ old('compe_id') ?? $bankAccount->compe_id }}">
-                                    <div id="bank_results" class="dropdown-menu" style="display: none; width: 100%; max-height: 200px; overflow-y: auto;"></div>
+
+                                    <datalist id="bankOptions">
+                                        {{-- As opções serão preenchidas via JavaScript ou PHP --}}
+                                    </datalist>
+
                                     @error('compe_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -139,6 +146,7 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <div class="form-check">
+                                        <input type="hidden" name="active" value="0">
                                         <input class="form-check-input" type="checkbox" id="active" name="active" value="1" 
                                                {{ (old('active') ?? $bankAccount->active) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="active">
@@ -282,56 +290,60 @@ function removeMask(element) {
 document.addEventListener('DOMContentLoaded', function() {
     const bankSearch = document.getElementById('bank_search');
     const compeId = document.getElementById('compe_id');
-    const bankResults = document.getElementById('bank_results');
+    const bankOptions = document.getElementById('bankOptions');
     let searchTimeout;
+    let banksData = [];
 
     bankSearch.addEventListener('input', function() {
         const query = this.value.trim();
         
         clearTimeout(searchTimeout);
         
+        // Verificar se o usuário selecionou uma opção do datalist
+        const selectedBank = banksData.find(bank => 
+            bankSearch.value === `${bank.code} - ${bank.bank_name}`
+        );
+        
+        if (selectedBank) {
+            compeId.value = selectedBank.id;
+            return;
+        }
+        
+        // Limpar compe_id se não há correspondência exata
+        compeId.value = '';
+        
         if (query.length < 2) {
-            bankResults.style.display = 'none';
+            bankOptions.innerHTML = '';
             return;
         }
         
         searchTimeout = setTimeout(() => {
-            fetch(`{{ route('compes.autocomplete') }}?q=${encodeURIComponent(query)}`)
+            fetch(`{{ route('compes.autocomplete') }}?q=${encodeURIComponent(query)}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
-                    bankResults.innerHTML = '';
+                    bankOptions.innerHTML = '';
+                    banksData = data;
                     
                     if (data.length > 0) {
                         data.forEach(bank => {
-                            const item = document.createElement('a');
-                            item.className = 'dropdown-item';
-                            item.href = '#';
-                            item.textContent = `${bank.code} - ${bank.bank_name}`;
-                            item.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                bankSearch.value = `${bank.code} - ${bank.bank_name}`;
-                                compeId.value = bank.id;
-                                bankResults.style.display = 'none';
-                            });
-                            bankResults.appendChild(item);
+                            const option = document.createElement('option');
+                            option.value = `${bank.code} - ${bank.bank_name}`;
+                            bankOptions.appendChild(option);
                         });
-                        bankResults.style.display = 'block';
-                    } else {
-                        bankResults.style.display = 'none';
                     }
                 })
                 .catch(error => {
                     console.error('Erro na busca:', error);
-                    bankResults.style.display = 'none';
+                    bankOptions.innerHTML = '';
                 });
         }, 300);
-    });
-
-    // Fechar dropdown ao clicar fora
-    document.addEventListener('click', function(e) {
-        if (!bankSearch.contains(e.target) && !bankResults.contains(e.target)) {
-            bankResults.style.display = 'none';
-        }
     });
 
     // Executar na inicialização da página
