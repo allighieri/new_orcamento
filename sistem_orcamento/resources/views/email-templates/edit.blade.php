@@ -77,18 +77,18 @@
                                             <small class="text-muted">Use estas variáveis no seu template:</small>
                                             <div class="mt-2">
                                                 <code>@{{recipientName}}</code><br>
-                                    <code>@{{budgetNumber}}</code><br>
-                                    <code>@{{budgetValue}}</code><br>
-                                    <code>@{{budgetDate}}</code><br>
-                                    <code>@{{deliveryDate}}</code><br>
-                                    <code>@{{budgetValidity}}</code><br>
-                                    <code>@{{budgetStatus}}</code><br>
-                                    <code>@{{companyName}}</code><br>
-                                    <code>@{{companyAddress}}</code><br>
-                                    <code>@{{companyCity}}</code><br>
-                                    <code>@{{companyState}}</code><br>
-                                    <code>@{{companyPhone}}</code><br>
-                                    <code>@{{companyEmail}}</code><br>
+                                                <code>@{{budgetNumber}}</code><br>
+                                                <code>@{{budgetValue}}</code><br>
+                                                <code>@{{budgetDate}}</code><br>
+                                                <code>@{{deliveryDate}}</code><br>
+                                                <code>@{{budgetValidity}}</code><br>
+                                                <code>@{{budgetStatus}}</code><br>
+                                                <code>@{{companyName}}</code><br>
+                                                <code>@{{companyAddress}}</code><br>
+                                                <code>@{{companyCity}}</code><br>
+                                                <code>@{{companyState}}</code><br>
+                                                <code>@{{companyPhone}}</code><br>
+                                                <code>@{{companyEmail}}</code><br>
                                             </div>
                                             <hr>
                                             <div class="d-grid gap-2">
@@ -454,19 +454,21 @@ function loadSampleTemplate() {
         <div class="footer">
             <div class="company-info">
                 <div class="company-name">\{\{companyName\}\}</div>
+                
                 <div class="company-details">
                     📍 \{\{companyAddress\}\}, \{\{companyCity\}\} - \{\{companyState\}\}<br>
                     📞 \{\{companyPhone\}\}<br>
                     ✉️ \{\{companyEmail\}\}
                 </div>
+                
             </div>
-            
+            <!--
             <div class="social-links">
                 <a href="#">🌐 Website</a>
                 <a href="#">📱 WhatsApp</a>
                 <a href="#">📧 Email</a>
             </div>
-            
+            -->
             <p style="font-size: 12px; color: #999; margin-top: 15px;">
                 Este email foi enviado automaticamente pelo nosso sistema de orçamentos.
             </p>

@@ -313,11 +313,13 @@
                 </div>
             </div>
             
+            <!--
             <div class="social-links">
                 <a href="#">🌐 Website</a>
                 <a href="#">📱 WhatsApp</a>
                 <a href="#">📧 Email</a>
             </div>
+            -->
             
             <p style="font-size: 12px; color: #999; margin-top: 15px;">
                 Este email foi enviado automaticamente pelo nosso sistema de orçamentos.
