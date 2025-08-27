@@ -57,7 +57,8 @@
                                         list="bankOptions" 
                                         id="bank_search" 
                                         name="bank_name" 
-                                        placeholder="Digite o código ou nome do banco...">
+                                        placeholder="Digite o código ou nome do banco..." required>
+
                                     <input type="hidden" id="compe_id" name="compe_id" value="{{ old('compe_id') }}">
 
                                     <datalist id="bankOptions">

@@ -1557,9 +1557,64 @@ $(document).ready(function() {
         updateBankAccountAddButtons();
     });
 
+    // --- Validação de Duplicação de Dados Bancários ---
+    
+    function validateBankAccountDuplication() {
+        const includeBankData = $('input[name="include_bank_data"]:checked').val();
+        
+        if (includeBankData !== 'yes') {
+            return true; // Se não incluir dados bancários, não há duplicação
+        }
+        
+        const selectedAccountIds = [];
+        const duplicates = [];
+        
+        $('#bank-data-container .bank-account-row').each(function() {
+            const selectElement = $(this).find('select[name*="bank_account_id"]');
+            const selectedValue = selectElement.val();
+            
+            if (selectedValue) {
+                const selectedText = selectElement.find('option:selected').text();
+
+                if (selectedAccountIds.includes(selectedValue)) {
+                    duplicates.push({
+                        id: selectedValue,
+                        text: selectedText
+                    });
+                } else {
+                    selectedAccountIds.push(selectedValue);
+                }
+            }
+        });
+        
+        if (duplicates.length > 0) {
+            const duplicate = duplicates[0];
+            let message = `Não é possível incluir o mesmo dado bancário duas vezes no orçamento.\n\n`;
+            message += `Dado bancário: ${duplicate.text}`;
+            message += `\n\nPor favor, selecione dados bancários diferentes.`;
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Dados Bancários Duplicados!',
+                text: message,
+                confirmButtonText: 'OK'
+            });
+            
+            return false;
+        }
+        
+        return true;
+    }
+    
     // --- Validação do Formulário ---
     
     $('#budgetForm').on('submit', function(e) {
+        // Validar duplicação de dados bancários
+        if (!validateBankAccountDuplication()) {
+            e.preventDefault();
+            return false;
+        }
+        
         const includePayments = $('input[name="include_payment_methods"]:checked').val();
         
         if (includePayments === 'yes') {
