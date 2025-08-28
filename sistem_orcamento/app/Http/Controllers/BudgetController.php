@@ -295,6 +295,46 @@ class BudgetController extends Controller
     }
 
     /**
+     * Serve PDF file with no-cache headers
+     */
+    public function servePdf(Budget $budget, $filename)
+    {
+        $user = auth()->guard('web')->user();
+        
+        // Super admin pode acessar qualquer PDF
+        if ($user->role !== 'super_admin') {
+            // Verificar se o orçamento pertence à empresa do usuário
+            if ($budget->company_id !== session('tenant_company_id')) {
+                abort(404);
+            }
+        }
+        
+        // Verificar se o arquivo existe na tabela pdf_files
+        $pdfFile = \App\Models\PdfFile::where('budget_id', $budget->id)
+            ->where('filename', $filename)
+            ->first();
+            
+        if (!$pdfFile) {
+            abort(404, 'PDF não encontrado.');
+        }
+        
+        $filePath = storage_path('app/public/pdfs/' . $filename);
+        
+        if (!file_exists($filePath)) {
+            abort(404, 'Arquivo PDF não encontrado.');
+        }
+        
+        // Retornar o PDF com headers no-cache
+        return response()->file($filePath, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0'
+        ]);
+    }
+
+    /**
      * Display the specified resource.
      */
     public function show(Budget $budget)
@@ -706,7 +746,9 @@ class BudgetController extends Controller
         // Verificar se a requisição é AJAX
         if (request()->ajax()) {
             // Para requisições AJAX, retornar JSON com URL para abrir
-            $publicUrl = asset('storage/' . $filePath);
+            // Usar a rota servePdf com timestamp para evitar cache do navegador
+            $timestamp = time();
+            $publicUrl = route('budgets.serve-pdf', ['budget' => $budget->id, 'filename' => $filename]) . '?v=' . $timestamp;
             return response()->json([
                 'success' => true,
                 'message' => 'PDF gerado e salvo com sucesso!',
@@ -717,8 +759,13 @@ class BudgetController extends Controller
                 'url' => $publicUrl
             ]);
         } else {
-            // Para requisições normais, abrir no navegador
-            return $pdf->stream($filename);
+            // Para requisições normais, abrir no navegador com headers no-cache
+            return response($pdf->output(), 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="' . $filename . '"')
+                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
         }
     }
     
@@ -978,8 +1025,9 @@ class BudgetController extends Controller
             throw new \Exception('Nenhum PDF encontrado para este orçamento.');
         }
         
-        // Gerar URL do PDF com HTTPS
-        $pdfUrl = secure_url('storage/pdfs/' . $pdfFile->filename);
+        // Gerar URL do PDF usando a rota servePdf com timestamp para evitar cache
+        $timestamp = time();
+        $pdfUrl = route('budgets.serve-pdf', ['budget' => $budget->id, 'filename' => $pdfFile->filename]) . '?v=' . $timestamp;
         
         // Usar nome do contato se fornecido, senão usar nome fantasia do cliente
         $recipientName = $contactName ?: $budget->client->fantasy_name;
@@ -1329,4 +1377,5 @@ class BudgetController extends Controller
         
         \Illuminate\Support\Facades\Log::info('PDF generated automatically', ['budget_id' => $budget->id, 'filename' => $filename]);
     }
+
 }
