@@ -64,7 +64,7 @@
                     @if(Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin']))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
-                            <i class="bi bi-people"></i> Usuários</a> <! -- um comentário -->
+                            <i class="bi bi-people"></i> Usuários</a> <!-- um comentário novo para teste futuro -->
                     </li>
                     @endif
                 </ul>
