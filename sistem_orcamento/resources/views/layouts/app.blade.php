@@ -75,7 +75,7 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             
-                            <i class="bi bi-person-check"></i> - {{ explode(' ', Auth::user()->name)[0] }}
+                            <i class="bi bi-person-check"></i> {{ explode(' ', Auth::user()->name)[0] }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li>
