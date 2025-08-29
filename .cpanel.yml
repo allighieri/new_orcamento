@@ -1,21 +1,6 @@
 ---
 deployment:
   tasks:
-    - echo "Iniciando deploy..."
-    - export DEPLOYPATH=/home/karaoke/public_html/orcamento
-
-    - echo "Sincronizando arquivos do reposit¨®rio para o diretorio de publicacao..."
-    - rsync -av --exclude='.env' --exclude='vendor' --exclude='storage' sistem_orcamento/ $DEPLOYPATH/
-
-    - echo "Instalando dependencias (Composer com PHP 8.3)..."
-    - cd $DEPLOYPATH && /opt/cpanel/ea-php83/root/usr/bin/php /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
-
-    - echo "Rodando migrations..."
-    - cd $DEPLOYPATH && /opt/cpanel/ea-php83/root/usr/bin/php artisan migrate --force
-
-    - echo "Limpando caches do Laravel..."
-    - cd $DEPLOYPATH && /opt/cpanel/ea-php83/root/usr/bin/php artisan cache:clear
-    - cd $DEPLOYPATH && /opt/cpanel/ea-php83/root/usr/bin/php artisan config:clear
-    - cd $DEPLOYPATH && /opt/cpanel/ea-php3/root/usr/bin/php artisan route:clear
-
-    - echo "Deploy conclu¨ªdo com sucesso!"
+    # Acessa a pasta do reposit¨®rio no servidor e executa o script de deploy.
+    - export DEPLOYPATH=/home/karaoke/repositories/new_orcamento
+    - /bin/sh $DEPLOYPATH/deploy.sh
