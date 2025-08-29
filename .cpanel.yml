@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    # Acessa a pasta do reposit¨®rio no servidor e executa o script de deploy.
+    - export DEPLOYPATH=/home/karaoke/repositories/new_orcamento
+    - /bin/sh $DEPLOYPATH/deploy.sh
