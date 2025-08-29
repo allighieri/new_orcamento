@@ -1,0 +1,32 @@
+---
+deployment:
+  tasks:
+    # Caminho de deploy do Laravel
+    - export DEPLOYPATH=/home/karaoke/public_html/orcamento
+
+    # Copiar pastas principais do Laravel
+    - /bin/cp -R app $DEPLOYPATH
+    - /bin/cp -R bootstrap $DEPLOYPATH
+    - /bin/cp -R config $DEPLOYPATH
+    - /bin/cp -R database $DEPLOYPATH
+    - /bin/cp -R resources $DEPLOYPATH
+    - /bin/cp -R routes $DEPLOYPATH
+
+    # Copiar a pasta public (apenas conteúdo, para não sobrescrever a pasta)
+    - /bin/cp -R public/* $DEPLOYPATH/public
+
+    # Copiar arquivos importantes
+    - /bin/cp artisan $DEPLOYPATH
+    - /bin/cp composer.json $DEPLOYPATH
+    - /bin/cp composer.lock $DEPLOYPATH
+
+    # Instalar dependências (Composer com PHP 8.3)
+    - cd $DEPLOYPATH && /opt/cpanel/ea-php83/root/usr/bin/php /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
+
+    # Limpar e gerar caches
+    - cd $DEPLOYPATH && /opt/cpanel/ea-php83/root/usr/bin/php artisan config:clear
+    - cd $DEPLOYPATH && /opt/cpanel/ea-php83/root/usr/bin/php artisan config:cache
+    - cd $DEPLOYPATH && /opt/cpanel/ea-php83/root/usr/bin/php artisan route:cache
+
+    # Executar migrations (sem confirmação)
+    - cd $DEPLOYPATH && /opt/cpanel/ea-php83/root/usr/bin/php artisan migrate --force
