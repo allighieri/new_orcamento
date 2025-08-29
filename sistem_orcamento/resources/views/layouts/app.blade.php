@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Sistema de Orçamento')</title>
+    <title>@yield('title', 'Sistema de Orçamentos')</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -22,7 +22,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container mx-auto">
             <a class="navbar-brand" href="{{ route('dashboard') }}">
-                <i class="bi bi-calculator"></i> Orça Fácil
+                <i class="bi bi-calculator"></i> Orça Fácil!
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -64,7 +64,7 @@
                     @if(Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin']))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
-                            <i class="bi bi-people"></i> Usuários</a>
+                            <i class="bi bi-people"></i> Usuários</a> <!-- um comentário novo para teste futuro -->
                     </li>
                     @endif
                 </ul>
@@ -75,7 +75,7 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             
-                            <i class="bi bi-person-circle"></i> {{ explode(' ', Auth::user()->name)[0] }}
+                            <i class="bi bi-person-check"></i> {{ explode(' ', Auth::user()->name)[0] }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li>
