@@ -1,4 +1,6 @@
 ---
 deployment:
-    tasks:
-        - echo "Deploying via cpanel.yml"
+  tasks:
+    # Acessa a pasta do repositório no servidor e executa o script de deploy.
+    - export DEPLOYPATH=/home/karaoke/repositories/new_orcamento
+    - /bin/sh $DEPLOYPATH/deploy.sh
