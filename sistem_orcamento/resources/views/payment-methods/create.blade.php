@@ -17,7 +17,7 @@
                     @csrf
                     
                     <div class="row">
-                        <div class="col-md-8">
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="payment_option_method_id" class="form-label">Método de Pagamento *</label>
                                 <select class="form-select @error('payment_option_method_id') is-invalid @enderror" 
@@ -36,25 +36,13 @@
                             </div>
                         </div>
                         
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Status</label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
-                                           {{ old('is_active', true) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_active">
-                                        Método Ativo
-                                    </label>
-                                </div>
-                                <div class="form-text">Métodos inativos não aparecerão nos orçamentos.</div>
-                            </div>
-                        </div>
+                        
                     </div>
                     
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <div class="mb-3">
-                                <label class="form-label">Configurações de Parcelamento</label>
+                                <label class="form-label">Parcelamento</label>
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" id="allows_installments" name="allows_installments" 
                                            {{ old('allows_installments') ? 'checked' : '' }}
@@ -66,8 +54,8 @@
                                 <div class="form-text">Marque se este método permite dividir o pagamento em parcelas.</div>
                             </div>
                         </div>
-                        
-                        <div class="col-md-6">
+
+                        <div class="col-md-3">
                             <div class="mb-3">
                                 <label for="max_installments" class="form-label">Máximo de Parcelas</label>
                                 <select class="form-select @error('max_installments') is-invalid @enderror" 
@@ -83,24 +71,35 @@
                                 <div class="form-text">Número máximo de parcelas permitidas para este método.</div>
                             </div>
                         </div>
+                        
+                        
                     </div>
+
                     
-                    <!-- Informações sobre o método -->
-                    <div class="alert alert-info">
-                        <h6><i class="bi bi-info-circle"></i> Informações Importantes</h6>
-                        <ul class="mb-0">
-                            <li>Métodos inativos não aparecerão como opção ao criar orçamentos.</li>
-                            <li>Se o método não permitir parcelamento, será considerado apenas pagamento à vista.</li>
-                            <li>Você pode editar essas configurações a qualquer momento.</li>
-                        </ul>
-                    </div>
+
+                    <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                           {{ old('is_active', true) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_active">
+                                        Método Ativo
+                                    </label>
+                                </div>
+                                <div class="form-text">Métodos inativos não aparecerão nos orçamentos.</div>
+                            </div>
+                        </div>
                     
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ route('payment-methods.index') }}" class="btn btn-secondary">
+                    <hr class="my-4"/>
+                    
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ route('payment-methods.index') }}" class="btn btn-secondary me-md-2">
                             <i class="bi bi-x-circle"></i> Cancelar
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Salvar Método
+                            <i class="bi bi-check-circle"></i> Salvar
                         </button>
                     </div>
                 </form>

@@ -52,6 +52,60 @@
                         </div>
                     </div>
                     
+                    
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- Permite Parcelamento -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input @error('allows_installments') is-invalid @enderror" 
+                                    type="checkbox" 
+                                    role="switch" 
+                                    id="allows_installments" 
+                                    name="allows_installments" 
+                                    value="1" 
+                                    {{ old('allows_installments', $paymentMethod->allows_installments) ? 'checked' : '' }}
+                                    onchange="toggleInstallments()">
+                                <label class="form-check-label" for="allows_installments">
+                                    <strong>Permite Parcelamento</strong>
+                                </label>
+                                @error('allows_installments')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+                            <div class="form-text">
+                                Marque se este método permite pagamento parcelado.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <!-- Máximo de Parcelas -->
+                        <div class="mb-3" id="max_installments_group" style="{{ old('allows_installments', $paymentMethod->allows_installments) ? '' : 'display: none;' }}">
+                            <label for="max_installments" class="form-label">Máximo de Parcelas <span class="text-danger">*</span></label>
+                            <input type="number" 
+                                class="form-control @error('max_installments') is-invalid @enderror" 
+                                id="max_installments" 
+                                name="max_installments" 
+                                value="{{ old('max_installments', $paymentMethod->max_installments) }}" 
+                                min="1" 
+                                max="60"
+                                placeholder="Ex: 12">
+                            @error('max_installments')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                            <div class="form-text">
+                                Número máximo de parcelas permitidas (1 a 60).
+                            </div>
+                        </div>
+                    </div>    
+                </div>
+                    
+                    
+
                     <!-- Status Ativo -->
                     <div class="mb-3">
                         <div class="form-check form-switch">
@@ -75,60 +129,17 @@
                             Apenas métodos ativos ficam disponíveis para seleção nos orçamentos.
                         </div>
                     </div>
+
+                    <hr class="my-4"/>
                     
-                    <!-- Permite Parcelamento -->
-                    <div class="mb-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input @error('allows_installments') is-invalid @enderror" 
-                                   type="checkbox" 
-                                   role="switch" 
-                                   id="allows_installments" 
-                                   name="allows_installments" 
-                                   value="1" 
-                                   {{ old('allows_installments', $paymentMethod->allows_installments) ? 'checked' : '' }}
-                                   onchange="toggleInstallments()">
-                            <label class="form-check-label" for="allows_installments">
-                                <strong>Permite Parcelamento</strong>
-                            </label>
-                            @error('allows_installments')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
-                            @enderror
-                        </div>
-                        <div class="form-text">
-                            Marque se este método permite pagamento parcelado.
-                        </div>
-                    </div>
-                    
-                    <!-- Máximo de Parcelas -->
-                    <div class="mb-3" id="max_installments_group" style="{{ old('allows_installments', $paymentMethod->allows_installments) ? '' : 'display: none;' }}">
-                        <label for="max_installments" class="form-label">Máximo de Parcelas <span class="text-danger">*</span></label>
-                        <input type="number" 
-                               class="form-control @error('max_installments') is-invalid @enderror" 
-                               id="max_installments" 
-                               name="max_installments" 
-                               value="{{ old('max_installments', $paymentMethod->max_installments) }}" 
-                               min="1" 
-                               max="60"
-                               placeholder="Ex: 12">
-                        @error('max_installments')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
-                        @enderror
-                        <div class="form-text">
-                            Número máximo de parcelas permitidas (1 a 60).
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-lg"></i> Salvar Alterações
-                        </button>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        
                         <a href="{{ route('payment-methods.show', $paymentMethod) }}" class="btn btn-outline-secondary">
                             <i class="bi bi-x-lg"></i> Cancelar
                         </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> Salvar
+                        </button>
                     </div>
                 </form>
             </div>
