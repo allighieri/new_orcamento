@@ -18,16 +18,16 @@ class SuperAdminSeeder extends Seeder
         if (!User::where('role', 'super_admin')->exists()) {
             User::create([
                 'name' => 'Super Administrador',
-                'email' => 'admin@sistema.com',
+                'email' => 'agenciaolhardigital@gmail.com',
                 'email_verified_at' => now(),
-                'password' => Hash::make('123456'),
+                'password' => Hash::make('@Gencia5859262'),
                 'role' => 'super_admin',
                 'active' => 1, // Super admin deve estar ativo
             ]);
 
             $this->command->info('Super Admin criado com sucesso!');
-            $this->command->info('Email: admin@sistema.com');
-            $this->command->info('Senha: 123456');
+            $this->command->info('Email: agenciaolhardigital@gmail.com');
+            $this->command->info('Senha: @Gencia5859262');
         } else {
             $this->command->info('Super Admin já existe no sistema.');
         }
