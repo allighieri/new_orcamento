@@ -74,7 +74,8 @@ class UserController extends Controller
             'active' => 'boolean'
         ], [
             'password.confirmed' => 'A confirmação da senha não confere.',
-            'company_id.required' => 'Campo obrigatório para user ou admin.'
+            'company_id.required' => 'Campo obrigatório para user ou admin.',
+            'email.unique' => 'Já existe um usuário com esse e-mail cadastrado!'
         ]);
 
         // Verificar permissões de role
