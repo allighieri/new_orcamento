@@ -249,7 +249,6 @@
                     
                     
                     
-                    @if($budget->budgetPayments->count() > 0)
                     <!-- Métodos de Pagamento -->
                     <div class="row mb-4">
                         <div class="col-12">
@@ -258,6 +257,7 @@
                                     <h5 class="mb-0"><i class="bi bi-credit-card"></i> Métodos de Pagamento</h5>
                                 </div>
                                 <div class="card-body">
+                                    @if($budget->budgetPayments->count() > 0)
                                     @foreach($budget->budgetPayments as $payment)
                                     <div class="mb-4">
                                         <div class="row">
@@ -307,11 +307,16 @@
                                         @endif
                                     </div>
                                     @endforeach
+                                    @else
+                                    <div class="text-center py-4">
+                                        <i class="bi bi-credit-card text-muted" style="font-size: 3rem;"></i>
+                                        <h6 class="text-muted mt-2">Forma de pagamento a combinar</h6>
+                                    </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     </div>
-                    @endif
                     
                     @if($budget->bankAccounts->count() > 0)
                     <!-- Dados Bancários -->

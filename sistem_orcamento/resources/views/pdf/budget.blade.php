@@ -249,8 +249,16 @@
     </table>
 
        
-    <!-- Formas de Pagamento -->    
-    @if($budget->budgetPayments->count() > 0)
+    @php
+    $hasNotes = $budget->budgetPayments->some(function ($payment) {
+        return !empty($payment->notes);
+    });
+@endphp
+
+@if($budget->budgetPayments->count() == 0)
+    <h3 style="margin-bottom: 10px; font-size: 14px;">Formas de Pagamento:</h3>
+    <p style="text-align: left; font-size: 12px; color: #666; margin: 0;">Forma de pagamento a combinar</p> 
+@else 
     <h4 style="text-align: center; margin-bottom: 5px">Formas de Pagamento:</h4>
     <table class="items-table" style="width: 100%; border-collapse: collapse; font-size: 10px;">
         <thead>
@@ -259,7 +267,9 @@
                 <th style="border: 1px solid #ddd; text-align: center;">Valor</th>
                 <th style="border: 1px solid #ddd; text-align: center;">Parcelas</th>
                 <th style="border: 1px solid #ddd; text-align: center;">Pagamento</th>
+                @if($hasNotes)
                 <th style="border: 1px solid #ddd; text-align: left;">Observações</th>
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -286,12 +296,14 @@
                         -
                     @endif
                 </td>
+                @if($hasNotes)
                 <td style="border: 1px solid #ddd;">{{ $payment->notes ?? '-' }}</td>
+                @endif
             </tr>
             @endforeach
         </tbody>
     </table>
-    @endif
+@endif
      
     @if($budget->bankAccounts->count() > 0)
     <div class="bank-accounts-section" style="margin-bottom: 10px;">
