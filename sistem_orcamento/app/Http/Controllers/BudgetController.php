@@ -73,6 +73,7 @@ class BudgetController extends Controller
             $companies = Company::orderBy('fantasy_name')->get();
             $products = Product::with(['category'])->orderBy('name')->get();
             $paymentMethods = PaymentMethod::with('paymentOptionMethod')->active()
+                ->whereNull('deleted_at')
                 ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
                 ->orderBy('payment_option_methods.method')
                 ->select('payment_methods.*')
@@ -85,6 +86,7 @@ class BudgetController extends Controller
             $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
             $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
             $paymentMethods = PaymentMethod::forCompany($companyId)->active()
+                ->whereNull('deleted_at')
                 ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
                 ->orderBy('payment_option_methods.method')
                 ->select('payment_methods.*')
@@ -374,6 +376,7 @@ class BudgetController extends Controller
             $companies = Company::orderBy('fantasy_name')->get();
             $products = Product::with(['category'])->orderBy('name')->get();
             $paymentMethods = PaymentMethod::forCompany($budget->company_id)
+                ->whereNull('deleted_at')
                 ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
                 ->orderBy('payment_option_methods.method')
                 ->select('payment_methods.*')
@@ -386,6 +389,7 @@ class BudgetController extends Controller
             $companies = Company::where('id', $companyId)->orderBy('fantasy_name')->get();
             $products = Product::where('company_id', $companyId)->with(['category'])->orderBy('name')->get();
             $paymentMethods = PaymentMethod::forCompany($companyId)
+                ->whereNull('deleted_at')
                 ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
                 ->orderBy('payment_option_methods.method')
                 ->select('payment_methods.*')

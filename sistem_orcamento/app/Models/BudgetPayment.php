@@ -39,10 +39,11 @@ class BudgetPayment extends Model
 
     /**
      * Relacionamento com método de pagamento
+     * Inclui métodos excluídos para manter histórico
      */
     public function paymentMethod(): BelongsTo
     {
-        return $this->belongsTo(PaymentMethod::class);
+        return $this->belongsTo(PaymentMethod::class)->withTrashed();
     }
 
     /**

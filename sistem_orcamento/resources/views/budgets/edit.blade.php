@@ -320,21 +320,38 @@
                                 <!-- Radio buttons para controlar exibição dos métodos de pagamento -->
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Incluir forma de pagamento no orçamento?</label>
+                                    @php
+                                        // Verificar se há métodos de pagamento disponíveis
+                                        $hasAvailablePaymentMethods = $paymentMethods->count() > 0;
+                                        
+                                        // Verificar se há pagamentos no orçamento com métodos válidos
+                                        $hasValidPayments = false;
+                                        foreach($budget->budgetPayments as $payment) {
+                                            if($payment->paymentMethod && !$payment->paymentMethod->trashed()) {
+                                                $hasValidPayments = true;
+                                                break;
+                                            }
+                                        }
+                                        
+                                        // Se não há métodos disponíveis ou não há pagamentos válidos, marcar como "Não"
+                                        $shouldIncludePayments = $hasAvailablePaymentMethods && ($hasValidPayments || $budget->budgetPayments->count() > 0);
+                                    @endphp
+                                    
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="include_payment_methods" id="include_payment_no" value="no" {{ $budget->budgetPayments->count() == 0 ? 'checked' : '' }}>
+                                        <input class="form-check-input" type="radio" name="include_payment_methods" id="include_payment_no" value="no" {{ !$shouldIncludePayments ? 'checked' : '' }}>
                                         <label class="form-check-label" for="include_payment_no">
                                             Não
                                         </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="include_payment_methods" id="include_payment_yes" value="yes" {{ $budget->budgetPayments->count() > 0 ? 'checked' : '' }}>
+                                        <input class="form-check-input" type="radio" name="include_payment_methods" id="include_payment_yes" value="yes" {{ $shouldIncludePayments ? 'checked' : '' }} {{ !$hasAvailablePaymentMethods ? 'disabled' : '' }}>
                                         <label class="form-check-label" for="include_payment_yes">
-                                            Sim
+                                            Sim {{ !$hasAvailablePaymentMethods ? '(Nenhum método disponível)' : '' }}
                                         </label>
                                     </div>
                                 </div>
                                 
-                                <div id="payment-methods-container" style="{{ $budget->budgetPayments->count() == 0 ? 'display: none;' : '' }}">
+                                <div id="payment-methods-container" style="{{ !$shouldIncludePayments ? 'display: none;' : '' }}">
                                     @if($budget->budgetPayments->count() > 0)
                                         @foreach($budget->budgetPayments as $index => $payment)
                                             <div class="payment-method-row mb-3">
@@ -343,6 +360,15 @@
                                                         <label class="form-label">Método de Pagamento</label>
                                                         <select class="form-select" name="payment_methods[{{ $index }}][payment_method_id]">
                                                             <option value="">Selecione um método</option>
+                                                            
+                                                            {{-- Incluir o método atual se foi excluído --}}
+                                                            @if($payment->paymentMethod && $payment->paymentMethod->trashed())
+                                                                <option value="{{ $payment->paymentMethod->id }}" data-allows-installments="{{ $payment->paymentMethod->allows_installments ? 'true' : 'false' }}" selected>
+                                                                    {{ $payment->paymentMethod->paymentOptionMethod->method ?? 'N/A' }} (Excluído)
+                                                                </option>
+                                                            @endif
+                                                            
+                                                            {{-- Métodos disponíveis --}}
                                                             @foreach($paymentMethods as $method)
                                                                 <option value="{{ $method->id }}" data-allows-installments="{{ $method->allows_installments ? 'true' : 'false' }}" {{ $payment->payment_method_id == $method->id ? 'selected' : '' }}>
                                                                     {{ $method->paymentOptionMethod->method ?? 'N/A' }}{{ !$method->is_active ? ' (Inativo)' : '' }}

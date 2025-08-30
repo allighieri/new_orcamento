@@ -23,6 +23,7 @@ class PaymentMethodController extends Controller
         // Obter métodos de pagamento disponíveis para a empresa do usuário
         $paymentMethods = PaymentMethod::forCompany($user->company_id)
             ->with('paymentOptionMethod')
+            ->whereNull('deleted_at')
             ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
             ->orderBy('payment_option_methods.method')
             ->select('payment_methods.*')
@@ -175,12 +176,6 @@ class PaymentMethodController extends Controller
         }
         
         try {
-            // Verificar se há pagamentos usando este método
-            if ($paymentMethod->budgetPayments()->count() > 0) {
-                return redirect()->route('payment-methods.index')
-                    ->with('error', 'Não é possível excluir este método de pagamento pois ele está sendo usado em orçamentos.');
-            }
-            
             $paymentMethod->delete();
             
             return redirect()->route('payment-methods.index')

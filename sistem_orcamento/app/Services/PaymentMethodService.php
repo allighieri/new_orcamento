@@ -14,6 +14,7 @@ class PaymentMethodService
     public function getAvailablePaymentMethods($companyId = null)
     {
         return PaymentMethod::active()
+            ->whereNull('deleted_at')
             ->forCompany($companyId)
             ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
             ->orderBy('payment_option_methods.method')
@@ -27,6 +28,7 @@ class PaymentMethodService
     public function getGlobalPaymentMethods()
     {
         return PaymentMethod::active()
+            ->whereNull('deleted_at')
             ->global()
             ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
             ->orderBy('payment_option_methods.method')
@@ -40,6 +42,7 @@ class PaymentMethodService
     public function getCompanySpecificPaymentMethods($companyId)
     {
         return PaymentMethod::active()
+            ->whereNull('deleted_at')
             ->where('company_id', $companyId)
             ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')
             ->orderBy('payment_option_methods.method')
@@ -88,6 +91,7 @@ class PaymentMethodService
     public function getInstallmentPaymentMethods($companyId = null)
     {
         return PaymentMethod::active()
+            ->whereNull('deleted_at')
             ->forCompany($companyId)
             ->allowsInstallments()
             ->join('payment_option_methods', 'payment_methods.payment_option_method_id', '=', 'payment_option_methods.id')

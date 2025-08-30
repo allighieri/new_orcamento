@@ -170,27 +170,16 @@
                         <i class="bi bi-pencil"></i> Editar Método
                     </a>
                     
-                    @if($paymentMethod->budget_payments_count == 0)
-                        <form action="{{ route('payment-methods.destroy', $paymentMethod) }}" method="POST" class="d-inline" id="delete-form-method-{{ $paymentMethod->id }}">
-                            @csrf
-                            @method('DELETE')
-                            <button type="button" class="btn btn-danger" onclick="confirmDeleteMethod({{ $paymentMethod->id }})">
-                                <i class="bi bi-trash"></i> Excluir Método
-                            </button>
-                        </form>
-                    @else
-                        <button type="button" class="btn btn-danger" disabled title="Não é possível excluir um método que está sendo usado">
+                    <form action="{{ route('payment-methods.destroy', $paymentMethod) }}" method="POST" class="d-inline" id="delete-form-method-{{ $paymentMethod->id }}">
+                        @csrf
+                        @method('DELETE')
+                        <button type="button" class="btn btn-danger" onclick="confirmDeleteMethod({{ $paymentMethod->id }})">
                             <i class="bi bi-trash"></i> Excluir Método
                         </button>
-                    @endif
+                    </form>
                 </div>
                 
-                @if($paymentMethod->budget_payments_count > 0)
-                    <div class="alert alert-warning mt-3">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        <strong>Atenção:</strong> Este método não pode ser excluído pois está sendo usado em {{ $paymentMethod->budget_payments_count }} orçamento(s).
-                    </div>
-                @endif
+
             </div>
         </div>
     </div>

@@ -193,14 +193,7 @@
                 <h4 class="mb-0">{{ $paymentMethod->budget_payments_count }}</h4>
                 <small class="text-muted">Orçamentos usando este método</small>
                 
-                @if($paymentMethod->budget_payments_count > 0)
-                    <div class="alert alert-info mt-3 p-2">
-                        <small>
-                            <i class="bi bi-info-circle"></i>
-                            Este método está sendo usado e não pode ser excluído.
-                        </small>
-                    </div>
-                @endif
+
             </div>
         </div>
         
