@@ -65,7 +65,7 @@ class BankAccountController extends Controller
             'compe_id' => 'nullable|exists:compes,id',
             'branch' => 'nullable|string|max:10',
             'account' => 'nullable|string|max:20',
-            'key' => 'nullable|in:CPF,email,telefone',
+            'key' => 'nullable|in:CPF,CNPJ,email,telefone',
             'key_desc' => 'nullable|string|max:255',
             'active' => 'boolean'
         ];
@@ -186,7 +186,7 @@ class BankAccountController extends Controller
             'compe_id' => 'nullable|exists:compes,id',
             'branch' => 'nullable|string|max:10',
             'account' => 'nullable|string|max:20',
-            'key' => 'nullable|in:CPF,email,telefone',
+            'key' => 'nullable|in:CPF,CNPJ,email,telefone',
             'key_desc' => 'nullable|string|max:255',
             'active' => 'boolean'
         ];

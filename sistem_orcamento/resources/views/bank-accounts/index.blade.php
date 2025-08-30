@@ -36,6 +36,7 @@
                                     <th>Banco</th>
                                     <th>Agência</th>
                                     <th>Conta</th>
+                                    <th>Chave PIX</th>
                                     <th>Descrição</th>
                                     <th>Status</th>
                                     @if(auth()->guard('web')->user()->role === 'super_admin')
@@ -58,6 +59,14 @@
                                     <td>{{ $account->compe ? '(' . $account->compe->code . ') ' . $account->compe->bank_name : 'N/A' }}</td>
                                     <td>{{ $account->branch ?? '-' }}</td>
                                     <td>{{ $account->account ?? '-' }}</td>
+                                    <td>
+                                        @if($account->type === 'PIX' && $account->key_desc)
+                                            <span class="badge bg-secondary">{{ $account->key }}</span> 
+                                            {{ $account->key_desc }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td>{{ $account->description }}</td>
                                     <td>
                                         @if($account->active)

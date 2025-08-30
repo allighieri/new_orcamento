@@ -76,6 +76,7 @@ class BankAccount extends Model
     {
         return match($this->key) {
             'CPF' => 'CPF',
+            'CNPJ' => 'CNPJ',
             'email' => 'E-mail',
             'telefone' => 'Telefone',
             default => null

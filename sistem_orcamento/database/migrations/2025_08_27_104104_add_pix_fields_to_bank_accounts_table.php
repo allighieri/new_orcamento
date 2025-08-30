@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bank_accounts', function (Blueprint $table) {
-            $table->enum('key', ['CPF', 'email', 'telefone'])->nullable()->after('account');
+            $table->enum('key', ['CPF', 'CNPJ', 'email', 'telefone'])->nullable()->after('account');
             $table->string('key_desc')->nullable()->after('key');
         });
     }

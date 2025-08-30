@@ -104,6 +104,7 @@
                                     <select class="form-select @error('key') is-invalid @enderror" id="key" name="key" onchange="togglePixKeyField()">
                                         <option value="">Selecione o tipo de chave</option>
                                         <option value="CPF" {{ (old('key') ?? $bankAccount->key) == 'CPF' ? 'selected' : '' }}>CPF</option>
+                                        <option value="CNPJ" {{ (old('key') ?? $bankAccount->key) == 'CNPJ' ? 'selected' : '' }}>CNPJ</option>
                                         <option value="email" {{ (old('key') ?? $bankAccount->key) == 'email' ? 'selected' : '' }}>E-mail</option>
                                         <option value="telefone" {{ (old('key') ?? $bankAccount->key) == 'telefone' ? 'selected' : '' }}>Telefone</option>
                                     </select>
@@ -238,6 +239,11 @@ function togglePixKeyField() {
                 keyDescField.setAttribute('data-mask', '999.999.999-99');
                 applyMask(keyDescField, '999.999.999-99');
                 break;
+            case 'CNPJ':
+                keyDescField.placeholder = '99.999.999/9999-99';
+                keyDescField.setAttribute('data-mask', '99.999.999/9999-99');
+                applyMask(keyDescField, '99.999.999/9999-99');
+                break;
             case 'telefone':
                 keyDescField.placeholder = '99 99999-9999';
                 keyDescField.setAttribute('data-mask', '99 99999-9999');
@@ -250,8 +256,11 @@ function togglePixKeyField() {
                 break;
         }
         
-        // Limpar o campo ao trocar de tipo
-        keyDescField.value = '';
+        // Limpar o campo apenas se não houver valor ou se for uma mudança de tipo
+        // (não limpar na inicialização da página)
+        if (!keyDescField.value || keyDescField.getAttribute('data-previous-type') !== keyType) {
+            keyDescField.setAttribute('data-previous-type', keyType);
+        }
     } else {
         pixKeyField.style.display = 'none';
         keyDescField.required = false;
@@ -352,7 +361,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Verificar se há tipo de chave PIX selecionado na inicialização
     const currentKeyType = document.getElementById('key').value;
     if (currentKeyType) {
+        const keyDescField = document.getElementById('key_desc');
+        const currentValue = keyDescField.value;
         togglePixKeyField();
+        // Preservar o valor após aplicar a máscara
+        if (currentValue) {
+            keyDescField.value = currentValue;
+            // Aplicar a máscara ao valor existente
+            const event = new Event('input', { bubbles: true });
+            keyDescField.dispatchEvent(event);
+        }
     }
 });
 </script>

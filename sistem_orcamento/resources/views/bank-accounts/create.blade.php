@@ -103,6 +103,7 @@
                                     <select class="form-select @error('key') is-invalid @enderror" id="key" name="key" onchange="togglePixKeyField()">
                                         <option value="">Selecione o tipo de chave</option>
                                         <option value="CPF" {{ old('key') == 'CPF' ? 'selected' : '' }}>CPF</option>
+                                        <option value="CNPJ" {{ old('key') == 'CNPJ' ? 'selected' : '' }}>CNPJ</option>
                                         <option value="email" {{ old('key') == 'email' ? 'selected' : '' }}>E-mail</option>
                                         <option value="telefone" {{ old('key') == 'telefone' ? 'selected' : '' }}>Telefone</option>
                                     </select>
@@ -245,6 +246,17 @@ function togglePixKeyField() {
                         .replace(/(\d{3})(\d)/, '$1.$2')
                         .replace(/(\d{3})(\d)/, '$1.$2')
                         .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                };
+                break;
+            case 'CNPJ':
+                keyDescInput.placeholder = '99.999.999/9999-99';
+                keyDescInput.maxLength = 18;
+                keyDescInput.oninput = function() {
+                    this.value = this.value.replace(/\D/g, '')
+                        .replace(/(\d{2})(\d)/, '$1.$2')
+                        .replace(/(\d{3})(\d)/, '$1.$2')
+                        .replace(/(\d{3})(\d)/, '$1/$2')
+                        .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
                 };
                 break;
             case 'telefone':
