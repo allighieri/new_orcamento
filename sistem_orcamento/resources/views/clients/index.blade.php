@@ -33,27 +33,25 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Nome Fantasia</th>
-                                    <th>Razão Social</th>
-                                    <th>CPF/CNPJ</th>
-                                    <th>Telefone</th>
-                                    <th>Email</th>
-                                    <th>CEP</th>
-                                    @if(auth()->guard('web')->user()->role === 'super_admin')
-                                        <th>Empresa</th>
-                                    @endif
-                                    <th>Ações</th>
+                                <th>Razão Social</th>
+                                <th>CPF/CNPJ</th>
+                                <th>Telefone</th>
+                                <th>Email</th>
+                                @if(auth()->guard('web')->user()->role === 'super_admin')
+                                    <th>Empresa</th>
+                                @endif
+                                <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($clients as $client)
                                 <tr>
                                     <td>{{ $client->id }}</td>
-                                    <td>{{ $client->fantasy_name }}</td>
-                                    <td>{{ $client->corporate_name }}</td>
+                                    <td>{{ $client->fantasy_name ?: '-' }}</td>
+                                    <td>{{ $client->corporate_name ?: '-' }}</td>
                                     <td>{{ $client->document_number }}</td>
                                     <td>{{ $client->phone }}</td>
                                     <td>{{ $client->email }}</td>
-                                    <td>{{ $client->cep ?: '-' }}</td>
                                     @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <td>{{ $client->company->fantasy_name ?? 'N/A' }}</td>
                                     @endif

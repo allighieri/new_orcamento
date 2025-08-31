@@ -72,7 +72,7 @@
                                             
                                             <div class="row">
                                                 <div class="col-md-12">
-                                                     <p class="mb-2">
+                                                    <p class="mb-2">
                                                     @if($budget->company->document_number && $budget->company->state_registration)
                                                             <strong>CPF/CNPJ:</strong> {{ $budget->company->document_number }} <strong>IE:</strong> {{ $budget->company->state_registration }}
                                                         @elseif($budget->company->document_number)

@@ -74,8 +74,8 @@ class ContactController extends Controller
         // Definir regras de validação baseadas na role do usuário
         $rules = [
             'name' => 'required|string|max:255',
-            'cpf' => 'nullable|string|max:14',
-            'phone' => 'required|string|max:20',
+            'cpf' => 'nullable|string|max:18',
+            'phone' => 'required|string|min:14|max:15',
             'email' => 'required|email|max:255',
         ];
         
@@ -116,7 +116,7 @@ class ContactController extends Controller
             
             if ($existingContact) {
                 return back()->withErrors([
-                    'cpf' => 'Este CPF já está cadastrado nesta empresa.'
+                    'cpf' => 'Este CPF/CNPJ já está cadastrado nesta empresa.'
                 ])->withInput();
             }
         }
@@ -220,8 +220,8 @@ class ContactController extends Controller
         // Definir regras de validação baseadas na role do usuário
         $rules = [
             'name' => 'required|string|max:255',
-            'cpf' => 'nullable|string|max:14',
-            'phone' => 'required|string|max:20',
+            'cpf' => 'nullable|string|max:18',
+            'phone' => 'required|string|min:14|max:15',
             'email' => 'required|email|max:255',
         ];
         
@@ -263,7 +263,7 @@ class ContactController extends Controller
             
             if ($existingContact) {
                 return back()->withErrors([
-                    'cpf' => 'Este CPF já está cadastrado nesta empresa.'
+                    'cpf' => 'Este CPF/CNPJ já está cadastrado nesta empresa.'
                 ])->withInput();
             }
         }

@@ -180,15 +180,21 @@
                 <div class="company-details">
                     <h2>{{ $budget->company->fantasy_name ?? $budget->company->corporate_name }}</h2>
                     <p>
-                    @if($budget->company->document_number && $budget->company->state_registration)
-                            <strong>CPF/CNPJ:</strong> {{ $budget->company->document_number }} <strong>IE:</strong> {{ $budget->company->state_registration }}
-                        @elseif($budget->company->document_number)
-                            <strong>CPF/CNPJ:</strong> {{ $budget->company->document_number }}
-                        @elseif($budget->company->state_registration)
-                            <strong>IE:</strong> {{ $budget->company->state_registration }}
+                        @php
+                            $document_number = $budget->company->document_number ?? null;
+                            $state_registration = $budget->company->state_registration ?? null;
+                            $docType = ($document_number && strlen($document_number) === 14) ? 'CPF' : 'CNPJ';
+                        @endphp
+
+                        @if($document_number && $state_registration)
+                            <strong>{{ $docType }}:</strong> {{ $document_number }} <strong>IE:</strong> {{ $state_registration }}
+                        @elseif($document_number)
+                            <strong>{{ $docType }}:</strong> {{ $document_number }}
+                        @elseif($state_registration)
+                            <strong>IE:</strong> {{ $state_registration }}
                         @else
                             <span class="text-muted">Nenhum documento informado</span>
-                    @endif
+                        @endif
                     </p>
                     @if($budget->company->phone)
                         <p>Telefone: {{ $budget->company->phone }}
@@ -235,15 +241,29 @@
         <h3>Dados do Cliente</h3>
         <p><strong>Nome:</strong> {{ $budget->client->corporate_name ?? $budget->client->fantasy_name }}</p>
         <p>
-            @if($budget->client->document_number && $budget->client->state_registration)
-                <strong>CPF/CNPJ:</strong> {{ $budget->client->document_number }} <strong>IE:</strong> {{ $budget->client->state_registration }}
-            @elseif($budget->client->document_number)
-                <strong>CPF/CNPJ:</strong> {{ $budget->client->document_number }}
-            @elseif($budget->client->state_registration)
-                <strong>IE:</strong> {{ $budget->client->state_registration }}
-            @else
-                <span class="text-muted">Nenhum documento informado</span>
+            @if($budget->client->document_number || $budget->client->state_registration)
+    {{-- Verifica se o número do documento existe --}}
+    @if($budget->client->document_number)
+        @php
+            $docLength = strlen($budget->client->document_number);
+            $docType = ($docLength === 14) ? 'CPF' : 'CNPJ';
+        @endphp
+        <strong>{{ $docType }}:</strong> {{ $budget->client->document_number }}
             @endif
+
+            {{-- Adiciona um separador se ambos os documentos existirem --}}
+            @if($budget->client->document_number && $budget->client->state_registration)
+                &nbsp;&nbsp;
+            @endif
+
+            {{-- Verifica se a Inscrição Estadual existe --}}
+            @if($budget->client->state_registration)
+                <strong>IE:</strong> {{ $budget->client->state_registration }}
+            @endif
+        @else
+            {{-- Exibe esta mensagem se nenhum dos documentos estiver presente --}}
+            <span class="text-muted">Nenhum documento informado</span>
+        @endif
         </p>
         @if($budget->client->phone)
             <p><strong>Telefone:</strong> {{ $budget->client->phone }} - 

@@ -57,9 +57,9 @@ class ClientController extends Controller
         $rules = [
             'fantasy_name' => 'nullable|string|max:255',
             'corporate_name' => 'nullable|string|max:255',
-            'document_number' => 'required|string|max:18',
+            'document_number' => 'required|string|min:14|max:18',
             'state_registration' => 'nullable|string|max:20',
-            'phone' => 'required|string|max:20',
+            'phone' => 'required|string|min:14|max:15',
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
             'district' => 'nullable|string|max:255',
@@ -172,9 +172,9 @@ class ClientController extends Controller
         $rules = [
             'fantasy_name' => 'nullable|string|max:255',
             'corporate_name' => 'nullable|string|max:255',
-            'document_number' => 'required|string|max:18',
+            'document_number' => 'required|string|min:14|max:18',
             'state_registration' => 'nullable|string|max:20',
-            'phone' => 'required|string|max:20',
+            'phone' => 'required|string|min:14|max:15',
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
             'district' => 'nullable|string|max:255',

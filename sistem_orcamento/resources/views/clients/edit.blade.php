@@ -181,25 +181,36 @@
 
 @push('scripts')
 <script>
-    // Aplicar máscara de telefone
-    $('#phone').mask('(00) 00000-0000');
-    
-    // Aplicar máscara dinâmica para CPF/CNPJ
-    $('#document_number').on('input', function() {
-        var value = $(this).val().replace(/\D/g, '');
-        if (value.length <= 11) {
-            $(this).mask('000.000.000-00');
-        } else {
-            $(this).mask('00.000.000/0000-00');
+$(document).ready(function() {
+    // Máscara dinâmica para telefone usando keyup para evitar problemas de cursor
+    var phoneOptions = {
+        onKeyPress: function(phone, e, field, options) {
+            var masks = ['(00) 0000-00009', '(00) 00000-0000'];
+            var mask = (phone.length > 14) ? masks[1] : masks[0];
+            $('#phone').mask(mask, options);
         }
-    });
+    };
+    $('#phone').mask('(00) 0000-00009', phoneOptions);
+    
+    /// Máscara dinâmica para CPF/CNPJ
+    var documentInput = $('#document_number');
+    documentInput.on('input', function() {
+        var cleanValue = $(this).val().replace(/\D/g, '');
+
+        if (cleanValue.length > 11) {
+            $(this).mask('00.000.000/0000-00', {clearIfNotMatch: true});
+        } else {
+            $(this).mask('000.000.000-009', {clearIfNotMatch: true});
+        }
+    }).trigger('input'); // O trigger('input') já aplica a máscara inicial
     
     // Máscara para CEP
-    $('#cep').mask('00000-000');
+    $('#cep').mask('99.999-999');
     
-    // Formatar UF em maiúsculas
+    // Máscara para UF (maiúscula)
     $('#state').on('input', function() {
-        $(this).val($(this).val().toUpperCase());
+        this.value = this.value.toUpperCase();
     });
+});
 </script>
 @endpush

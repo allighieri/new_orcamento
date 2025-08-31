@@ -33,12 +33,11 @@
                                     <th>ID</th>
                                     <th>Logo</th>
                                     <th>Razão Social</th>
-                                    <th>Nome Fantasia</th>
-                                    <th>CNPJ</th>
-                                    <th>Telefone</th>
-                                    <th>Email</th>
-                                    <th>CEP</th>
-                                    <th>Ações</th>
+                                <th>Nome Fantasia</th>
+                                <th>CNPJ</th>
+                                <th>Telefone</th>
+                                <th>Email</th>
+                                <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -52,12 +51,11 @@
                                             <i class="bi bi-building-add text-muted" style="font-size: 1.5rem;"></i>
                                         @endif
                                     </td>
-                                    <td>{{ $company->corporate_name }}</td>
-                                    <td>{{ $company->fantasy_name }}</td>
-                                    <td>{{ $company->cnpj }}</td>
+                                    <td>{{ $company->corporate_name ?: '-' }}</td>
+                                    <td>{{ $company->fantasy_name ?: '-' }}</td>
+                                    <td>{{ $company->document_number }}</td>
                                     <td>{{ $company->phone }}</td>
                                     <td>{{ $company->email }}</td>
-                                    <td>{{ $company->cep ?: '-' }}</td>
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('companies.show', $company) }}" class="btn btn-sm btn-outline-info" title="Visualizar">

@@ -31,7 +31,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="cpf" class="form-label">CPF</label>
+                                    <label for="cpf" class="form-label">CPF/CNPJ</label>
                                     <input type="text" class="form-control @error('cpf') is-invalid @enderror" 
                                            id="cpf" name="cpf" value="{{ old('cpf', $contact->cpf) }}">
                                     @error('cpf')
@@ -124,11 +124,27 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Máscara para CPF
-    $('#cpf').mask('000.000.000-00');
+    /// Máscara dinâmica para CPF/CNPJ
+    var documentInput = $('#cpf');
+    documentInput.on('input', function() {
+        var cleanValue = $(this).val().replace(/\D/g, '');
+
+        if (cleanValue.length > 11) {
+            $(this).mask('00.000.000/0000-00', {clearIfNotMatch: true});
+        } else {
+            $(this).mask('000.000.000-009', {clearIfNotMatch: true});
+        }
+    }).trigger('input'); // O trigger('input') já aplica a máscara inicial
     
-    // Máscara para telefone
-    $('#phone').mask('(00) 00000-0000');
+    // Máscara dinâmica para telefone/celular
+    var phoneOptions = {
+        onKeyPress: function(phone, e, field, options) {
+            var masks = ['(00) 0000-00009', '(00) 00000-0000'];
+            var mask = (phone.length > 14) ? masks[1] : masks[0];
+            $('#phone').mask(mask, options);
+        }
+    };
+    $('#phone').mask('(00) 0000-00009', phoneOptions);
 });
 </script>
 @endpush
