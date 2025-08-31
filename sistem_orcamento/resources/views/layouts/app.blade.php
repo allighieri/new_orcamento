@@ -98,6 +98,11 @@
                                     <i class="bi bi-building-add"></i> Dados da Empresa
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('contact-forms.*') ? 'active' : '' }}" href="{{ route('contact-forms.index') }}">
+                                    <i class="bi bi-telephone"></i> Contatos
+                                </a>
+                            </li>
                             @endif
                             @if(Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin']))
                             <li>

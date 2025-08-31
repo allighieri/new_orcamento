@@ -6,6 +6,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ContactFormController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -60,6 +61,9 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
 
     // Rotas para Contatos (todos os usuários autenticados)
     Route::resource('contacts', ContactController::class);
+    
+    // Rotas para Formulários de Contato (todos os usuários autenticados)
+    Route::resource('contact-forms', ContactFormController::class);
 
     // Rotas para Orçamentos (todos os usuários autenticados)
     Route::resource('budgets', BudgetController::class);
