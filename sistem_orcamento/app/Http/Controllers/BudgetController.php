@@ -11,6 +11,7 @@ use App\Models\Contact;
 use App\Models\PaymentMethod;
 use App\Models\BankAccount;
 use App\Models\BudgetBankAccount;
+use App\Models\CompanySetting;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
@@ -94,7 +95,11 @@ class BudgetController extends Controller
             $bankAccounts = BankAccount::where('company_id', $companyId)->with('compe')->active()->orderBy('description')->get();
         }
         
-        return view('budgets.create', compact('clients', 'companies', 'products', 'paymentMethods', 'bankAccounts'));
+        // Obter configurações da empresa
+        $companyId = $user->role === 'super_admin' ? null : session('tenant_company_id');
+        $settings = $companyId ? CompanySetting::getForCompany($companyId) : CompanySetting::getForCompany(1);
+        
+        return view('budgets.create', compact('clients', 'companies', 'products', 'paymentMethods', 'bankAccounts', 'settings'));
     }
 
     /**
@@ -352,7 +357,11 @@ class BudgetController extends Controller
         }
         
         $budget->load(['client', 'company', 'items.product', 'pdfFiles', 'budgetPayments.paymentMethod', 'budgetPayments.paymentInstallments', 'bankAccounts.compe']);
-        return view('budgets.show', compact('budget'));
+        
+        // Buscar configurações da empresa
+        $settings = CompanySetting::where('company_id', $budget->company_id)->first();
+        
+        return view('budgets.show', compact('budget', 'settings'));
     }
 
     /**
@@ -399,7 +408,10 @@ class BudgetController extends Controller
         
         $budget->load(['items.product', 'budgetPayments.paymentMethod', 'bankAccounts']);
         
-        return view('budgets.edit', compact('budget', 'clients', 'companies', 'products', 'paymentMethods', 'bankAccounts'));
+        // Obter configurações da empresa do orçamento
+        $settings = CompanySetting::getForCompany($budget->company_id);
+        
+        return view('budgets.edit', compact('budget', 'clients', 'companies', 'products', 'paymentMethods', 'bankAccounts', 'settings'));
     }
 
     /**
@@ -716,7 +728,10 @@ class BudgetController extends Controller
         // Excluir registros antigos da tabela pdf_files
         \App\Models\PdfFile::where('budget_id', $budget->id)->delete();
         
-        $pdf = Pdf::loadView('pdf.budget', compact('budget'));
+        // Obter configurações da empresa
+        $settings = CompanySetting::getForCompany($budget->company_id);
+        
+        $pdf = Pdf::loadView('pdf.budget', compact('budget', 'settings'));
         $pdf->setPaper('A4', 'portrait');
 
         if(empty($budget->client->corporate_name)){
@@ -1350,7 +1365,10 @@ class BudgetController extends Controller
         // Excluir registros antigos da tabela pdf_files
         \App\Models\PdfFile::where('budget_id', $budget->id)->delete();
         
-        $pdf = Pdf::loadView('pdf.budget', compact('budget'));
+        // Obter configurações da empresa
+        $settings = CompanySetting::getForCompany($budget->company_id);
+        
+        $pdf = Pdf::loadView('pdf.budget', compact('budget', 'settings'));
         $pdf->setPaper('A4', 'portrait');
 
         if(empty($budget->client->corporate_name)){

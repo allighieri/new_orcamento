@@ -14,6 +14,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\BankAccountController;
+use App\Http\Controllers\SettingsController;
 
 // Rotas de Autenticação
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -80,6 +81,12 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     
     // Rotas para Contas Bancárias - todos os usuários autenticados podem gerenciar
     Route::resource('bank-accounts', BankAccountController::class);
+    
+    // Rotas para Configurações - admin e super_admin podem gerenciar
+    Route::middleware('role:admin,super_admin')->group(function () {
+        Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+    });
     
     // Rota para autocomplete de bancos
     Route::get('compes/autocomplete', [App\Http\Controllers\CompeController::class, 'autocomplete'])->name('compes.autocomplete');

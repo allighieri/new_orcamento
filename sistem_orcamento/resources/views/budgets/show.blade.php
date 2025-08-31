@@ -72,9 +72,17 @@
                                             
                                             <div class="row">
                                                 <div class="col-md-12">
-                                                    @if($budget->company->document_number)
-                                                    <p class="mb-2"><strong>CNPJ:</strong> {{ $budget->company->document_number }}</p>
+                                                     <p class="mb-2">
+                                                    @if($budget->company->document_number && $budget->company->state_registration)
+                                                            <strong>CPF/CNPJ:</strong> {{ $budget->company->document_number }} <strong>IE:</strong> {{ $budget->company->state_registration }}
+                                                        @elseif($budget->company->document_number)
+                                                            <strong>CPF/CNPJ:</strong> {{ $budget->company->document_number }}
+                                                        @elseif($budget->company->state_registration)
+                                                            <strong>IE:</strong> {{ $budget->company->state_registration }}
+                                                        @else
+                                                            <span class="text-muted">Nenhum documento informado</span>
                                                     @endif
+                                                    </p>
                                                     @if($budget->company->phone)
                                                     <p class="mb-2"><strong>Telefone:</strong> {{ $budget->company->phone }}</p>
                                                     @endif
@@ -104,7 +112,13 @@
                                     @if($budget->delivery_date)
                                     <p class="mb-2"><strong>Previsão de Entrega:</strong><br>{{ $budget->delivery_date->format('d/m/Y') }}</p>
                                     @endif
-                                    <p class="mb-2"><strong>Validade:</strong><br>{{ $budget->valid_until->format('d/m/Y') }}</p>
+                                    <p class="mb-2"><strong>Validade:</strong><br>
+                                    @if(isset($settings) && $settings->show_validity_as_text)
+                                        {{ $settings->budget_validity_days }} dias após a emissão
+                                    @else
+                                        {{ $budget->valid_until->format('d/m/Y') }}
+                                    @endif
+                                    </p>
                                     <p class="mb-2"><strong>Status:</strong><br>
                                         <span class="badge status-clickable info-status-badge
                                             @if($budget->status == 'Pendente') bg-warning
@@ -146,7 +160,17 @@
                                                 @endif
                                             </p>
                                             @if($budget->client->document_number)
-                                            <p class="mb-1"><strong>CPF/CNPJ:</strong> {{ $budget->client->document_number }}</p>
+                                            <p class="mb-1">
+                                                @if($budget->client->document_number && $budget->client->state_registration)
+                                                    <strong>CPF/CNPJ:</strong> {{ $budget->client->document_number }} <strong>IE:</strong> {{ $budget->client->state_registration }}
+                                                @elseif($budget->client->document_number)
+                                                    <strong>CPF/CNPJ:</strong> {{ $budget->client->document_number }}
+                                                @elseif($budget->client->state_registration)
+                                                    <strong>IE:</strong> {{ $budget->client->state_registration }}
+                                                @else
+                                                    <span class="text-muted">Nenhum documento informado</span>
+                                                @endif
+                                            </p>
                                             @endif
                                             @if($budget->client->phone)
                                             <p class="mb-1"><strong>Telefone:</strong> {{ $budget->client->phone }}</p>

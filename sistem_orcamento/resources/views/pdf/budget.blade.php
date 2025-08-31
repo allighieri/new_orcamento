@@ -18,15 +18,24 @@
         }
         .header {
             position: fixed;
-            top: -120px;
+            top: -100px;
             left: 0;
             right: 0;
             height: 95px;
             margin-bottom: 30px;
-            border-bottom: 1px dotted #333;
-            padding-bottom: 5px;
-            padding: 10px 0;
         }
+
+        .bordered{
+            border: 1px solid #333;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .borderless{
+            border-bottom: 1px dotted #333;
+            padding-bottom: 10px;
+        }
+
         .header-content {
             position: relative;
             margin-bottom: 5px;
@@ -38,37 +47,36 @@
         }
 
         .company-logo {
+            position: relative;
+            top: -12px;
             float: left;
             margin-right: 20px;
-            width: 90px;
-            height: 90px;
+            width: 120px;
+            height: 120px;
         }
         .company-details {
             flex: 1;
             text-align: left;
+            width: 500px;
         }
         .company-details p {
             margin: 3px 0;
-            width: 500px;
+           
         }
-
-
         .company-info h2 {
             margin: 5px 0;
             color: #333;
         }
 
         .client-info {
-            margin-bottom: 30px;
-            border-bottom: 1px dotted #333;
-            padding: 5px;
+            margin:30px 0 20px 0;   
         }
 
          .client-info p{
             margin: 3px 0;
          }
 
-         .client-info h2{
+         .client-info h3{
             margin: 0;
          }
 
@@ -77,7 +85,7 @@
             top: 0;
             right: 0;
             text-align: right;
-            min-width: 300px;
+            min-width: 400px;
         }
 
         .budget-number {
@@ -151,24 +159,32 @@
     </style>
 </head>
 <body>
-    @if($budget->company->logo)
+    @if($budget->company->logo && $settings->enable_pdf_watermark)
         <div class="watermark">
-            <img src="{{ public_path('storage/' . $budget->company->logo) }}" alt="Watermark" style="width: 100%; height: 100%;">
+            <img src="{{ public_path('storage/' . $budget->company->logo) }}" alt="{{ $budget->company->fantasy_name }}" style="width: 100%; height: 100%;">
         </div>
     @endif
-    <div class="header">
+    <div class="header {{ $settings->border ? 'bordered' : 'borderless' }}">
         <div class="header-content">
             <div class="company-info">
                 @if($budget->company->logo)
-                    <img src="{{ public_path('storage/' . $budget->company->logo) }}" alt="Logo da {{ $budget->company->corporate_name ?? $budget->company->fantasy_name }}" class="company-logo">
+                    <img class="company-logo" src="{{ public_path('storage/' . $budget->company->logo) }}" alt="Logo {{ $budget->company->corporate_name ?? $budget->company->fantasy_name }}">
                 @endif
                 <div class="company-details">
                     <h2>{{ $budget->company->fantasy_name ?? $budget->company->corporate_name }}</h2>
-                    @if($budget->company->document_number)
-                        <p>CNPJ: {{ $budget->company->document_number }} - 
+                    <p>
+                    @if($budget->company->document_number && $budget->company->state_registration)
+                            <strong>CPF/CNPJ:</strong> {{ $budget->company->document_number }} <strong>IE:</strong> {{ $budget->company->state_registration }}
+                        @elseif($budget->company->document_number)
+                            <strong>CPF/CNPJ:</strong> {{ $budget->company->document_number }}
+                        @elseif($budget->company->state_registration)
+                            <strong>IE:</strong> {{ $budget->company->state_registration }}
+                        @else
+                            <span class="text-muted">Nenhum documento informado</span>
                     @endif
+                    </p>
                     @if($budget->company->phone)
-                        Telefone: {{ $budget->company->phone }}</p>
+                        <p>Telefone: {{ $budget->company->phone }}
                     @endif
                     @if($budget->company->email)
                         <p>Email: {{ $budget->company->email }}</p>
@@ -186,17 +202,31 @@
                 @if($budget->delivery_date)
                 <p style="margin: 0 0 5px 0; padding-bottom: 0"><strong>Previsão de Entrega:</strong> {{ $budget->delivery_date->format('d/m/Y') }}</p>
                 @endif
-                <p style="margin-top: 0; padding-top: 0"><strong>Validade:</strong> {{ $budget->valid_until->format('d/m/Y') }}</p>
+                <p style="margin-top: 0; padding-top: 0"><strong>Validade:</strong> 
+                @if(isset($settings) && $settings->show_validity_as_text)
+                    {{ $settings->budget_validity_days }} dias após a emissão
+                @else
+                    {{ $budget->valid_until->format('d/m/Y') }}
+                @endif
+                </p>
             </div>
         </div>
     </div>
 
-    <div class="client-info">
+    <div class="client-info {{ $settings->border ? 'bordered' : 'borderless' }}">
         <h3>Dados do Cliente</h3>
         <p><strong>Nome:</strong> {{ $budget->client->corporate_name ?? $budget->client->fantasy_name }}</p>
-        @if($budget->client->document_number)
-            <p><strong>CPF/CNPJ:</strong> {{ $budget->client->document_number }}</p>
-        @endif
+        <p>
+            @if($budget->client->document_number && $budget->client->state_registration)
+                <strong>CPF/CNPJ:</strong> {{ $budget->client->document_number }} <strong>IE:</strong> {{ $budget->client->state_registration }}
+            @elseif($budget->client->document_number)
+                <strong>CPF/CNPJ:</strong> {{ $budget->client->document_number }}
+            @elseif($budget->client->state_registration)
+                <strong>IE:</strong> {{ $budget->client->state_registration }}
+            @else
+                <span class="text-muted">Nenhum documento informado</span>
+            @endif
+        </p>
         @if($budget->client->phone)
             <p><strong>Telefone:</strong> {{ $budget->client->phone }} - 
         @endif
@@ -256,8 +286,8 @@
 @endphp
 
 @if($budget->budgetPayments->count() == 0)
-    <h3 style="margin-bottom: 10px; font-size: 14px;">Formas de Pagamento:</h3>
-    <p style="text-align: left; font-size: 12px; color: #666; margin: 0;">Forma de pagamento a combinar</p> 
+    <h3 style="margin-bottom: 3px; font-size: 14px;">Formas de Pagamento:</h3>
+    <p style="text-align: left; font-size: 12px; color: #666; margin: 0;">A combinar</p> 
 @else 
     <h4 style="text-align: center; margin-bottom: 5px">Formas de Pagamento:</h4>
     <table class="items-table" style="width: 100%; border-collapse: collapse; font-size: 10px;">
@@ -383,7 +413,13 @@
     <!--    
         <div class="footer">
             <p>Orçamento gerado em {{ now()->format('d/m/Y H:i:s') }}</p>
-            <p>Este orçamento é válido até {{ $budget->valid_until->format('d/m/Y') }}</p>
+            <p>Este orçamento é válido até 
+            @if(isset($settings) && $settings->show_validity_as_text)
+                {{ $settings->budget_validity_days }} dias após a emissão
+            @else
+                {{ $budget->valid_until->format('d/m/Y') }}
+            @endif
+            </p>
         </div>
     -->    
 </body>

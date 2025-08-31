@@ -65,13 +65,13 @@
                          <div class="col-md-2">
                             <div class="mb-3">
                                 <label for="valid_until" class="form-label">Validade*</label>
-                                <input type="date" class="form-control" id="valid_until" name="valid_until" value="{{ old('valid_until', date('Y-m-d', strtotime('+15 days'))) }}" required>
+                        <input type="date" class="form-control" id="valid_until" name="valid_until" value="{{ old('valid_until', date('Y-m-d', strtotime('+' . $settings->budget_validity_days . ' days'))) }}" required>
                             </div>
                         </div>
                         <div class="col-md-2">
                             <div class="mb-3">
                                 <label for="delivery_date" class="form-label">Previsão de Entrega</label>
-                                <input type="date" class="form-control" id="delivery_date" name="delivery_date" value="{{ old('delivery_date', date('Y-m-d', strtotime('+15 days'))) }}">
+                                <input type="date" class="form-control" id="delivery_date" name="delivery_date" value="{{ old('delivery_date', date('Y-m-d', strtotime('+' . $settings->budget_delivery_days . ' days'))) }}">
                             </div>
                         </div>
                     </div>
@@ -1086,12 +1086,16 @@ $(document).ready(function() {
         return new Date(dateToValidate) >= new Date(issueDate);
     }
 
-    // Quando a data do orçamento mudar, calcular automaticamente +15 dias para validade e previsão de entrega
+    // Configurações da empresa
+    const budgetValidityDays = {{ $settings->budget_validity_days }};
+const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
+    
+    // Quando a data do orçamento mudar, calcular automaticamente baseado nas configurações
     $('#issue_date').on('change', function() {
         const issueDate = $(this).val();
         if (issueDate) {
-            const validUntilDate = addDays(issueDate, 15);
-            const deliveryDate = addDays(issueDate, 15);
+            const validUntilDate = addDays(issueDate, budgetValidityDays);
+            const deliveryDate = addDays(issueDate, budgetDeliveryDays);
             
             $('#valid_until').val(validUntilDate);
             $('#delivery_date').val(deliveryDate);
@@ -1110,7 +1114,7 @@ $(document).ready(function() {
                 text: 'A data de validade não pode ser anterior à data do orçamento.',
                 confirmButtonText: 'OK'
             });
-            $(this).val(addDays(issueDate, 15));
+            $(this).val(addDays(issueDate, budgetValidityDays));
         }
     });
 
@@ -1126,7 +1130,7 @@ $(document).ready(function() {
                 text: 'A data de previsão de entrega não pode ser anterior à data do orçamento.',
                 confirmButtonText: 'OK'
             });
-            $(this).val(addDays(issueDate, 15));
+            $(this).val(addDays(issueDate, budgetDeliveryDays));
         }
     });
     

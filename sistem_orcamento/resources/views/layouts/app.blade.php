@@ -108,6 +108,12 @@
                                 <a class="dropdown-item {{ request()->routeIs('google.settings') ? 'active' : '' }}" href="{{ route('google.settings') }}">
                                     <i class="bi bi-envelope-paper"></i> Config Gmail</a>
                             </li>
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('settings.index') ? 'active' : '' }}" href="{{ route('settings.index') }}">
+                                    <i class="bi bi-gear"></i> Configurações</a>
+                            </li>
 
                             @endif
                             <li><hr class="dropdown-divider"></li>
