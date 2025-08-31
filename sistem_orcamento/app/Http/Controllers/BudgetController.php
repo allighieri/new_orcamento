@@ -669,10 +669,8 @@ class BudgetController extends Controller
             // Excluir o orçamento do banco de dados
             $budget->delete();
             
-            $deletedFilesCount = $pdfFiles->count();
-            $message = $deletedFilesCount > 0 
-                ? "Orçamento excluído com sucesso! {$deletedFilesCount} arquivo(s) PDF também foram removidos."
-                : 'Orçamento excluído com sucesso!';
+           
+            $message = "Orçamento excluído!";
             
             // Verificar se deve redirecionar para dashboard
             if (request()->input('redirect_to') === 'dashboard') {

@@ -104,7 +104,7 @@ class Company extends Model
         return $contacts->sortBy(function ($contact) {
             // Emails recebem prioridade 2 (último)
             // Outros contatos recebem prioridade 1 (primeiro)
-            return $contact['type'] === 'email' ? 2 : 1;
+            return strtolower($contact['type']) === 'email' ? 2 : 1;
         })->values();
     }
     
@@ -137,6 +137,9 @@ class Company extends Model
      */
     private function getContactIcon($type)
     {
+        // Converter para minúscula para garantir compatibilidade
+        $type = strtolower($type);
+        
         $icons = [
             'telefone' => 'bi-telephone',
             'celular' => 'bi-phone',

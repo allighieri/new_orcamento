@@ -61,18 +61,18 @@
                                     <div class="row">
                                         <!-- Logo da Empresa -->
                                         @if($budget->company->logo)
-                                        <div class="col-md-3 text-center mb-2">
+                                        <div class="col-md-3 text-center">
                                             <img src="{{ asset('storage/' . $budget->company->logo) }}" alt="Logo da {{ $budget->company->corporate_name ?? $budget->company->fantasy_name }}" class="img-fluid" style="width: 100%; height: 100%;">
                                         </div>
                                         <div class="col-md-9">
                                         @else
-                                        <div class="col-md-12">
+                                            <div class="col-md-12">
                                         @endif
-                                            <h6 class="fw-bold mb-3">{{ $budget->company->corporate_name }}</h6>
+                                            <h6 class="fw-bold mb-1 mt-4">{{ $budget->company->corporate_name }}</h6>
                                             
                                             <div class="row">
                                                 <div class="col-md-12">
-                                                    <p class="mb-2">
+                                                    <p class="mb-0">
                                                     @if($budget->company->document_number && $budget->company->state_registration)
                                                         @if(strlen($budget->company->document_number) == 14)
                                                                 <strong>CPF:</strong> {{ $budget->company->document_number }} 
@@ -93,17 +93,18 @@
                                                         $consolidatedContacts = $budget->company->getConsolidatedContacts();
                                                     @endphp
                                                     @if($consolidatedContacts->isNotEmpty())
-                                                        <p class="mb-2"><strong>Contatos:</strong></p>
-                                                        <div class="contact-list">
+                                                        <p class="mb-0"><strong>Contatos:</strong></p>
+                                                        <div class="contact-list d-flex flex-wrap gap-1">
                                                             @foreach($consolidatedContacts as $contact)
-                                                                <p class="mb-1">
+                                                                <span class="mb-0 text-danger me-3">
                                                                     <i class="{{ $contact['icon'] }}"></i> {{ $contact['description'] }}
-                                                                </p>
+                                                                </span>
                                                             @endforeach
                                                         </div>
                                                     @endif
                                                     @if($budget->company->address || $budget->company->city || $budget->company->state)
-                                                    <p class="mb-2"><strong>Endereço:</strong>
+                                                    <p>
+                                                        <strong>Endereço:</strong>
                                                         {{ $budget->company->address }}
                                                             @if($budget->company->district)
                                                                 , {{ $budget->company->district }}
@@ -133,7 +134,7 @@
                             <div class="card h-100">
                                 <div class="card-body text-center">
                                     <h4 class="text-primary mb-3">{{ $budget->number }}</h4>
-                                    <p class="mb-2"><strong>Data:</strong><br>{{ $budget->issue_date->format('d/m/Y') }}</p>
+                                    <p class="mb-2"><strong>Data:</strong> {{ $budget->issue_date->format('d/m/Y') }}</p>
                                     @if($budget->delivery_date)
                                     <p class="mb-2"><strong>Previsão de Entrega:</strong><br>{{ $budget->delivery_date->format('d/m/Y') }}</p>
                                     @endif
@@ -144,7 +145,7 @@
                                         {{ $budget->valid_until->format('d/m/Y') }}
                                     @endif
                                     </p>
-                                    <p class="mb-2"><strong>Status:</strong><br>
+                                    <p class="mb-2"><strong>Status:</strong>
                                         <span class="badge status-clickable info-status-badge
                                             @if($budget->status == 'Pendente') bg-warning
                                             @elseif($budget->status == 'Enviado') bg-info
