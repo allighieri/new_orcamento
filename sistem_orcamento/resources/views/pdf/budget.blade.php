@@ -26,13 +26,13 @@
         }
 
         .bordered{
-            border: 1px solid #333;
+            border: 1px solid #ccc;
             padding: 10px;
             border-radius: 10px;
         }
 
         .borderless{
-            border-bottom: 1px dotted #333;
+            border-bottom: 1px dotted #ccc;
             padding-bottom: 10px;
         }
 
@@ -155,6 +155,13 @@
             z-index: -1;
             width: 700px;
             height: 700px;
+        }
+        .signature{
+            border: none; padding: 0 20px; text-align: center; width: 50%;
+        }
+
+        .signature-line{
+            height: 50px; border-bottom: 1px solid #aaa; margin-bottom: 10px; text-align: center;
         }
     </style>
 </head>
@@ -390,24 +397,24 @@
         </tr>   
     </table>    
 
-    <table style="text-align: center; width: 100%; border: none; border-collapse: collapse;">
-        <tr>
-            <td style="border: none; padding: 0; text-align: center;">
-                <div style="width: 90%; text-align: center; margin: 0 auto;">
-                    <div style="height: 50px; border-bottom: 1px solid #000; margin-bottom: 10px; text-align: center;"></div>
-                    <p style="margin: 0 !important;"><strong>Assinatura da Empresa</strong></p>
-                    <small>{{ $budget->client->corporate_name ?? $budget->client->fantasy_name ?? 'Cliente' }}</small>
-                </div>
-            </td>
-             <td style="border: none; padding: 0; text-align: center;">
-                <div style="width: 90%; text-align: center; margin: 0 auto;">
-                    <div style="height: 50px; border-bottom: 1px solid #000; margin-bottom: 10px; text-align: center;"></div>
-                    <p style="margin: 0 !important;"><strong>Assinatura da Empresa</strong></p>
-                    <small>{{ $budget->company->corporate_name }}</small>
-                </div>
-            </td>
-        </tr>
-    </table>
+    <table style="text-align: center; width: 100%; border: none; border-collapse: collapse; table-layout: fixed;">
+    <tr>
+        <td class="signature">
+            <div style="text-align: center; margin: 0 auto;">
+                <div class="signature-line"></div>
+                <p style="margin: 0 !important;"><strong>Assinatura do Cliente</strong></p>
+                <small>{{ $budget->client->corporate_name ?? $budget->client->fantasy_name ?? 'Cliente' }}</small>
+            </div>
+        </td>
+        <td class="signature">
+            <div style="text-align: center; margin: 0 auto;">
+                <div class="signature-line"></div>
+                <p style="margin: 0 !important;"><strong>Assinatura da Empresa</strong></p>
+                <small>{{ $budget->company->corporate_name }}</small>
+            </div>
+        </td>
+    </tr>
+</table>
 
     
     <!--    
