@@ -59,7 +59,7 @@
                                     <th>Data</th>
                                     <th>Status</th>
                                     <th>Total</th>
-                                    <th>Ações</th>
+                                    <th class="text-end" style="width: 1%;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -96,7 +96,7 @@
                                         </span>
                                     </td>
                                     <td><strong>R$ {{ number_format($budget->final_amount, 2, ',', '.') }}</strong></td>
-                                    <td>
+                                    <td class="text-end">
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('budgets.show', $budget) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
                                                 <i class="bi bi-eye"></i>
@@ -108,14 +108,13 @@
                                                 class="btn btn-sm btn-outline-secondary generate-pdf-btn" 
                                                 title="Gerar PDF" 
                                                 data-budget-id="{{ $budget->id }}"
-                                                data-route="{{ route('budgets.pdf', $budget) }}"> {{-- Adicionando a rota aqui --}}
+                                                data-route="{{ route('budgets.pdf', $budget) }}">
                                                     <i class="bi bi-file-earmark-pdf"></i>
                                                 </a>
 
                                                 {{-- Grupo de botões de e-mail e WhatsApp (inicialmente ocultos) --}}
-                                                {{-- Use um ID ou uma classe única para este grupo, associada ao budget->id --}}
                                                 <div class="btn-group budget-actions-{{ $budget->id }}" role="group" 
-                                                    @if($budget->pdfFiles->count() == 0) style="display:none;" @endif> {{-- ESCONDER INICIALMENTE --}}
+                                                    @if($budget->pdfFiles->count() == 0) style="display:none;" @endif>
                                                     <button type="button" class="btn btn-sm btn-outline-success" title="Enviar PDF via WhatsApp" onclick="handleWhatsAppSend({{ $budget->id }})">
                                                         <i class="bi bi-whatsapp"></i>
                                                     </button>
@@ -123,14 +122,14 @@
                                                         <i class="bi bi-envelope"></i>
                                                     </button>
                                                 </div>
-                                            <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-inline" id="delete-form-budget-{{ $budget->id }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteBudget({{ $budget->id }})">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteBudget({{ $budget->id }})">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </div>
+                                        <form action="{{ route('budgets.destroy', $budget) }}" method="POST" class="d-none" id="delete-form-budget-{{ $budget->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
                                     </td>
                                 </tr>
                                 @endforeach

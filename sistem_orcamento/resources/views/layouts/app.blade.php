@@ -239,11 +239,11 @@
 
     <script>
         // Script para gerenciar a modal de status
-        let currentBudgetId = null;
+        let statusModalBudgetId = null;
         
         // Função para abrir a modal de status
         function openStatusModal(budgetId, currentStatus) {
-            currentBudgetId = budgetId;
+            statusModalBudgetId = budgetId;
             $('#status').val(currentStatus);
             $('#statusModal').modal('show');
         }
@@ -253,7 +253,7 @@
             // Evento para salvar o novo status
             $('#saveStatusBtn').click(function() {
                 const newStatus = $('#status').val();
-                const budgetId = currentBudgetId;
+                const budgetId = statusModalBudgetId;
                 
                 if (!newStatus) {
                     Swal.fire({

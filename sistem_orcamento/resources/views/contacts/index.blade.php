@@ -39,7 +39,7 @@
                                     <th>Empresa</th>
                                     @endif
                                     <th>Cliente</th>
-                                    <th>Ações</th>
+                                    <th class="text-end" style="width: 1%;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -62,7 +62,7 @@
                                             N/A
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="text-end">
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('contacts.show', $contact) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
                                                 <i class="bi bi-eye"></i>
@@ -71,15 +71,17 @@
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             @if(auth()->guard('web')->user()->role === 'admin' || auth()->guard('web')->user()->role === 'super_admin')
-                                                <form action="{{ route('contacts.destroy', $contact) }}" method="POST" class="d-inline" id="delete-form-contact-{{ $contact->id }}">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteContact({{ $contact->id }})">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteContact({{ $contact->id }})">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
                                             @endif
                                         </div>
+                                        @if(auth()->guard('web')->user()->role === 'admin' || auth()->guard('web')->user()->role === 'super_admin')
+                                            <form action="{{ route('contacts.destroy', $contact) }}" method="POST" class="d-none" id="delete-form-contact-{{ $contact->id }}">
+                                                @csrf
+                                                @method('DELETE')
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforeach

@@ -35,7 +35,7 @@
                                     <th>Função</th>
                                     <th>Empresa</th>
                                     <th>Status</th>
-                                    <th>Ações</th>
+                                    <th class="text-end" style="width: 1%;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -73,7 +73,7 @@
                                             <span class="badge bg-secondary">Inativo</span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="text-end">
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('users.show', $user) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
                                                 <i class="bi bi-eye"></i>
@@ -82,22 +82,24 @@
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             @if($user->id !== auth()->id())
-                                                <form action="{{ route('users.toggle-active', $user) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <button type="submit" class="btn btn-sm {{ $user->active ? 'btn-outline-secondary' : 'btn-outline-success' }}" title="{{ $user->active ? 'Desativar' : 'Ativar' }}">
-                                                        <i class="bi {{ $user->active ? 'bi-pause' : 'bi-play' }}"></i>
-                                                    </button>
-                                                </form>
-                                                <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este usuário?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <button type="submit" class="btn btn-sm {{ $user->active ? 'btn-outline-secondary' : 'btn-outline-success' }}" title="{{ $user->active ? 'Desativar' : 'Ativar' }}" onclick="document.getElementById('toggle-form-{{ $user->id }}').submit();">
+                                                    <i class="bi {{ $user->active ? 'bi-pause' : 'bi-play' }}"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="if(confirm('Tem certeza que deseja excluir este usuário?')) document.getElementById('delete-form-{{ $user->id }}').submit();">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
                                             @endif
                                         </div>
+                                        @if($user->id !== auth()->id())
+                                            <form action="{{ route('users.toggle-active', $user) }}" method="POST" class="d-none" id="toggle-form-{{ $user->id }}">
+                                                @csrf
+                                                @method('PATCH')
+                                            </form>
+                                            <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-none" id="delete-form-{{ $user->id }}">
+                                                @csrf
+                                                @method('DELETE')
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforeach

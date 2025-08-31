@@ -36,7 +36,7 @@
                                         <th>Empresa</th>
                                     @endif
                                     <th>Produtos</th>
-                                    <th>Ações</th>
+                                    <th class="text-end" style="width: 1%;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -62,7 +62,7 @@
                                             <span class="badge bg-info">{{ $item->category->products_count ?? 0 }}</span>
                                         </a>
                                     </td>
-                                    <td>
+                                    <td class="text-end">
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('products.create', ['category_id' => $item->category->id]) }}" class="btn btn-sm btn-outline-primary" title="Cadastrar Produto">
                                                 <i class="bi bi-plus-circle"></i>
@@ -73,14 +73,14 @@
                                             <a href="{{ route('categories.edit', $item->category) }}" class="btn btn-sm btn-outline-warning" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form action="{{ route('categories.destroy', $item->category) }}" method="POST" class="d-inline" id="delete-form-category-{{ $item->category->id }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteCategory({{ $item->category->id }})">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteCategory({{ $item->category->id }})">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </div>
+                                        <form action="{{ route('categories.destroy', $item->category) }}" method="POST" class="d-none" id="delete-form-category-{{ $item->category->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
                                     </td>
                                 </tr>
                                 @endforeach

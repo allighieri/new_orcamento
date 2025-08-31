@@ -674,8 +674,18 @@ class BudgetController extends Controller
                 ? "Orçamento excluído com sucesso! {$deletedFilesCount} arquivo(s) PDF também foram removidos."
                 : 'Orçamento excluído com sucesso!';
             
+            // Verificar se deve redirecionar para dashboard
+            if (request()->input('redirect_to') === 'dashboard') {
+                return redirect()->route('dashboard')->with('success', $message);
+            }
+            
             return redirect()->route('budgets.index')->with('success', $message);
         } catch (\Exception $e) {
+            // Verificar se deve redirecionar para dashboard em caso de erro
+            if (request()->input('redirect_to') === 'dashboard') {
+                return redirect()->route('dashboard')->with('error', 'Erro ao excluir orçamento: ' . $e->getMessage());
+            }
+            
             return redirect()->route('budgets.index')->with('error', 'Erro ao excluir orçamento: ' . $e->getMessage());
         }
     }
@@ -775,7 +785,7 @@ class BudgetController extends Controller
                 'path' => $filePath,
                 'full_path' => $fullPath,
                 'size' => filesize($fullPath),
-                'url' => $publicUrl
+                'pdf_url' => $publicUrl
             ]);
         } else {
             // Para requisições normais, abrir no navegador com headers no-cache

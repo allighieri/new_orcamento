@@ -39,7 +39,7 @@
                                     @endif
                                     <th>Preço</th>
                                     
-                                    <th>Ações</th>
+                                    <th class="text-end" style="width: 1%;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -60,7 +60,7 @@
                                     @endif
                                     <td>R$ {{ number_format($product->price, 2, ',', '.') }}</td>
                                     
-                                    <td>
+                                    <td class="text-end">
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
                                                 <i class="bi bi-eye"></i>
@@ -68,14 +68,14 @@
                                             <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-warning" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline" id="delete-form-product-{{ $product->id }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteProduct({{ $product->id }})">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteProduct({{ $product->id }})">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </div>
+                                        <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-none" id="delete-form-product-{{ $product->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
                                     </td>
                                 </tr>
                                 @endforeach

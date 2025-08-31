@@ -40,7 +40,7 @@
                                 @if(auth()->guard('web')->user()->role === 'super_admin')
                                     <th>Empresa</th>
                                 @endif
-                                <th>Ações</th>
+                                <th class="text-end" style="width: 1%;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -55,7 +55,7 @@
                                     @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <td>{{ $client->company->fantasy_name ?? 'N/A' }}</td>
                                     @endif
-                                    <td>
+                                    <td class="text-end">
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('clients.show', $client) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
                                                 <i class="bi bi-eye"></i>
@@ -63,14 +63,14 @@
                                             <a href="{{ route('clients.edit', $client) }}" class="btn btn-sm btn-outline-warning" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form action="{{ route('clients.destroy', $client) }}" method="POST" class="d-inline" id="delete-form-{{ $client->id }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDelete({{ $client->id }})">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDelete({{ $client->id }})">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </div>
+                                        <form action="{{ route('clients.destroy', $client) }}" method="POST" class="d-none" id="delete-form-{{ $client->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
                                     </td>
                                 </tr>
                                 @endforeach
