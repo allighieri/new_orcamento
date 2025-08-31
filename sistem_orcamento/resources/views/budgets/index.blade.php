@@ -859,7 +859,7 @@ $(document).on('click', '.generate-pdf-btn', function(e) {
 
             if (response.success) {
                 // Abrir o PDF em uma nova aba
-                window.open(response.url, '_blank');
+                window.open(response.pdf_url, '_blank');
 
                 // Mostrar os botões de e-mail e WhatsApp
                 $(`.budget-actions-${budgetId}`).show(); 
