@@ -67,6 +67,9 @@
                     <span class="fw-bold">Endereço:</span> {{ $client->address ?: 'Não informado' }}, {{ $client->district ?: 'Não informado' }}, {{ $client->city ?: 'Não informado' }} - {{ $client->state ?: 'Não informado' }}
                 </div>
                 
+                <div class="mb-2">
+                    <span class="fw-bold">CEP:</span> {{ $client->cep ?: 'Não informado' }}
+                </div>
                 
                 <div class="mb-2">
                     <span class="fw-bold">Cadastrado em:</span> 

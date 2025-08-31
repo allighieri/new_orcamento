@@ -19,6 +19,7 @@ class Client extends Model
         'district',
         'city',
         'state',
+        'cep',
         'company_id'
     ];
 

@@ -86,6 +86,11 @@
                 </div>
                 
                 <div class="mb-1 d-flex align-items-center">
+                    <strong class="me-3" style="min-width: 120px;">CEP:</strong>
+                    <span class="flex-grow-1">{{ $company->cep ?: 'Não informado' }}</span>
+                </div>
+                
+                <div class="mb-1 d-flex align-items-center">
                     <strong class="me-3" style="min-width: 120px;">Bairro:</strong>
                     <span class="flex-grow-1">{{ $company->district ?: 'Não informado' }}</span>
                 </div>

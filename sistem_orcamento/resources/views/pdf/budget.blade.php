@@ -21,8 +21,8 @@
             top: -100px;
             left: 0;
             right: 0;
-            height: 95px;
-            margin-bottom: 30px;
+            height: 110px;
+            margin-bottom: 50px;
         }
 
         .bordered{
@@ -48,7 +48,7 @@
 
         .company-logo {
             position: relative;
-            top: -12px;
+            top: 0;
             float: left;
             margin-right: 20px;
             width: 120px;
@@ -69,7 +69,7 @@
         }
 
         .client-info {
-            margin:30px 0 20px 0;   
+            margin:50px 0 20px 0;   
         }
 
          .client-info p{
@@ -197,7 +197,18 @@
                         <p>Email: {{ $budget->company->email }}</p>
                     @endif
                     @if($budget->company->address)
-                        <p>{{ $budget->company->address }}, {{ $budget->company->city }}-{{ $budget->company->state }}</p>
+                        <p>
+                            {{ $budget->company->address }}, 
+                            @if($budget->company->district)
+                                {{ $budget->company->district }}, 
+                            @endif
+                        </p>    
+                        <p>
+                            {{ $budget->company->city }}-{{ $budget->company->state }}
+                            @if($budget->company->cep)
+                                - {{ $budget->company->cep }}
+                            @endif
+                        </p>
                     @endif
                 </div>
             </div>
@@ -241,7 +252,17 @@
             <strong>Email:</strong> {{ $budget->client->email }}</p>
         @endif
         @if($budget->client->address)
-            <p><strong>Endereço:</strong> {{ $budget->client->address }}, {{ $budget->client->city }}-{{ $budget->client->state }}</p>
+            <p>
+                <strong>Endereço:</strong> {{ $budget->client->address }}, 
+                
+                @if($budget->client->district)
+                    {{ $budget->client->district }}, 
+                @endif
+                {{ $budget->client->city }}-{{ $budget->client->state }}
+                @if($budget->client->cep)
+                    - {{ $budget->client->cep }}
+                @endif    
+            </p>
         @endif
     </div>
 

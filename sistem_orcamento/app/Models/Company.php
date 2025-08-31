@@ -18,6 +18,7 @@ class Company extends Model
         'district',
         'city',
         'state',
+        'cep',
         'logo'
     ];
 

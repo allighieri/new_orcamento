@@ -65,6 +65,7 @@ class ClientController extends Controller
             'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
+            'cep' => 'nullable|string|max:10',
         ];
         
         // Super admin deve selecionar uma empresa
@@ -179,6 +180,7 @@ class ClientController extends Controller
             'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
+            'cep' => 'nullable|string|max:10',
         ];
         
         // Super admin pode alterar a empresa

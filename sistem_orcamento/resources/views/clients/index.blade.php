@@ -37,6 +37,7 @@
                                     <th>CPF/CNPJ</th>
                                     <th>Telefone</th>
                                     <th>Email</th>
+                                    <th>CEP</th>
                                     @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <th>Empresa</th>
                                     @endif
@@ -52,6 +53,7 @@
                                     <td>{{ $client->document_number }}</td>
                                     <td>{{ $client->phone }}</td>
                                     <td>{{ $client->email }}</td>
+                                    <td>{{ $client->cep ?: '-' }}</td>
                                     @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <td>{{ $client->company->fantasy_name ?? 'N/A' }}</td>
                                     @endif

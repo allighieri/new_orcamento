@@ -54,6 +54,7 @@ class CompanyController extends Controller
             'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
+            'cep' => 'nullable|string|max:10',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -110,6 +111,7 @@ class CompanyController extends Controller
             'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
+            'cep' => 'nullable|string|max:10',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 

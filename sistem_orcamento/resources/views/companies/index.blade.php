@@ -37,6 +37,7 @@
                                     <th>CNPJ</th>
                                     <th>Telefone</th>
                                     <th>Email</th>
+                                    <th>CEP</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
@@ -56,6 +57,7 @@
                                     <td>{{ $company->cnpj }}</td>
                                     <td>{{ $company->phone }}</td>
                                     <td>{{ $company->email }}</td>
+                                    <td>{{ $company->cep ?: '-' }}</td>
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('companies.show', $company) }}" class="btn btn-sm btn-outline-info" title="Visualizar">

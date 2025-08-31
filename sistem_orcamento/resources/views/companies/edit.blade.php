@@ -108,7 +108,7 @@
                         </div>
                         
                         <div class="row">
-                            <div class="col-md-8">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="city" class="form-label">Cidade *</label>
                                     <input type="text" class="form-control @error('city') is-invalid @enderror" 
@@ -118,12 +118,22 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="mb-3">
                                     <label for="state" class="form-label">UF *</label>
                                     <input type="text" class="form-control @error('state') is-invalid @enderror" 
                                            id="state" name="state" value="{{ old('state', $company->state) }}" maxlength="2" required>
                                     @error('state')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="cep" class="form-label">CEP</label>
+                                    <input type="text" class="form-control @error('cep') is-invalid @enderror" 
+                                           id="cep" name="cep" value="{{ old('cep', $company->cep) }}">
+                                    @error('cep')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -179,6 +189,9 @@ $(document).ready(function() {
     
     // Máscara para telefone
     $('#phone').mask('(00) 00000-0000');
+    
+    // Máscara para CEP
+    $('#cep').mask('00000-000');
     
     // Máscara para UF (maiúscula)
     $('#state').on('input', function() {
