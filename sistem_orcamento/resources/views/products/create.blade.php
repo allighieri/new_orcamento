@@ -16,6 +16,7 @@
                 <div class="card-body">
                     <form method="POST" action="{{ route('products.store') }}">
                         @csrf
+                        
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -27,6 +28,8 @@
                                     @enderror
                                 </div>
                             </div>
+                        </div>
+                        <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="price" class="form-label">Preço *</label>
