@@ -308,8 +308,26 @@
                 <div class="company-name">{{ $companyName }}</div>
                 <div class="company-details">
                     📍 {{ $companyAddress }}, {{ $companyCity }} - {{ $companyState }}<br>
-                    📞 {{ $companyPhone }}<br>
-                    ✉️ {{ $companyEmail }}
+                    @php
+                        $company = \App\Models\Company::find($budget->company_id ?? 1);
+                        $consolidatedContacts = $company ? $company->getConsolidatedContacts() : collect();
+                    @endphp
+                    @if($consolidatedContacts->isNotEmpty())
+                        @foreach($consolidatedContacts as $contact)
+                            @if($contact['type'] === 'telefone')
+                                📞 {{ $contact['description'] }}<br>
+                            @elseif($contact['type'] === 'celular')
+                                📱 {{ $contact['description'] }}<br>
+                            @elseif($contact['type'] === 'whatsapp')
+                                📲 {{ $contact['description'] }}<br>
+                            @elseif($contact['type'] === 'email')
+                                ✉️ {{ $contact['description'] }}<br>
+                            @endif
+                        @endforeach
+                    @else
+                        📞 {{ $companyPhone }}<br>
+                        ✉️ {{ $companyEmail }}
+                    @endif
                 </div>
             </div>
             

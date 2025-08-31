@@ -196,11 +196,15 @@
                             <span class="text-muted">Nenhum documento informado</span>
                         @endif
                     </p>
-                    @if($budget->company->phone)
-                        <p>Telefone: {{ $budget->company->phone }}
-                    @endif
-                    @if($budget->company->email)
-                        <p>Email: {{ $budget->company->email }}</p>
+                    @php
+                        $consolidatedContacts = $budget->company->getConsolidatedContacts();
+                    @endphp
+                    @if($consolidatedContacts->isNotEmpty())
+                        <p>
+                            @foreach($consolidatedContacts as $index => $contact)
+                                {{ ucfirst($contact['type']) }}: {{ $contact['description'] }}@if($index < count($consolidatedContacts) - 1) | @endif
+                            @endforeach
+                        </p>
                     @endif
                     @if($budget->company->address)
                         <p>
@@ -266,10 +270,10 @@
         @endif
         </p>
         @if($budget->client->phone)
-            <p><strong>Telefone:</strong> {{ $budget->client->phone }} - 
+            <p><strong>Telefone:</strong> {{ $budget->client->phone }}</p>
         @endif
         @if($budget->client->email)
-            <strong>Email:</strong> {{ $budget->client->email }}</p>
+            <p><strong>Email:</strong> {{ $budget->client->email }}</p>
         @endif
         @if($budget->client->address)
             <p>

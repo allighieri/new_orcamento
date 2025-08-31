@@ -74,24 +74,49 @@
                                                 <div class="col-md-12">
                                                     <p class="mb-2">
                                                     @if($budget->company->document_number && $budget->company->state_registration)
-                                                            <strong>CPF/CNPJ:</strong> {{ $budget->company->document_number }} <strong>IE:</strong> {{ $budget->company->state_registration }}
-                                                        @elseif($budget->company->document_number)
-                                                            <strong>CPF/CNPJ:</strong> {{ $budget->company->document_number }}
-                                                        @elseif($budget->company->state_registration)
-                                                            <strong>IE:</strong> {{ $budget->company->state_registration }}
-                                                        @else
+                                                        @if(strlen($budget->company->document_number) == 14)
+                                                                <strong>CPF:</strong> {{ $budget->company->document_number }} 
+                                                                @if($budget->company->state_registration)
+                                                                    <strong>IE:</strong> {{ $budget->company->state_registration }}
+                                                                @endif
+                                                            @elseif(strlen($budget->company->document_number) == 18)
+                                                                <strong>CNPJ:</strong> {{ $budget->company->document_number }} 
+                                                                @if($budget->company->state_registration)
+                                                                    <strong>IE:</strong> {{ $budget->company->state_registration }}
+                                                                @endif
+                                                            @else
                                                             <span class="text-muted">Nenhum documento informado</span>
+                                                        @endif
                                                     @endif
                                                     </p>
-                                                    @if($budget->company->phone)
-                                                    <p class="mb-2"><strong>Telefone:</strong> {{ $budget->company->phone }}</p>
+                                                    @php
+                                                        $consolidatedContacts = $budget->company->getConsolidatedContacts();
+                                                    @endphp
+                                                    @if($consolidatedContacts->isNotEmpty())
+                                                        <p class="mb-2"><strong>Contatos:</strong></p>
+                                                        <div class="contact-list">
+                                                            @foreach($consolidatedContacts as $contact)
+                                                                <p class="mb-1">
+                                                                    <i class="{{ $contact['icon'] }}"></i> {{ $contact['description'] }}
+                                                                </p>
+                                                            @endforeach
+                                                        </div>
                                                     @endif
-                                                    @if($budget->company->email)
-                                                    <p class="mb-2"><strong>Email:</strong> {{ $budget->company->email }}</p>
-                                                    @endif
-                                                     @if($budget->company->address || $budget->company->city || $budget->company->state)
+                                                    @if($budget->company->address || $budget->company->city || $budget->company->state)
                                                     <p class="mb-2"><strong>Endereço:</strong>
-                                                        {{ $budget->company->address }}@if($budget->company->address && ($budget->company->city || $budget->company->state)), @endif{{ $budget->company->city }}@if($budget->company->city && $budget->company->state) - @endif{{ $budget->company->state }}
+                                                        {{ $budget->company->address }}
+                                                            @if($budget->company->district)
+                                                                , {{ $budget->company->district }}
+                                                            @endif
+                                                            @if($budget->company->city)
+                                                                , {{ $budget->company->city }}
+                                                            @endif
+                                                            @if($budget->company->state)
+                                                                - {{ $budget->company->state }}
+                                                            @endif
+                                                            @if($budget->company->cep)
+                                                                - {{ $budget->company->cep }}
+                                                            @endif
                                                     </p>
                                                     @endif
                                                 </div>
@@ -161,13 +186,17 @@
                                             </p>
                                             @if($budget->client->document_number)
                                             <p class="mb-1">
-                                                @if($budget->client->document_number && $budget->client->state_registration)
-                                                    <strong>CPF/CNPJ:</strong> {{ $budget->client->document_number }} <strong>IE:</strong> {{ $budget->client->state_registration }}
-                                                @elseif($budget->client->document_number)
-                                                    <strong>CPF/CNPJ:</strong> {{ $budget->client->document_number }}
-                                                @elseif($budget->client->state_registration)
-                                                    <strong>IE:</strong> {{ $budget->client->state_registration }}
-                                                @else
+                                               @if(strlen($budget->client->document_number) == 14)
+                                                        <strong>CPF:</strong> {{ $budget->client->document_number }} 
+                                                        @if($budget->client->state_registration)
+                                                            <strong>IE:</strong> {{ $budget->client->state_registration }}
+                                                        @endif
+                                                    @elseif(strlen($budget->client->document_number) == 18)
+                                                        <strong>CNPJ:</strong> {{ $budget->client->document_number }} 
+                                                        @if($budget->client->state_registration)
+                                                            <strong>IE:</strong> {{ $budget->client->state_registration }}
+                                                        @endif
+                                                    @else
                                                     <span class="text-muted">Nenhum documento informado</span>
                                                 @endif
                                             </p>
@@ -182,7 +211,19 @@
                                             @endif
                                             @if($budget->client->address || $budget->client->city || $budget->client->state)
                                             <p class="mb-1"><strong>Endereço:</strong><br>
-                                                {{ $budget->client->address }}@if($budget->client->address && ($budget->client->city || $budget->client->state)), @endif{{ $budget->client->city }}@if($budget->client->city && $budget->client->state) - @endif{{ $budget->client->state }}
+                                                {{ $budget->client->address }}
+                                                    @if($budget->client->district)
+                                                        , {{ $budget->client->district }}
+                                                    @endif
+                                                    @if($budget->client->city)
+                                                        , {{ $budget->client->city }}
+                                                    @endif
+                                                    @if($budget->client->state)
+                                                        - {{ $budget->client->state }}
+                                                    @endif
+                                                    @if($budget->client->cep)
+                                                        - {{ $budget->client->cep }}
+                                                    @endif
                                             </p>
                                             @endif
                                         </div>
