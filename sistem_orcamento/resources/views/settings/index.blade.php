@@ -5,31 +5,19 @@
 @section('content')
 <div class="container mx-auto">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">
-                        <i class="bi bi-gear"></i> Configurações da Empresa
-                    </h4>
-                </div>
-                <div class="card-body">
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
 
-                    @if($errors->any())
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <ul class="mb-0">
-                                @foreach($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-gear"></i> Configurações da Empresa</h5>
+                    <a href="{{ url()->previous() }}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+
+                
+                <div class="card-body">
+                   
 
                     <form method="POST" action="{{ route('settings.update') }}">
                         @csrf
@@ -38,14 +26,14 @@
                         <!-- Configurações de Orçamento -->
                         <div class="row mb-4">
                             <div class="col-12">
-                                <h5 class="text-primary mb-3">
+                                <h5 class="text-primary mb-1">
                                     <i class="bi bi-file-earmark-text"></i> Configurações de Orçamento
                                 </h5>
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <label for="budget_validity_days" class="form-label fw-bold">
                                     <i class="bi bi-calendar-check"></i> Dias de Validade do Orçamento
                                 </label>
@@ -71,7 +59,7 @@
                                 </small>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <label for="budget_delivery_days" class="form-label fw-bold">
                                     <i class="bi bi-truck"></i> Dias de Previsão de Entrega
                                 </label>
@@ -174,12 +162,10 @@
                         <!-- Botões de Ação -->
                         <div class="row">
                             <div class="col-12">
-                                <div class="d-flex justify-content-between">
-                                    <a href="{{ route('dashboard') }}" class="btn btn-secondary">
-                                        <i class="bi bi-arrow-left"></i> Voltar
-                                    </a>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-0">
+                                    <a href="{{ route('dashboard') }}" class="btn btn-secondary">Cancelar</a>
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-check-lg"></i> Salvar Configurações
+                                        <i class="fas fa-save"></i> Salvar
                                     </button>
                                 </div>
                             </div>
@@ -188,41 +174,7 @@
                 </div>
             </div>
 
-            <!-- Card de Informações -->
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h6 class="mb-0">
-                        <i class="bi bi-info-circle"></i> Informações
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="text-primary">Dias de Validade</h6>
-                            <p class="small text-muted mb-3">
-                                Define por quantos dias o orçamento será válido após sua criação. 
-                                Esta data aparecerá no PDF e na visualização do orçamento.
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-primary">Previsão de Entrega</h6>
-                            <p class="small text-muted mb-3">
-                                Define a previsão padrão de entrega dos produtos/serviços. 
-                                Esta informação será exibida no orçamento.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <h6 class="text-primary">Marca d'Água</h6>
-                            <p class="small text-muted mb-0">
-                                Quando ativada, adiciona uma marca d'água sutil no fundo dos PDFs dos orçamentos, 
-                                ajudando a identificar documentos da sua empresa.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
         </div>
     </div>
 </div>

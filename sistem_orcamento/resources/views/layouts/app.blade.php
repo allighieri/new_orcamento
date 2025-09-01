@@ -146,10 +146,10 @@
                     icon: 'success',
                     title: 'Sucesso!',
                     text: '{{ session('success') }}',
-                    timer: 5000,
+                    timer: 2000,
                     showConfirmButton: false,
                     toast: true,
-                    position: 'top-end'
+                    position: 'bottom-start'
                 });
             </script>
         @endif
@@ -160,7 +160,7 @@
                     icon: 'warning',
                     title: 'Atenção!',
                     text: '{{ session('warning') }}',
-                    timer: 5000,
+                    timer: 4000,
                     showConfirmButton: false,
                     toast: true,
                     position: 'top-end'
@@ -174,7 +174,7 @@
                     icon: 'error',
                     title: 'Erro!',
                     text: '{{ session('error') }}',
-                    timer: 6000,
+                    timer: 5000,
                     showConfirmButton: false,
                     toast: true,
                     position: 'top-end'

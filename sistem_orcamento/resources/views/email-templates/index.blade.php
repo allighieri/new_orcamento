@@ -37,7 +37,7 @@
                                         <th>Descrição</th>
                                         <th>Status</th>
                                         <th>Data</th>
-                                        <th>Ações</th>
+                                        <th class="text-end">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -58,7 +58,7 @@
                                                 @endif
                                             </td>
                                             <td>{{ $template->created_at->format('d/m/Y H:i') }}</td>
-                                            <td>
+                                            <td class="text-end">
                                                 <div class="btn-group" role="group">
                                                     <a href="{{ route('email-templates.show', $template) }}" 
                                                        class="btn btn-sm btn-info" title="Visualizar">
@@ -72,16 +72,14 @@
                                                        class="btn btn-sm btn-warning" title="Editar">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
-                                                    <form action="{{ route('email-templates.destroy', $template) }}" method="POST" class="d-inline" id="delete-form-template-{{ $template->id }}">
-                                                   
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="button" class="btn btn-sm btn-danger" title="Excluir" onclick="confirmDeleteTemplate({{ $template->id }})">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                        
-                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-danger" title="Excluir" onclick="confirmDeleteTemplate({{ $template->id }})">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
                                                 </div>
+                                                <form action="{{ route('email-templates.destroy', $template) }}" method="POST" class="d-inline" id="delete-form-template-{{ $template->id }}">
+                                                    @csrf
+                                                    @method('DELETE')    
+                                                </form>
                                             </td>
                                         </tr>
                                     @endforeach

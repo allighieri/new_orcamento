@@ -42,7 +42,7 @@
                                     @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <th>Empresa</th>
                                     @endif
-                                    <th>Ações</th>
+                                    <th class="text-end">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -78,7 +78,7 @@
                                     @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <td>{{ $account->company->fantasy_name ?? 'N/A' }}</td>
                                     @endif
-                                    <td>
+                                    <td  class="text-end">
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('bank-accounts.show', $account) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
                                                 <i class="bi bi-eye"></i>
@@ -86,14 +86,14 @@
                                             <a href="{{ route('bank-accounts.edit', $account) }}" class="btn btn-sm btn-outline-warning" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form action="{{ route('bank-accounts.destroy', $account) }}" method="POST" class="d-inline" id="delete-form-{{ $account->id }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDelete({{ $account->id }})">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                             <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDelete({{ $account->id }})">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </div>
+                                        <form action="{{ route('bank-accounts.destroy', $account) }}" method="POST" class="d-none" id="delete-form-{{ $account->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
                                     </td>
                                 </tr>
                                 @endforeach

@@ -419,14 +419,10 @@
                                                                value="{{ $payment->custom_date ? $payment->custom_date->format('Y-m-d') : '' }}">
                                                     </div>
                                                     <div class="col-md-1 d-flex align-items-end">
-                                                        @if($index == 0)
-                                                            <button type="button" class="btn btn-success btn-sm add-payment-method" style="height: 38px;">
-                                                                <i class="bi bi-plus"></i>
-                                                            </button>
-                                                        @else
-                                                            <button type="button" class="btn btn-danger btn-sm remove-payment-method me-1" style="height: 38px;">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
+                                                        <button type="button" class="btn btn-danger btn-sm remove-payment-method me-1" style="height: 38px;">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                        @if($loop->last)
                                                             <button type="button" class="btn btn-success btn-sm add-payment-method" style="height: 38px;">
                                                                 <i class="bi bi-plus"></i>
                                                             </button>
@@ -550,7 +546,7 @@
                                         @foreach($budget->bankAccounts as $index => $bankAccount)
                                             <div class="bank-account-row mb-3">
                                                 <div class="row">
-                                                    <div class="col-md-10">
+                                                    <div class="col-md-3">
                                                         <label class="form-label">Conta Bancária</label>
                                                         <select class="form-select" name="bank_accounts[{{ $index }}][bank_account_id]">
                                                             <option value="">Selecione uma conta</option>
@@ -567,11 +563,9 @@
                                                         </select>
                                                     </div>
                                                     <div class="col-md-2 d-flex align-items-end">
-                                                        @if($loop->count > 1)
-                                                            <button type="button" class="btn btn-danger btn-sm remove-bank-account me-1" style="height: 38px;">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        @endif
+                                                        <button type="button" class="btn btn-danger btn-sm remove-bank-account me-1" style="height: 38px;">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
                                                         @if($loop->last)
                                                             <button type="button" class="btn btn-success btn-sm add-bank-account" style="height: 38px;">
                                                                 <i class="bi bi-plus"></i>
@@ -584,7 +578,7 @@
                                     @else
                                         <div class="bank-account-row mb-3">
                                             <div class="row">
-                                                <div class="col-md-10">
+                                                <div class="col-md-3">
                                                     <label class="form-label">Conta Bancária</label>
                                                     <select class="form-select" name="bank_accounts[0][bank_account_id]">
                                                         <option value="">Selecione uma conta</option>
@@ -1033,11 +1027,8 @@ $(document).ready(function() {
          const row = $(this).closest('.product-row');
          
          if (price) {
-             const formattedPrice = parseFloat(price).toLocaleString('pt-BR', {
-                 minimumFractionDigits: 2,
-                 maximumFractionDigits: 2
-             });
-             row.find('.unit-price-input').val(formattedPrice);
+             // Usar o valor numérico diretamente, a máscara reverse formatará automaticamente
+            row.find('.unit-price-input').val(parseFloat(price).toFixed(2).replace('.', ','));
          }
          
          if (description) {
@@ -1147,9 +1138,8 @@ $(document).ready(function() {
             productRow.find('.product-select').val(item.product_id);
             productRow.find('.quantity-input').val(item.quantity);
             
-            // Ajusta o preço unitário para o formato brasileiro
-            const unitPriceFormatted = parseFloat(item.unit_price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            productRow.find('.unit-price-input').val(unitPriceFormatted);
+            // Usar o valor numérico diretamente, a máscara reverse formatará automaticamente
+            productRow.find('.unit-price-input').val(parseFloat(item.unit_price).toFixed(2).replace('.', ','));
             
             productRow.find('textarea[name*="[description]"]').val(item.description);
             
@@ -1286,8 +1276,8 @@ $(document).ready(function() {
         if (existingQuoteData.items && existingQuoteData.items.length > 0) {
             let firstItem = existingQuoteData.items[0];
             $('.product-row:first').find('.quantity-input').val(firstItem.quantity);
-            const unitPriceFormatted = parseFloat(firstItem.unit_price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            $('.product-row:first').find('.unit-price-input').val(unitPriceFormatted);
+            // Usar o valor numérico diretamente, a máscara reverse formatará automaticamente
+            $('.product-row:first').find('.unit-price-input').val(parseFloat(firstItem.unit_price).toFixed(2).replace('.', ','));
             $('.product-row:first').find('textarea[name*="[description]"]').val(firstItem.description);
         }
     } else {
@@ -1558,6 +1548,10 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
 
     updateAddButtonVisibility();
     calculateTotals();
+    
+    // Configurar botões de adicionar no carregamento inicial
+    updatePaymentAddButtons();
+    updateAddBankAccountButton();
 
     // Gerenciamento de métodos de pagamento
     let paymentMethodIndex = {{ $budget->budgetPayments->count() > 0 ? $budget->budgetPayments->count() : 1 }};
@@ -1631,13 +1625,21 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
         $('.money').mask('#.##0,00', {reverse: true});
         
         paymentMethodIndex++;
+        updatePaymentAddButtons();
     });
+
+    // Função para controlar exibição dos botões de adicionar métodos de pagamento
+    function updatePaymentAddButtons() {
+        $('.add-payment-method').hide();
+        $('#payment-methods-container .payment-method-row:last .add-payment-method').show();
+    }
 
     // Controlar exibição dos métodos de pagamento e card de valor restante com radio buttons
     $('input[name="include_payment_methods"]').change(function() {
         if ($(this).val() === 'yes') {
             $('#payment-methods-container').show();
             $('#remainingAmountCard').show();
+            updatePaymentAddButtons();
         } else {
             $('#payment-methods-container').hide();
             $('#remainingAmountCard').hide();
@@ -1801,6 +1803,7 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
         if (paymentRows.length > 1) {
             $(this).closest('.payment-method-row').remove();
             updateRemainingAmount(); // Atualizar valor restante após remoção
+            updatePaymentAddButtons(); // Atualizar botões de adicionar
         } else {
             Swal.fire({
                 icon: 'warning',
@@ -2003,14 +2006,8 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
 
     // Atualizar visibilidade do botão adicionar
     function updateAddBankAccountButton() {
-        const bankRows = $('.bank-account-row');
-        const addBtn = $('.add-bank-account');
-        
-        if (bankRows.length >= 10) { // Limite máximo de contas
-            addBtn.hide();
-        } else {
-            addBtn.show();
-        }
+        $('.add-bank-account').hide();
+        $('#bank-data-container .bank-account-row:last .add-bank-account').show();
     }
 
     // Verificar estado inicial dos dados bancários

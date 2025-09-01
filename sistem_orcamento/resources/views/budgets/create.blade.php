@@ -334,10 +334,13 @@
                                                 <input type="date" class="form-control" name="payment_methods[0][custom_date]">
                                             </div>
                                             <div class="col-md-1 d-flex align-items-end">
-                                <button type="button" class="btn btn-success btn-sm add-payment-method" style="height: 38px;">
-                                    <i class="bi bi-plus"></i>
-                                </button>
-                            </div>
+                                                <button type="button" class="btn btn-danger btn-sm remove-payment-method me-1" style="height: 38px;">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-success btn-sm add-payment-method" style="height: 38px;">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="row mt-2">
                                             <div class="col-md-12">
@@ -399,7 +402,7 @@
                                 <div id="bank-data-container" style="display: none;">
                                     <div class="bank-account-row mb-3">
                                         <div class="row">
-                                            <div class="col-md-10">
+                                            <div class="col-md-3">
                                                 <label class="form-label">Conta Bancária</label>
                                                 <select class="form-select" name="bank_accounts[0][bank_account_id]">
                                                     <option value="">Selecione uma conta</option>
@@ -416,10 +419,13 @@
                                                 </select>
                                             </div>
                                             <div class="col-md-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-success btn-sm add-bank-account" style="height: 38px;">
-                                    <i class="bi bi-plus"></i>
-                                </button>
-                            </div>
+                                                <button type="button" class="btn btn-danger btn-sm remove-bank-account me-1" style="height: 38px;">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-success btn-sm add-bank-account" style="height: 38px;">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -800,20 +806,28 @@ $(document).ready(function() {
         const remainingElement = $('#remainingAmount');
         const cardElement = $('#remainingAmountCard');
         
-        if (remaining === 0) {
-            // Ocultar seção quando valor for R$ 0,00
-            cardElement.hide();
-        } else {
-            // Mostrar seção quando valor for diferente de R$ 0,00
-            cardElement.show();
-            
-            if (remaining < 0) {
-                remainingElement.css('color', '#dc3545'); // Vermelho
-                cardElement.css('border-left-color', '#dc3545');
+        // Verificar se a opção de incluir forma de pagamento está marcada como 'sim'
+        const includePaymentMethods = $('input[name="include_payment_methods"]:checked').val();
+        
+        if (includePaymentMethods === 'yes') {
+            if (remaining === 0) {
+                // Ocultar seção quando valor for R$ 0,00
+                cardElement.hide();
             } else {
-                remainingElement.css('color', '#ffc107'); // Amarelo
-                cardElement.css('border-left-color', '#ffc107');
+                // Mostrar seção quando valor for diferente de R$ 0,00
+                cardElement.show();
+                
+                if (remaining < 0) {
+                    remainingElement.css('color', '#dc3545'); // Vermelho
+                    cardElement.css('border-left-color', '#dc3545');
+                } else {
+                    remainingElement.css('color', '#ffc107'); // Amarelo
+                    cardElement.css('border-left-color', '#ffc107');
+                }
             }
+        } else {
+            // Se não incluir forma de pagamento, sempre ocultar a seção
+            cardElement.hide();
         }
     }
 
@@ -916,8 +930,9 @@ $(document).ready(function() {
         let row = $(this).closest('.product-row');
         
         if (price) {
-            row.find('.unit-price-input').val(formatMoney(price));
-        }
+            // Usar o valor numérico diretamente, a máscara reverse formatará automaticamente
+            row.find('.unit-price-input').val(parseFloat(price).toFixed(2).replace('.', ','));
+        }
         
         if (description) {
             row.find('textarea[name*="[description]"]').val(description);
@@ -1502,7 +1517,7 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
         const template = `
             <div class="bank-account-row mb-3">
                 <div class="row">
-                    <div class="col-md-10">
+                    <div class="col-md-3">
                         <label class="form-label">Conta Bancária</label>
                         <select class="form-select" name="bank_accounts[${bankAccountIndex}][bank_account_id]">
                             <option value="">Selecione uma conta</option>

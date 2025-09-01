@@ -35,7 +35,7 @@
                                     <th>Parcelamento</th>
                                     <th>Máx. Parcelas</th>
                                     <th>Status</th>
-                                    <th>Ações</th>
+                                    <th class="text-end">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -74,7 +74,7 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="text-end">
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('payment-methods.show', $method) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
                                                 <i class="bi bi-eye"></i>
@@ -83,15 +83,17 @@
                                                 <a href="{{ route('payment-methods.edit', $method) }}" class="btn btn-sm btn-outline-warning" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <form action="{{ route('payment-methods.destroy', $method) }}" method="POST" class="d-inline" id="delete-form-method-{{ $method->id }}">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteMethod({{ $method->id }})">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteMethod({{ $method->id }})">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
                                             @endif
                                         </div>
+                                        @if(!$method->is_global || auth()->user()->role === 'super_admin')
+                                        <form action="{{ route('payment-methods.destroy', $method) }}" method="POST" class="d-inline" id="delete-form-method-{{ $method->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforeach
