@@ -2,8 +2,8 @@
 
 @section('content')
 <div class="container">
-    <div class="container mx-auto row">
-        <div class="col-md-12">
+    <div class="row">
+        <div class="col-md-8">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
@@ -139,6 +139,51 @@
                             <button type="submit" class="btn btn-primary">Atualizar Produto</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-calculator"></i> Calculadora de Preço Unitário
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="calc_quantity" class="form-label">Quantidade</label>
+                        <input type="number" class="form-control" id="calc_quantity" placeholder="Ex: 10" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="calc_total" class="form-label">Valor Total</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" class="form-control" id="calc_total" placeholder="0,00">
+                        </div>
+                    </div>
+                    <div class="d-grid mb-3">
+                        <button type="button" class="btn btn-info" id="calculateBtn">
+                            <i class="bi bi-calculator"></i> Calcular
+                        </button>
+                    </div>
+                    
+                    <div id="calculatorResult" style="display: none;">
+                        <div class="alert alert-success" id="resultSuccess" style="display: none;">
+                            <strong>Preço unitário:</strong> <span id="unitPrice"></span><br>
+                            <button type="button" class="btn btn-success btn-sm mt-2" id="useCalculatedPrice">
+                                <i class="bi bi-check"></i> Usar este preço
+                            </button>
+                        </div>
+                        <div class="alert alert-warning" id="resultWarning" style="display: none;">
+                            <strong>Atenção!</strong> O resultado não é exato.<br>
+                            <strong>Sugestão:</strong> Use R$ <span id="suggestedTotal"></span> como valor total.<br>
+                            <strong>Preço unitário:</strong> <span id="suggestedUnitPrice"></span><br>
+                            <button type="button" class="btn btn-warning btn-sm mt-2" id="useSuggestedPrice">
+                                <i class="bi bi-check"></i> Usar preço sugerido
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -351,6 +396,131 @@ $(document).ready(function() {
         loadCategoriesByCompany(initialCompanyId);
     }
     @endif
+    
+    // Máscara para valor total da calculadora
+    $('#calc_total').mask('000.000.000.000.000,00', {
+        reverse: true,
+        placeholder: '0,00'
+    });
+    
+    // Função para converter valor monetário brasileiro para número
+    function parseMoney(value) {
+        if (!value) return 0;
+        return parseFloat(value.replace(/\./g, '').replace(',', '.'));
+    }
+    
+    // Função para formatar número como moeda brasileira
+    function formatMoney(value) {
+        return value.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+    
+    // Função para encontrar o valor total mais próximo que resulte em preço com 2 casas decimais
+      function findNearestExactTotal(quantity, originalTotal) {
+          const originalUnitPrice = originalTotal / quantity;
+          // Arredondar para 2 casas decimais
+          const roundedUnitPrice = Math.round(originalUnitPrice * 100) / 100;
+          const nearestExactTotal = roundedUnitPrice * quantity;
+          
+          return { total: nearestExactTotal, unitPrice: roundedUnitPrice };
+      }
+    
+    // Calculadora de preço unitário
+    $('#calculateBtn').click(function() {
+        const quantity = parseInt($('#calc_quantity').val());
+        const totalValue = parseMoney($('#calc_total').val());
+        
+        // Validações
+        if (!quantity || quantity <= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atenção!',
+                text: 'Digite uma quantidade válida.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
+        if (!totalValue || totalValue <= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atenção!',
+                text: 'Digite um valor total válido.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
+        // Calcular preço unitário
+         const unitPrice = totalValue / quantity;
+         
+         // Verificar se o resultado tem mais de 2 casas decimais
+         const roundedPrice = Math.round(unitPrice * 100) / 100;
+         const hasMoreThanTwoDecimals = Math.abs(unitPrice - roundedPrice) > 0.001;
+        
+        // Mostrar resultado
+        $('#calculatorResult').show();
+        
+        // Sempre mostrar o resultado exato primeiro
+        $('#unitPrice').text('R$ ' + formatMoney(unitPrice));
+        $('#resultSuccess').show();
+        
+        if (hasMoreThanTwoDecimals) {
+            // Mostrar sugestão apenas se tiver mais de 2 casas decimais
+            const suggestion = findNearestExactTotal(quantity, totalValue);
+            
+            $('#suggestedTotal').text('R$ ' + formatMoney(suggestion.total));
+            $('#suggestedUnitPrice').text('R$ ' + formatMoney(suggestion.unitPrice));
+            $('#resultWarning').show();
+            
+            // Armazenar valores para uso posterior
+            window.calculatorSuggestion = suggestion;
+        } else {
+            // Não mostrar sugestão se o resultado tiver 2 casas decimais ou menos
+            $('#resultWarning').hide();
+        }
+    });
+    
+    // Usar preço calculado (resultado exato)
+    $('#useCalculatedPrice').click(function() {
+        const unitPrice = $('#unitPrice').text().replace('R$ ', '');
+        $('#price').val(unitPrice).trigger('input');
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Sucesso!',
+            text: 'Preço aplicado com sucesso!',
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    });
+    
+    // Usar preço sugerido (resultado aproximado)
+    $('#useSuggestedPrice').click(function() {
+        const suggestedPrice = $('#suggestedUnitPrice').text().replace('R$ ', '');
+        $('#price').val(suggestedPrice).trigger('input');
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Sucesso!',
+            text: 'Preço sugerido aplicado com sucesso!',
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    });
+    
+    // Limpar resultado quando campos da calculadora são alterados
+    $('#calc_quantity, #calc_total').on('input', function() {
+        $('#calculatorResult').hide();
+        $('#resultSuccess').hide();
+        $('#resultWarning').hide();
+    });
 });
 </script>
 @endpush
