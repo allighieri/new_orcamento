@@ -127,6 +127,9 @@
                                                             <div class="input-group">
                                                                 <div class="input-group-text">R$</div>
                                                                 <input type="text" class="form-control money unit-price-input" name="products[{{ $index }}][unit_price]" value="{{ old('products.'.$index.'.unit_price') ? number_format(old('products.'.$index.'.unit_price'), 2, ',', '.') : '' }}">
+                                                                <button type="button" class="btn btn-outline-info calculator-btn" data-bs-toggle="modal" data-bs-target="#calculatorModal" title="Calculadora de preço unitário">
+                                                                    <i class="bi bi-calculator"></i>
+                                                                </button>
                                                             </div>
                                                         </div>
 
@@ -140,11 +143,11 @@
 
                                                         <div class="col-md-1">
                                                             <label class="form-label">&nbsp;</label>
-                                                            <div class="d-flex gap-1">
-                                                                <button type="button" class="btn btn-danger btn-sm remove-product">
+                                                            <div class="d-flex gap-1 align-items-end" style="height: 38px;">
+                                                                <button type="button" class="btn btn-danger btn-sm remove-product" style="height: 38px;">
                                                                     <i class="bi bi-trash3"></i>
                                                                 </button>
-                                                                <button type="button" class="btn btn-success btn-sm add-product">
+                                                                <button type="button" class="btn btn-success btn-sm add-product" style="height: 38px;">
                                                                     <i class="bi bi-plus-circle"></i>
                                                                 </button>
                                                             </div>
@@ -187,6 +190,9 @@
                                                         <div class="input-group">
                                                             <div class="input-group-text">R$</div>
                                                             <input type="text" class="form-control money unit-price-input" name="products[0][unit_price]">
+                                                            <button type="button" class="btn btn-outline-info calculator-btn" data-bs-toggle="modal" data-bs-target="#calculatorModal" title="Calculadora de preço unitário">
+                                                                <i class="bi bi-calculator"></i>
+                                                            </button>
                                                         </div>
                                                     </div>
 
@@ -200,11 +206,11 @@
 
                                                     <div class="col-md-1">
                                                         <label class="form-label">&nbsp;</label>
-                                                        <div class="d-flex gap-1">
-                                                            <button type="button" class="btn btn-danger btn-sm remove-product">
+                                                        <div class="d-flex gap-1 align-items-end" style="height: 38px;">
+                                                            <button type="button" class="btn btn-danger btn-sm remove-product" style="height: 38px;">
                                                                 <i class="bi bi-trash3"></i>
                                                             </button>
-                                                            <button type="button" class="btn btn-success btn-sm add-product">
+                                                            <button type="button" class="btn btn-success btn-sm add-product" style="height: 38px;">
                                                                 <i class="bi bi-plus-circle"></i>
                                                             </button>
                                                         </div>
@@ -328,10 +334,10 @@
                                                 <input type="date" class="form-control" name="payment_methods[0][custom_date]">
                                             </div>
                                             <div class="col-md-1 d-flex align-items-end">
-                                                <button type="button" class="btn btn-success btn-sm add-payment-method">
-                                                    <i class="bi bi-plus"></i>
-                                                </button>
-                                            </div>
+                                <button type="button" class="btn btn-success btn-sm add-payment-method" style="height: 38px;">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
                                         </div>
                                         <div class="row mt-2">
                                             <div class="col-md-12">
@@ -410,10 +416,10 @@
                                                 </select>
                                             </div>
                                             <div class="col-md-2 d-flex align-items-end">
-                                                <button type="button" class="btn btn-success btn-sm add-bank-account">
-                                                    <i class="bi bi-plus"></i>
-                                                </button>
-                                            </div>
+                                <button type="button" class="btn btn-success btn-sm add-bank-account" style="height: 38px;">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -627,6 +633,9 @@
                 <div class="input-group">
                     <div class="input-group-text">R$</div>
                     <input type="text" class="form-control money unit-price-input" name="products[INDEX][unit_price]">
+                    <button type="button" class="btn btn-outline-info calculator-btn" data-bs-toggle="modal" data-bs-target="#calculatorModal" title="Calculadora de preço unitário">
+                        <i class="bi bi-calculator"></i>
+                    </button>
                 </div>
             </div>
 
@@ -640,11 +649,11 @@
 
             <div class="col-md-1">
                 <label class="form-label">&nbsp;</label>
-                <div class="d-flex gap-1">
-                    <button type="button" class="btn btn-danger btn-sm remove-product">
+                <div class="d-flex gap-1 align-items-end" style="height: 38px;">
+                    <button type="button" class="btn btn-danger btn-sm remove-product" style="height: 38px;">
                         <i class="bi bi-trash3"></i>
                     </button>
-                    <button type="button" class="btn btn-success btn-sm add-product">
+                    <button type="button" class="btn btn-success btn-sm add-product" style="height: 38px;">
                         <i class="bi bi-plus-circle"></i>
                     </button>
                 </div>
@@ -791,15 +800,20 @@ $(document).ready(function() {
         const remainingElement = $('#remainingAmount');
         const cardElement = $('#remainingAmountCard');
         
-        if (remaining < 0) {
-            remainingElement.css('color', '#dc3545'); // Vermelho
-            cardElement.css('border-left-color', '#dc3545');
-        } else if (remaining === 0) {
-            remainingElement.css('color', '#28a745'); // Verde
-            cardElement.css('border-left-color', '#28a745');
+        if (remaining === 0) {
+            // Ocultar seção quando valor for R$ 0,00
+            cardElement.hide();
         } else {
-            remainingElement.css('color', '#ffc107'); // Amarelo
-            cardElement.css('border-left-color', '#ffc107');
+            // Mostrar seção quando valor for diferente de R$ 0,00
+            cardElement.show();
+            
+            if (remaining < 0) {
+                remainingElement.css('color', '#dc3545'); // Vermelho
+                cardElement.css('border-left-color', '#dc3545');
+            } else {
+                remainingElement.css('color', '#ffc107'); // Amarelo
+                cardElement.css('border-left-color', '#ffc107');
+            }
         }
     }
 
@@ -1407,10 +1421,10 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
                          <input type="date" class="form-control" name="payment_methods[${paymentMethodIndex}][custom_date]">
                      </div>
                     <div class="col-md-1 d-flex align-items-end">
-                        <button type="button" class="btn btn-danger btn-sm remove-payment-method me-1">
+                        <button type="button" class="btn btn-danger btn-sm remove-payment-method me-1" style="height: 38px;">
                             <i class="bi bi-trash"></i>
                         </button>
-                        <button type="button" class="btn btn-success btn-sm add-payment-method">
+                        <button type="button" class="btn btn-success btn-sm add-payment-method" style="height: 38px;">
                             <i class="bi bi-plus"></i>
                         </button>
                     </div>
@@ -1505,10 +1519,10 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
                         </select>
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
-                        <button type="button" class="btn btn-danger btn-sm remove-bank-account me-1">
+                        <button type="button" class="btn btn-danger btn-sm remove-bank-account me-1" style="height: 38px;">
                             <i class="bi bi-trash"></i>
                         </button>
-                        <button type="button" class="btn btn-success btn-sm add-bank-account">
+                        <button type="button" class="btn btn-success btn-sm add-bank-account" style="height: 38px;">
                             <i class="bi bi-plus"></i>
                         </button>
                     </div>
@@ -1646,6 +1660,178 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
                 return false;
             }
         }
+    })
+
+    // === CALCULADORA DE PREÇO UNITÁRIO ===
+    let currentCalculatorInput = null;
+    
+    // Máscara para valor total da calculadora
+    $('#calc_total').mask('000.000.000.000.000,00', {
+        reverse: true,
+        placeholder: '0,00'
+    });
+    
+    // Função para converter valor monetário brasileiro para número
+    function parseMoney(value) {
+        if (!value) return 0;
+        return parseFloat(value.replace(/\./g, '').replace(',', '.'));
+    }
+    
+    // Função para formatar número como moeda brasileira
+    function formatMoney(value) {
+        return value.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+    
+    // Função para encontrar o valor total mais próximo que resulte em preço com 2 casas decimais
+    function findNearestExactTotal(quantity, originalTotal) {
+        const originalUnitPrice = originalTotal / quantity;
+        // Arredondar para 2 casas decimais
+        const roundedUnitPrice = Math.round(originalUnitPrice * 100) / 100;
+        const nearestExactTotal = roundedUnitPrice * quantity;
+        
+        return { total: nearestExactTotal, unitPrice: roundedUnitPrice };
+    }
+    
+    // Abrir calculadora e armazenar referência do campo atual
+    $(document).on('click', '.calculator-btn', function() {
+        currentCalculatorInput = $(this).siblings('.unit-price-input');
+        
+        // Encontrar o campo de quantidade correspondente na mesma linha
+        const productRow = $(this).closest('.row');
+        window.currentQuantityInput = productRow.find('.quantity-input');
+        
+        // Limpar campos da calculadora
+        $('#calc_quantity').val('');
+        $('#calc_total').val('');
+        $('#calculatorResult').hide();
+        $('#resultSuccess').hide();
+        $('#resultWarning').hide();
+    });
+    
+    // Calculadora de preço unitário
+    $('#calculateBtn').click(function() {
+        const quantity = parseInt($('#calc_quantity').val());
+        const totalValue = parseMoney($('#calc_total').val());
+        
+        // Validações
+        if (!quantity || quantity <= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atenção!',
+                text: 'Digite uma quantidade válida.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
+        if (!totalValue || totalValue <= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atenção!',
+                text: 'Digite um valor total válido.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
+        // Calcular preço unitário
+        const unitPrice = totalValue / quantity;
+        
+        // Verificar se o resultado tem mais de 2 casas decimais
+        const roundedPrice = Math.round(unitPrice * 100) / 100;
+        const hasMoreThanTwoDecimals = Math.abs(unitPrice - roundedPrice) > 0.001;
+        
+        // Mostrar resultado
+        $('#calculatorResult').show();
+        
+        if (hasMoreThanTwoDecimals) {
+            // Resultado com mais de 2 casas decimais - mostrar com fundo vermelho e até 4 casas decimais
+            const unitPriceFormatted = unitPrice.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 4
+            });
+            
+            $('#unitPrice').text('R$ ' + unitPriceFormatted);
+            $('#resultSuccess').removeClass('alert-success').addClass('alert-danger').show();
+            $('#useCalculatedPrice').hide(); // Esconder botão "Usar este preço"
+            
+            // Mostrar valores sugeridos
+            const suggestion = findNearestExactTotal(quantity, totalValue);
+            $('#suggestedTotal').text('R$ ' + formatMoney(suggestion.total));
+            $('#suggestedUnitPrice').text('R$ ' + formatMoney(suggestion.unitPrice));
+            $('#resultWarning').show();
+            
+            // Armazenar valores para uso posterior
+            window.calculatorSuggestion = suggestion;
+        } else {
+            // Resultado inteiro ou com 2 casas decimais - mostrar com fundo verde
+            $('#unitPrice').text('R$ ' + formatMoney(unitPrice));
+            $('#resultSuccess').removeClass('alert-danger').addClass('alert-success').show();
+            $('#useCalculatedPrice').show(); // Mostrar botão "Usar este preço"
+            
+            // Esconder valores sugeridos
+            $('#resultWarning').hide();
+        }
+    });
+    
+    // Usar preço calculado (resultado exato)
+    $('#useCalculatedPrice').click(function() {
+        if (currentCalculatorInput && window.currentQuantityInput) {
+            const unitPrice = $('#unitPrice').text().replace('R$ ', '');
+            const quantity = $('#calc_quantity').val();
+            
+            // Aplicar preço unitário e quantidade
+            currentCalculatorInput.val(unitPrice).trigger('input');
+            window.currentQuantityInput.val(quantity).trigger('input');
+            
+            // Fechar modal
+            $('#calculatorModal').modal('hide');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Sucesso!',
+                text: 'Preço e quantidade aplicados com sucesso!',
+                timer: 1500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
+    });
+    
+    // Usar preço sugerido (resultado aproximado)
+    $('#useSuggestedPrice').click(function() {
+        if (currentCalculatorInput && window.currentQuantityInput) {
+            const suggestedPrice = $('#suggestedUnitPrice').text().replace('R$ ', '');
+            const quantity = $('#calc_quantity').val();
+            
+            // Aplicar preço unitário sugerido e quantidade
+            currentCalculatorInput.val(suggestedPrice).trigger('input');
+            window.currentQuantityInput.val(quantity).trigger('input');
+            
+            // Fechar modal
+            $('#calculatorModal').modal('hide');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Sucesso!',
+                text: 'Preço sugerido e quantidade aplicados com sucesso!',
+                timer: 1500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
+    });
+    
+    // Limpar resultado quando campos da calculadora são alterados
+    $('#calc_quantity, #calc_total').on('input', function() {
+        $('#calculatorResult').hide();
+        $('#resultSuccess').hide();
+        $('#resultWarning').hide();
     });
 
     // --- Funções de Notificação (opcional, requer SweetAlert2) ---
@@ -1678,3 +1864,52 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
 });
 </script>
 @endpush
+
+<!-- Modal Calculadora de Preço Unitário -->
+<div class="modal fade" id="calculatorModal" tabindex="-1" aria-labelledby="calculatorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="calculatorModalLabel">
+                    <i class="bi bi-calculator"></i> Calculadora de Preço Unitário
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="calc_quantity" class="form-label">Quantidade</label>
+                    <input type="number" class="form-control" id="calc_quantity" placeholder="Ex: 10" min="1">
+                </div>
+                <div class="mb-3">
+                    <label for="calc_total" class="form-label">Valor Total</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        <input type="text" class="form-control" id="calc_total" placeholder="0,00">
+                    </div>
+                </div>
+                <div class="d-grid mb-3">
+                    <button type="button" class="btn btn-info" id="calculateBtn">
+                        <i class="bi bi-calculator"></i> Calcular
+                    </button>
+                </div>
+                
+                <div id="calculatorResult" style="display: none;">
+                    <div class="alert alert-success" id="resultSuccess" style="display: none;">
+                        <strong>Preço unitário:</strong> <span id="unitPrice"></span><br>
+                        <button type="button" class="btn btn-success btn-sm mt-2" id="useCalculatedPrice">
+                            <i class="bi bi-check"></i> Usar este preço
+                        </button>
+                    </div>
+                    <div class="alert alert-warning" id="resultWarning" style="display: none;">
+                        <strong>Atenção!</strong> O resultado não é exato.<br>
+                        <strong>Sugestão:</strong> Use R$ <span id="suggestedTotal"></span> como valor total.<br>
+                        <strong>Preço unitário:</strong> <span id="suggestedUnitPrice"></span><br>
+                        <button type="button" class="btn btn-warning btn-sm mt-2" id="useSuggestedPrice">
+                            <i class="bi bi-check"></i> Usar preço sugerido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

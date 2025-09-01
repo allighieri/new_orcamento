@@ -312,23 +312,28 @@ $(document).ready(function() {
         }
         
         // Calcular preço unitário
-         const unitPrice = totalValue / quantity;
-         
-         // Verificar se o resultado tem mais de 2 casas decimais
-         const roundedPrice = Math.round(unitPrice * 100) / 100;
-         const hasMoreThanTwoDecimals = Math.abs(unitPrice - roundedPrice) > 0.001;
+        const unitPrice = totalValue / quantity;
+        
+        // Verificar se o resultado tem mais de 2 casas decimais
+        const roundedPrice = Math.round(unitPrice * 100) / 100;
+        const hasMoreThanTwoDecimals = Math.abs(unitPrice - roundedPrice) > 0.001;
         
         // Mostrar resultado
         $('#calculatorResult').show();
         
-        // Sempre mostrar o resultado exato primeiro
-        $('#unitPrice').text('R$ ' + formatMoney(unitPrice));
-        $('#resultSuccess').show();
-        
         if (hasMoreThanTwoDecimals) {
-            // Mostrar sugestão apenas se tiver mais de 2 casas decimais
-            const suggestion = findNearestExactTotal(quantity, totalValue);
+            // Resultado com mais de 2 casas decimais - mostrar com fundo vermelho e até 4 casas decimais
+            const unitPriceFormatted = unitPrice.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 4
+            });
             
+            $('#unitPrice').text('R$ ' + unitPriceFormatted);
+            $('#resultSuccess').removeClass('alert-success').addClass('alert-danger').show();
+            $('#useCalculatedPrice').hide(); // Esconder botão "Usar este preço"
+            
+            // Mostrar valores sugeridos
+            const suggestion = findNearestExactTotal(quantity, totalValue);
             $('#suggestedTotal').text('R$ ' + formatMoney(suggestion.total));
             $('#suggestedUnitPrice').text('R$ ' + formatMoney(suggestion.unitPrice));
             $('#resultWarning').show();
@@ -336,7 +341,12 @@ $(document).ready(function() {
             // Armazenar valores para uso posterior
             window.calculatorSuggestion = suggestion;
         } else {
-            // Não mostrar sugestão se o resultado tiver 2 casas decimais ou menos
+            // Resultado inteiro ou com 2 casas decimais - mostrar com fundo verde
+            $('#unitPrice').text('R$ ' + formatMoney(unitPrice));
+            $('#resultSuccess').removeClass('alert-danger').addClass('alert-success').show();
+            $('#useCalculatedPrice').show(); // Mostrar botão "Usar este preço"
+            
+            // Esconder valores sugeridos
             $('#resultWarning').hide();
         }
     });
