@@ -316,10 +316,10 @@
                     @endif
                 </td>
                 <td>
-                    @if($item->product)
-                        {{ $item->product->description ?? '' }}
+                    @if($item->description)
+                        {{ $item->description ?? ($item->product->description ?? '') }}
                     @else
-                        {{ $item->description ?? '' }}
+                        <span class="text-muted">-</span>
                     @endif
                 </td>
                 <td style="text-align: center;">{{ $item->quantity }}</td>

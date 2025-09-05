@@ -891,7 +891,13 @@ $(document).ready(function() {
         const remainingElement = $('#remainingAmount');
         const cardElement = $('#remainingAmountCard');
         
-        if (remaining === 0) {
+        // Verificar se a opção de incluir forma de pagamento está marcada como 'não'
+        const includePaymentMethods = $('input[name="include_payment_methods"]:checked').val();
+        
+        if (includePaymentMethods === 'no') {
+            // Ocultar seção quando 'Incluir forma de pagamento no orçamento' estiver marcado como 'NÃO'
+            cardElement.hide();
+        } else if (remaining === 0) {
             // Ocultar quando valor for R$ 0,00
             cardElement.hide();
         } else {
