@@ -181,14 +181,6 @@
             </div>
             <div class="card-body">
                 <div class="mb-2">
-                    <small class="text-muted">ID:</small>
-                    <strong>{{ $paymentMethod->id }}</strong>
-                </div>
-                <div class="mb-2">
-                    <small class="text-muted">Slug:</small>
-                    <code>{{ $paymentMethod->slug }}</code>
-                </div>
-                <div class="mb-2">
                     <small class="text-muted">Tipo:</small>
                     @if($paymentMethod->is_global)
                         <span class="badge bg-info">Global</span>
@@ -223,39 +215,7 @@
             </div>
         </div>
         
-        <!-- Dicas -->
-        <div class="card mt-3">
-            <div class="card-header">
-                <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Dicas</h6>
-            </div>
-            <div class="card-body">
-                <ul class="list-unstyled mb-0 small">
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success"></i>
-                        Use nomes claros e descritivos
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success"></i>
-                        Métodos inativos não aparecem nos orçamentos
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success"></i>
-                        Configure o parcelamento conforme necessário
-                    </li>
-                    @if($paymentMethod->is_global)
-                        <li class="mb-0">
-                            <i class="bi bi-info-circle text-info"></i>
-                            Métodos globais ficam disponíveis para todas as empresas
-                        </li>
-                    @else
-                        <li class="mb-0">
-                            <i class="bi bi-info-circle text-info"></i>
-                            Este método é específico da sua empresa
-                        </li>
-                    @endif
-                </ul>
-            </div>
-        </div>
+        
     </div>
 </div>
 

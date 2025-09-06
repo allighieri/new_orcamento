@@ -92,6 +92,10 @@
                             <li>
                                 <a class="dropdown-item {{ request()->routeIs('payment-methods.*') ? 'active' : '' }}" href="{{ route('payment-methods.index') }}">
                                     <i class="bi bi-credit-card"></i> Pagamento</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('payment-option-methods.*') ? 'active' : '' }}" href="{{ route('payment-option-methods.index') }}">
+                                    <i class="bi bi-gear"></i> Métodos de Pagamento</a>
                             </li>   
                             <li>
                                 <a class="dropdown-item {{ request()->routeIs('companies.index') ? 'active' : '' }}" href="{{ route('companies.index') }}">
@@ -182,7 +186,7 @@
                     timer: 4000,
                     showConfirmButton: false,
                     toast: true,
-                    position: 'top-end'
+                    position: 'bottom-start'
                 });
             </script>
         @endif
@@ -196,7 +200,7 @@
                     timer: 5000,
                     showConfirmButton: false,
                     toast: true,
-                    position: 'top-end'
+                    position: 'bottom-start'
                 });
             </script>
         @endif

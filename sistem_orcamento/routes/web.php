@@ -14,6 +14,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\PaymentOptionMethodController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\SettingsController;
 
@@ -123,6 +124,7 @@ Route::middleware(['auth', 'user.active', 'role:admin,super_admin'])->group(func
 
 // Rotas exclusivas para Super Admin
 Route::middleware(['auth', 'user.active', 'role:super_admin'])->group(function () {
-    // Aqui podem ser adicionadas rotas específicas para super admin
-    // Como configurações do sistema, etc.
+    // Rotas para Métodos de Opção de Pagamento - apenas super_admin
+    Route::resource('payment-option-methods', PaymentOptionMethodController::class);
+    Route::patch('payment-option-methods/{paymentOptionMethod}/toggle-active', [PaymentOptionMethodController::class, 'toggleActive'])->name('payment-option-methods.toggle-active');
 });
