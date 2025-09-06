@@ -12,23 +12,29 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $user = auth()->guard('web')->user();
         
         if ($user->role === 'super_admin') {
             // Super admin pode ver todas as categorias
-            $categories = Category::with(['parent', 'allChildren', 'company'])
-                ->withCount('products')
-                ->get();
+            $query = Category::with(['parent', 'allChildren', 'company'])
+                ->withCount('products');
         } else {
             // Admin e user veem apenas categorias da sua empresa
             $companyId = session('tenant_company_id');
-            $categories = Category::where('company_id', $companyId)
+            $query = Category::where('company_id', $companyId)
                 ->with(['parent', 'allChildren'])
-                ->withCount('products')
-                ->get();
+                ->withCount('products');
         }
+        
+        // Pesquisar por nome da categoria
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+        
+        $categories = $query->get();
         
         // Organizar categorias em formato de árvore para exibição
         $categoriesTree = $this->buildCategoriesTree($categories);

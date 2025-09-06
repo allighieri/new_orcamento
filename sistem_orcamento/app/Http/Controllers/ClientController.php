@@ -6,28 +6,45 @@ use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $user = auth()->guard('web')->user();
         
         if ($user->role === 'super_admin') {
             // Super admin pode ver todos os clientes
-            $clients = Client::with('company')
-                ->orderBy('fantasy_name')
-                ->paginate(15);
+            $query = Client::with('company');
         } else {
             // Admin e user veem apenas clientes da sua empresa
             $companyId = session('tenant_company_id');
-            $clients = Client::where('company_id', $companyId)
-                ->orderBy('fantasy_name')
-                ->paginate(15);
+            $query = Client::where('company_id', $companyId);
         }
+        
+        // Pesquisar por nome corporativo, fantasia ou CNPJ/CPF do cliente
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            // Remove caracteres especiais para busca por documento
+            $cleanSearchTerm = preg_replace('/[^0-9]/', '', $searchTerm);
+            
+            $query->where(function($q) use ($searchTerm, $cleanSearchTerm) {
+                $q->where('corporate_name', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('fantasy_name', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('document_number', 'LIKE', '%' . $searchTerm . '%');
+                  
+                // Se há números no termo de busca, busca também pelo documento sem formatação
+                if (!empty($cleanSearchTerm)) {
+                    $q->orWhere(\DB::raw('REPLACE(REPLACE(REPLACE(REPLACE(document_number, ".", ""), "-", ""), "/", ""), " ", "")'), 'LIKE', '%' . $cleanSearchTerm . '%');
+                }
+            });
+        }
+        
+        $clients = $query->orderBy('fantasy_name')->paginate(10)->appends($request->query());
         
         return view('clients.index', compact('clients'));
     }

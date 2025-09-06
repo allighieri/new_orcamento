@@ -7,13 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class CompanyController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->guard('web')->user();
         
@@ -26,7 +27,27 @@ class CompanyController extends Controller
         }
         
         // Super admin vê a listagem completa
-        $companies = Company::paginate(10);
+        $query = Company::query();
+        
+        // Pesquisar por nome corporativo, fantasia ou CNPJ da empresa
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            // Remove caracteres especiais para busca por documento
+            $cleanSearchTerm = preg_replace('/[^0-9]/', '', $searchTerm);
+            
+            $query->where(function($q) use ($searchTerm, $cleanSearchTerm) {
+                $q->where('corporate_name', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('fantasy_name', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('document_number', 'LIKE', '%' . $searchTerm . '%');
+                  
+                // Se há números no termo de busca, busca também pelo documento sem formatação
+                if (!empty($cleanSearchTerm)) {
+                    $q->orWhere(\DB::raw('REPLACE(REPLACE(REPLACE(REPLACE(document_number, ".", ""), "-", ""), "/", ""), " ", "")'), 'LIKE', '%' . $cleanSearchTerm . '%');
+                }
+            });
+        }
+        
+        $companies = $query->paginate(10)->appends($request->query());
         return view('companies.index', compact('companies'));
     }
 

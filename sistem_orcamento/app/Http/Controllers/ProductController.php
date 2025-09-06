@@ -14,21 +14,27 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $user = auth()->guard('web')->user();
         
         if ($user->role === 'super_admin') {
             // Super admin pode ver todos os produtos
-            $products = Product::with(['category', 'company'])
-                ->paginate(10);
+            $query = Product::with(['category', 'company']);
         } else {
             // Admin e user veem apenas produtos da sua empresa
             $companyId = session('tenant_company_id');
-            $products = Product::where('company_id', $companyId)
-                ->with('category')
-                ->paginate(10);
+            $query = Product::where('company_id', $companyId)
+                ->with('category');
         }
+        
+        // Pesquisar por nome do produto
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+        
+        $products = $query->paginate(10)->appends($request->query());
         
         return view('products.index', compact('products'));
     }
