@@ -43,7 +43,19 @@ class BudgetController extends Controller
             $query->where('client_id', $request->client);
         }
         
-        $budgets = $query->paginate(10);
+        // Pesquisar por nome do cliente ou número do orçamento
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('number', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhereHas('client', function($clientQuery) use ($searchTerm) {
+                      $clientQuery->where('corporate_name', 'LIKE', '%' . $searchTerm . '%')
+                                  ->orWhere('fantasy_name', 'LIKE', '%' . $searchTerm . '%');
+                  });
+            });
+        }
+        
+        $budgets = $query->paginate(10)->appends($request->query());
         
         // Buscar dados do cliente para exibir no título se filtrado
         $client = null;

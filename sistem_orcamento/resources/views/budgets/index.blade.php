@@ -44,6 +44,33 @@
 
 <div class="container mx-auto row">
     <div class="col-12">
+        <!-- Formulário de Pesquisa -->
+        <div class="mb-4">
+           
+                <form method="GET" action="{{ route('budgets.index') }}" class="row g-3">
+                    <div class="col-md-4">
+                       
+                        <input type="text" 
+                               class="form-control" 
+                               id="search" 
+                               name="search" 
+                               value="{{ request('search') }}" 
+                               placeholder="Nome do cliente ou número do orçamento">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        @if(request('search'))
+                            <a href="{{ route('budgets.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i>
+                            </a>
+                        @endif
+                    </div>
+                </form>
+            
+        </div>
+        
         <div class="card">
             <div class="card-body">
                 @if($budgets->count() > 0)
