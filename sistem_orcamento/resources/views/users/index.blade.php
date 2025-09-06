@@ -114,7 +114,7 @@
                         <h4 class="text-muted mt-3">Nenhum usuário cadastrado</h4>
                         <p class="text-muted">Comece cadastrando o primeiro usuário</p>
                         <a href="{{ route('users.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Usuário
+                            <i class="bi bi-plus"></i> Novo Usuário
                         </a>
                     </div>
                 @endif

@@ -114,7 +114,7 @@
                         <h4 class="text-muted mt-3">Nenhum produto cadastrado</h4>
                         <p class="text-muted">Comece cadastrando seu primeiro produto</p>
                         <a href="{{ route('products.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Produto
+                            <i class="bi bi-plus"></i> Novo Produto
                         </a>
                     </div>
                 @endif

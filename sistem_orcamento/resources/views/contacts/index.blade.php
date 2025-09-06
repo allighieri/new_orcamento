@@ -120,7 +120,7 @@
                         <h4 class="text-muted mt-3">Nenhum contato cadastrado</h4>
                         <p class="text-muted">Comece cadastrando seu primeiro contato</p>
                         <a href="{{ route('contacts.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Contato
+                            <i class="bi bi-plus"></i> Novo Contato
                         </a>
                     </div>
                 @endif

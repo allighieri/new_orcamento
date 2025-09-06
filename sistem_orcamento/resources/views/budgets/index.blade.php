@@ -171,7 +171,7 @@
                         <h4 class="text-muted mt-3">Nenhum orçamento cadastrado</h4>
                         <p class="text-muted">Comece cadastrando seu primeiro orçamento</p>
                         <a href="{{ route('budgets.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Orçamento
+                            <i class="bi bi-plus"></i> Novo Orçamento
                         </a>
                     </div>
                 @endif

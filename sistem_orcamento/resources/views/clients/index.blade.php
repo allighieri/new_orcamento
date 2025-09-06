@@ -109,7 +109,7 @@
                         <h4 class="text-muted mt-3">Nenhum cliente cadastrado</h4>
                         <p class="text-muted">Comece cadastrando seu primeiro cliente</p>
                         <a href="{{ route('clients.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Cliente
+                            <i class="bi bi-plus"></i> Novo Cliente
                         </a>
                     </div>
                 @endif

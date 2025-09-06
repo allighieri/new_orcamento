@@ -117,7 +117,7 @@
                         <h4 class="text-muted mt-3">Nenhuma categoria cadastrada</h4>
                         <p class="text-muted">Comece cadastrando sua primeira categoria</p>
                         <a href="{{ route('categories.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Categoria
+                            <i class="bi bi-plus"></i> Nova Categoria
                         </a>
                     </div>
                 @endif
