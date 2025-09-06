@@ -51,14 +51,14 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Número</th>
-                                    <th>Cliente</th>
+                                    <th style="width: 120px;">Número</th>
+                                    <th style="width: 30%;">Cliente</th>
                                     @if(Auth::user()->hasRole('super_admin'))
                                     <th>Empresa</th>
                                     @endif
-                                    <th>Data</th>
-                                    <th>Status</th>
-                                    <th>Total</th>
+                                    <th style="width: 120px;">Data</th>
+                                    <th style="width: 120px;">Status</th>
+                                    <th style="width: 120px;">Total</th>
                                     <th class="text-end" style="width: 1%;">Ações</th>
                                 </tr>
                             </thead>

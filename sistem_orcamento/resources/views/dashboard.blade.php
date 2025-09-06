@@ -223,22 +223,26 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Número</th>
-                                    <th>Cliente</th>
+                                    <th  style="width: 120px;">Número</th>
+                                    <th style="width: 30%;">Cliente</th>
                                     @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <th>Empresa</th>
                                     @endif
                                     <th>Status</th>
                                     <th>Valor Final</th>
-                                    <th>Data</th>
-                                    <th>Ações</th>
+                                    <th style="width: 120px;">Data</th>
+                                    <th class="text-end">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($recentBudgets as $budget)
                                 <tr>
-                                    <td><strong>#{{ $budget->number }}</strong></td>
-                                    <td>{{ $budget->client->corporate_name ?? $budget->client->fantasy_name }}</td>
+                                    <td><strong>{{ $budget->number }}</strong></td>
+                                    <td>
+                                        <a href="{{ route('clients.show', $budget->client) }}" class="text-decoration-none">
+                                            {{ $budget->client->corporate_name ?? $budget->client->fantasy_name }}
+                                        </a>
+                                    </td>
                                     @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <td>{{ $budget->company->fantasy_name ?? 'N/A' }}</td>
                                     @endif
@@ -261,7 +265,7 @@
                                     </td>
                                     <td>R$ {{ number_format($budget->final_amount, 2, ',', '.') }}</td>
                                     <td>{{ $budget->issue_date->format('d/m/Y') }}</td>
-                                    <td>
+                                    <td class="text-end">
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('budgets.show', $budget) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
                                                 <i class="bi bi-eye"></i>

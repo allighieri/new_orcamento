@@ -36,13 +36,20 @@ class UpdatePaymentMethodRequest extends FormRequest
     public function rules(): array
     {
         $paymentMethod = $this->route('payment_method');
-        $companyId = $paymentMethod->company_id;
+        $user = auth()->user();
         
-        return [
+        // Determinar company_id para validação
+        $companyId = $user->role === 'super_admin' ? $this->input('company_id') : $this->route('paymentMethod')->company_id;
+        
+        $rules = [
             'payment_option_method_id' => [
                 'required',
                 'integer',
-                'exists:payment_option_methods,id'
+                'exists:payment_option_methods,id',
+                Rule::unique('payment_methods', 'payment_option_method_id')
+                    ->where('company_id', $companyId)
+                    ->ignore($this->route('paymentMethod')->id)
+                    ->whereNull('deleted_at')
             ],
             'is_active' => 'boolean',
             'allows_installments' => 'boolean',
@@ -54,6 +61,17 @@ class UpdatePaymentMethodRequest extends FormRequest
                 'required_if:allows_installments,true'
             ]
         ];
+        
+        // Super admin pode alterar a empresa
+        if ($user->role === 'super_admin') {
+            $rules['company_id'] = [
+                'required',
+                'integer',
+                'exists:companies,id'
+            ];
+        }
+        
+        return $rules;
     }
 
     /**
@@ -64,9 +82,13 @@ class UpdatePaymentMethodRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'payment_option_method_id.required' => 'O método de pagamento é obrigatório.',
+            'payment_option_method_id.required' => 'É obrigatório selecionar um método de pagamento.',
             'payment_option_method_id.integer' => 'O método de pagamento deve ser um número válido.',
             'payment_option_method_id.exists' => 'O método de pagamento selecionado não existe.',
+            'payment_option_method_id.unique' => 'Este método de pagamento já está cadastrado para esta empresa.',
+            'company_id.required' => 'A empresa é obrigatória.',
+            'company_id.integer' => 'A empresa deve ser um número válido.',
+            'company_id.exists' => 'A empresa selecionada não existe.',
             'is_active.boolean' => 'O status ativo deve ser verdadeiro ou falso.',
             'allows_installments.boolean' => 'A permissão de parcelamento deve ser verdadeira ou falsa.',
             'max_installments.integer' => 'O número máximo de parcelas deve ser um número inteiro.',

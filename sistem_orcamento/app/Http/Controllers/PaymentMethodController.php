@@ -38,7 +38,13 @@ class PaymentMethodController extends Controller
     public function create(): View
     {
         $paymentOptionMethods = \App\Models\PaymentOptionMethod::orderBy('method')->get();
-        return view('payment-methods.create', compact('paymentOptionMethods'));
+        
+        $companies = collect();
+        if (auth()->user()->role === 'super_admin') {
+            $companies = \App\Models\Company::orderBy('fantasy_name')->get();
+        }
+        
+        return view('payment-methods.create', compact('paymentOptionMethods', 'companies'));
     }
 
     /**
@@ -56,15 +62,33 @@ class PaymentMethodController extends Controller
         $slug = $baseSlug;
         $counter = 1;
         
-        while (PaymentMethod::where('company_id', $user->company_id)
+        // Determinar company_id - se super_admin pode escolher, senão usa a empresa do usuário
+        if ($user->role === 'super_admin') {
+            $companyId = $validated['company_id'] ?? null;
+            if (!$companyId) {
+                return redirect()->back()
+                    ->withErrors(['company_id' => 'É necessário selecionar uma empresa.'])
+                    ->withInput();
+            }
+        } else {
+            $companyId = $user->company_id;
+            if (!$companyId) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'Usuário não possui empresa associada.'])
+                    ->withInput();
+            }
+        }
+        
+        while (PaymentMethod::where('company_id', $companyId)
                            ->where('slug', $slug)
+                           ->withTrashed()
                            ->exists()) {
             $slug = $baseSlug . '-' . $counter;
             $counter++;
         }
 
         // Definir valores padrão
-        $validated['company_id'] = $user->company_id;
+        $validated['company_id'] = $companyId;
         $validated['slug'] = $slug;
         // Os valores de is_active e allows_installments já foram processados pelo Request
         
@@ -113,7 +137,13 @@ class PaymentMethodController extends Controller
         }
         
         $paymentOptionMethods = \App\Models\PaymentOptionMethod::orderBy('method')->get();
-        return view('payment-methods.edit', compact('paymentMethod', 'paymentOptionMethods'));
+        
+        $companies = collect();
+        if ($user->role === 'super_admin') {
+            $companies = \App\Models\Company::orderBy('fantasy_name')->get();
+        }
+        
+        return view('payment-methods.edit', compact('paymentMethod', 'paymentOptionMethods', 'companies'));
     }
 
     /**
@@ -130,16 +160,27 @@ class PaymentMethodController extends Controller
         
         $validated = $request->validated();
 
-        // Gerar novo slug se o método de pagamento mudou
-        if ($validated['payment_option_method_id'] !== $paymentMethod->payment_option_method_id) {
+        // Determinar company_id - se super_admin pode escolher, senão mantém o atual
+        if ($user->role === 'super_admin') {
+            $companyId = $validated['company_id'] ?? $paymentMethod->company_id;
+        } else {
+            $companyId = $paymentMethod->company_id;
+        }
+
+        // Gerar novo slug se o método de pagamento mudou ou se a empresa mudou (super_admin)
+        $needsNewSlug = ($validated['payment_option_method_id'] !== $paymentMethod->payment_option_method_id) ||
+                       ($user->role === 'super_admin' && $companyId !== $paymentMethod->company_id);
+                       
+        if ($needsNewSlug) {
             $paymentOptionMethod = \App\Models\PaymentOptionMethod::find($validated['payment_option_method_id']);
             $baseSlug = Str::slug($paymentOptionMethod->method);
             $slug = $baseSlug;
             $counter = 1;
             
-            while (PaymentMethod::where('company_id', $paymentMethod->company_id)
+            while (PaymentMethod::where('company_id', $companyId)
                                ->where('slug', $slug)
                                ->where('id', '!=', $paymentMethod->id)
+                               ->withTrashed()
                                ->exists()) {
                 $slug = $baseSlug . '-' . $counter;
                 $counter++;
@@ -147,6 +188,9 @@ class PaymentMethodController extends Controller
             
             $validated['slug'] = $slug;
         }
+        
+        // Definir company_id no validated
+        $validated['company_id'] = $companyId;
 
         // Os valores de is_active e allows_installments já foram processados pelo Request
         

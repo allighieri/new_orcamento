@@ -52,6 +52,32 @@
                         </div>
                     </div>
                     
+                    @if(auth()->user()->role === 'super_admin')
+                    <!-- Empresa -->
+                    <div class="mb-3">
+                        <label for="company_id" class="form-label">Empresa <span class="text-danger">*</span></label>
+                        <select class="form-select @error('company_id') is-invalid @enderror" 
+                                id="company_id" 
+                                name="company_id" 
+                                required>
+                            <option value="">Selecione uma empresa...</option>
+                            @foreach($companies as $company)
+                                <option value="{{ $company->id }}" 
+                                        {{ old('company_id', $paymentMethod->company_id) == $company->id ? 'selected' : '' }}>
+                                    {{ $company->fantasy_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('company_id')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                        <div class="form-text">
+                            Empresa à qual este método de pagamento pertence.
+                        </div>
+                    </div>
+                    @endif
                     
                 <div class="row">
                     <div class="col-md-6">
@@ -255,6 +281,22 @@ function toggleInstallments() {
 // Inicializar o estado do formulário
 document.addEventListener('DOMContentLoaded', function() {
     toggleInstallments();
+    
+    // Verificar se há erros de validação e mostrar SweetAlert
+    @if($errors->any())
+        let errorMessages = [];
+        @foreach($errors->all() as $error)
+            errorMessages.push('{{ $error }}');
+        @endforeach
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro de Validação',
+            html: errorMessages.join('<br>'),
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+        });
+    @endif
 });
 </script>
 
