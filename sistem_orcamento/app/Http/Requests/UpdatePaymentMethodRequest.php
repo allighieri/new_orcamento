@@ -15,6 +15,16 @@ class UpdatePaymentMethodRequest extends FormRequest
         $paymentMethod = $this->route('payment_method');
         $user = auth()->user();
         
+        // Verificar se o usuário está autenticado
+        if (!$user) {
+            return false;
+        }
+        
+        // Verificar se o método de pagamento existe
+        if (!$paymentMethod) {
+            return false;
+        }
+        
         // Super admin pode editar qualquer método
         if ($user->role === 'super_admin') {
             return true;
@@ -38,8 +48,18 @@ class UpdatePaymentMethodRequest extends FormRequest
         $paymentMethod = $this->route('payment_method');
         $user = auth()->user();
         
+        // Verificar se o usuário está autenticado
+        if (!$user) {
+            abort(401);
+        }
+        
+        // Verificar se o método de pagamento existe
+        if (!$paymentMethod) {
+            abort(404);
+        }
+        
         // Determinar company_id para validação
-        $companyId = $user->role === 'super_admin' ? $this->input('company_id') : $this->route('paymentMethod')->company_id;
+        $companyId = $user->role === 'super_admin' ? $this->input('company_id') : $paymentMethod->company_id;
         
         $rules = [
             'payment_option_method_id' => [
@@ -48,7 +68,7 @@ class UpdatePaymentMethodRequest extends FormRequest
                 'exists:payment_option_methods,id',
                 Rule::unique('payment_methods', 'payment_option_method_id')
                     ->where('company_id', $companyId)
-                    ->ignore($this->route('paymentMethod')->id)
+                    ->ignore($paymentMethod->id)
                     ->whereNull('deleted_at')
             ],
             'is_active' => 'boolean',

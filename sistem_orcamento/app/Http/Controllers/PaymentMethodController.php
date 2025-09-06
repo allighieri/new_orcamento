@@ -20,6 +20,10 @@ class PaymentMethodController extends Controller
     {
         $user = auth()->user();
         
+        if (!$user) {
+            abort(401, 'Usuário não autenticado.');
+        }
+        
         // Obter métodos de pagamento disponíveis para a empresa do usuário
         $paymentMethods = PaymentMethod::forCompany($user->company_id)
             ->with('paymentOptionMethod')
@@ -37,10 +41,16 @@ class PaymentMethodController extends Controller
      */
     public function create(): View
     {
+        $user = auth()->user();
+        
+        if (!$user) {
+            abort(401, 'Usuário não autenticado.');
+        }
+        
         $paymentOptionMethods = \App\Models\PaymentOptionMethod::orderBy('method')->get();
         
         $companies = collect();
-        if (auth()->user()->role === 'super_admin') {
+        if ($user->role === 'super_admin') {
             $companies = \App\Models\Company::orderBy('fantasy_name')->get();
         }
         
@@ -112,6 +122,10 @@ class PaymentMethodController extends Controller
     {
         $user = auth()->user();
         
+        if (!$user) {
+            abort(401, 'Usuário não autenticado.');
+        }
+        
         // Verificar se o usuário pode visualizar este método
         if (!$this->canUserAccessPaymentMethod($user, $paymentMethod)) {
             abort(403, 'Acesso negado.');
@@ -130,6 +144,10 @@ class PaymentMethodController extends Controller
     public function edit(PaymentMethod $paymentMethod): View
     {
         $user = auth()->user();
+        
+        if (!$user) {
+            abort(401, 'Usuário não autenticado.');
+        }
         
         // Verificar se o usuário pode editar este método
         if (!$this->canUserEditPaymentMethod($user, $paymentMethod)) {
@@ -152,6 +170,10 @@ class PaymentMethodController extends Controller
     public function update(UpdatePaymentMethodRequest $request, PaymentMethod $paymentMethod): RedirectResponse
     {
         $user = auth()->user();
+        
+        if (!$user) {
+            abort(401, 'Usuário não autenticado.');
+        }
         
         // Verificar se o usuário pode editar este método
         if (!$this->canUserEditPaymentMethod($user, $paymentMethod)) {

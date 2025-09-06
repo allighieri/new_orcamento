@@ -28,7 +28,7 @@
                     @method('PUT')
                     
                     <!-- Método de Pagamento -->
-                    <div class="mb-3">
+                    <div class="col-6 mb-3">
                         <label for="payment_option_method_id" class="form-label">Método de Pagamento <span class="text-danger">*</span></label>
                         <select class="form-select @error('payment_option_method_id') is-invalid @enderror" 
                                 id="payment_option_method_id" 
@@ -48,7 +48,7 @@
                             </div>
                         @enderror
                         <div class="form-text">
-                            Tipo de método de pagamento que será exibido nos orçamentos.
+                            Método de pagamento que será exibido nos orçamentos.
                         </div>
                     </div>
                     
@@ -180,14 +180,6 @@
                 <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informações</h6>
             </div>
             <div class="card-body">
-                <div class="mb-2">
-                    <small class="text-muted">Tipo:</small>
-                    @if($paymentMethod->is_global)
-                        <span class="badge bg-info">Global</span>
-                    @else
-                        <span class="badge bg-secondary">Empresa</span>
-                    @endif
-                </div>
                 <div class="mb-2">
                     <small class="text-muted">Criado em:</small>
                     <strong>{{ $paymentMethod->created_at->format('d/m/Y H:i') }}</strong>
