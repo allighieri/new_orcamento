@@ -90,7 +90,8 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     // Rotas para Configurações - admin e super_admin podem gerenciar
     Route::middleware('role:admin,super_admin')->group(function () {
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
-        Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('settings/theme', [SettingsController::class, 'updateTheme'])->name('settings.theme');
     });
     
     // Rota para autocomplete de bancos

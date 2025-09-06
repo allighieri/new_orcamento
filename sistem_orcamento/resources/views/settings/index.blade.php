@@ -159,9 +159,76 @@
 
                         <hr class="my-4">
 
+                        <!-- Configurações de Tema -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-1">
+                                    <i class="bi bi-palette"></i> Configurações de Tema
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-brush"></i> Selecionar Tema
+                                </label>
+                                <div class="theme-color-picker">
+                                    <div class="color-options d-flex flex-wrap gap-2 mb-2">
+                                        @php
+                                            $currentTheme = App\Http\Controllers\SettingsController::getCurrentTheme();
+                                        @endphp
+                                        <div class="color-option {{ $currentTheme == 'blue' ? 'active' : '' }}" data-theme="blue" data-color="#0d6efd" title="Azul (Padrão)">
+                                            <div class="color-circle" style="background-color: #0d6efd;"></div>
+                                        </div>
+                                        <div class="color-option {{ $currentTheme == 'green' ? 'active' : '' }}" data-theme="green" data-color="#198754" title="Verde">
+                                            <div class="color-circle" style="background-color: #198754;"></div>
+                                        </div>
+                                        <div class="color-option {{ $currentTheme == 'teal' ? 'active' : '' }}" data-theme="teal" data-color="#20c997" title="Teal">
+                                            <div class="color-circle" style="background-color: #20c997;"></div>
+                                        </div>
+                                        <div class="color-option {{ $currentTheme == 'cyan' ? 'active' : '' }}" data-theme="cyan" data-color="#0dcaf0" title="Ciano">
+                                            <div class="color-circle" style="background-color: #0dcaf0;"></div>
+                                        </div>
+                                        <div class="color-option {{ $currentTheme == 'purple' ? 'active' : '' }}" data-theme="purple" data-color="#6f42c1" title="Roxo">
+                                            <div class="color-circle" style="background-color: #6f42c1;"></div>
+                                        </div>
+                                        <div class="color-option {{ $currentTheme == 'indigo' ? 'active' : '' }}" data-theme="indigo" data-color="#6610f2" title="Índigo">
+                                            <div class="color-circle" style="background-color: #6610f2;"></div>
+                                        </div>
+                                        <div class="color-option {{ $currentTheme == 'pink' ? 'active' : '' }}" data-theme="pink" data-color="#e83e8c" title="Rosa">
+                                            <div class="color-circle" style="background-color: #e83e8c;"></div>
+                                        </div>
+                                        <div class="color-option {{ $currentTheme == 'red' ? 'active' : '' }}" data-theme="red" data-color="#dc3545" title="Vermelho">
+                                            <div class="color-circle" style="background-color: #dc3545;"></div>
+                                        </div>
+                                        <div class="color-option {{ $currentTheme == 'orange' ? 'active' : '' }}" data-theme="orange" data-color="#fd7e14" title="Laranja">
+                                            <div class="color-circle" style="background-color: #fd7e14;"></div>
+                                        </div>
+                                        <div class="color-option {{ $currentTheme == 'yellow' ? 'active' : '' }}" data-theme="yellow" data-color="#ffc107" title="Amarelo">
+                                            <div class="color-circle" style="background-color: #ffc107;"></div>
+                                        </div>
+                                        <div class="color-option {{ $currentTheme == 'lime' ? 'active' : '' }}" data-theme="lime" data-color="#32cd32" title="Lima">
+                                            <div class="color-circle" style="background-color: #32cd32;"></div>
+                                        </div>
+                                        <div class="color-option {{ $currentTheme == 'dark' ? 'active' : '' }}" data-theme="dark" data-color="#495057" title="Escuro">
+                                            <div class="color-circle" style="background-color: #495057;"></div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="theme_selector" name="theme" value="{{ $currentTheme }}">
+                                </div>
+                                <small class="form-text text-muted">
+                                    Clique em uma cor para selecionar o tema
+                                </small>
+                            </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
                         <!-- Botões de Ação -->
                         <div class="row">
-                            <div class="col-12">
+                            <div class="col-12 pb-4 px-4">
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-0">
                                     <a href="{{ route('dashboard') }}" class="btn btn-secondary">Cancelar</a>
                                     <button type="submit" class="btn btn-primary">
@@ -178,4 +245,81 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const themeSelector = document.getElementById('theme_selector');
+    const colorOptions = document.querySelectorAll('.color-option');
+    
+    // Aplicar tema atual na inicialização
+    const currentTheme = '{{ session("theme", "blue") }}';
+    if (currentTheme !== 'blue') {
+        document.documentElement.setAttribute('data-theme', currentTheme);
+    }
+    
+    // Adicionar event listeners para as opções de cor
+    colorOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const theme = this.getAttribute('data-theme');
+            
+            console.log('Clicou no tema:', theme); // Debug
+            
+            // Remover classe active de todas as opções
+            colorOptions.forEach(opt => opt.classList.remove('active'));
+            
+            // Adicionar classe active à opção selecionada
+            this.classList.add('active');
+            
+            // Atualizar o valor do input hidden
+            if (themeSelector) {
+                themeSelector.value = theme;
+            }
+            
+            // Aplicar tema imediatamente
+            applyTheme(theme);
+        });
+    });
+    
+    function applyTheme(theme) {
+        console.log('Aplicando tema:', theme); // Debug
+        
+        // Fazer requisição AJAX
+        fetch('{{ route("settings.theme") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ theme: theme })
+        })
+        .then(response => {
+            console.log('Resposta recebida:', response.status); // Debug
+            return response.json();
+        })
+        .then(data => {
+            console.log('Dados da resposta:', data); // Debug
+            if (data.success) {
+                // Aplicar tema imediatamente
+                if (theme === 'blue') {
+                    document.documentElement.removeAttribute('data-theme');
+                } else {
+                    document.documentElement.setAttribute('data-theme', theme);
+                }
+                
+                console.log('Tema aplicado com sucesso! Atributo data-theme:', document.documentElement.getAttribute('data-theme'));
+            } else {
+                console.error('Erro ao aplicar tema - resposta não foi sucesso');
+            }
+        })
+        .catch(error => {
+            console.error('Erro na requisição AJAX:', error);
+        });
+    }
+    
+
+
+});
+</script>
 @endsection

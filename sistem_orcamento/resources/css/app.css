@@ -1,5 +1,205 @@
 /* CSS customizado para o sistema de orçamento */
 
+/* ===== VARIÁVEIS DE TEMA ===== */
+:root {
+    /* Tema Azul (Padrão) */
+    --primary-color: #0d6efd;
+    --primary-hover: #0b5ed7;
+    --primary-active: #0a58ca;
+    --primary-rgb: 13, 110, 253;
+}
+
+/* Tema Verde */
+[data-theme="green"] {
+    --primary-color: #198754;
+    --primary-hover: #157347;
+    --primary-active: #146c43;
+    --primary-rgb: 25, 135, 84;
+}
+
+/* Tema Roxo */
+[data-theme="purple"] {
+    --primary-color: #6f42c1;
+    --primary-hover: #5d39a6;
+    --primary-active: #59359a;
+    --primary-rgb: 111, 66, 193;
+}
+
+/* Tema Vermelho */
+[data-theme="red"] {
+    --primary-color: #dc3545;
+    --primary-hover: #bb2d3b;
+    --primary-active: #b02a37;
+    --primary-rgb: 220, 53, 69;
+}
+
+/* Tema Laranja */
+[data-theme="orange"] {
+    --primary-color: #fd7e14;
+    --primary-hover: #e76500;
+    --primary-active: #d15e00;
+    --primary-rgb: 253, 126, 20;
+}
+
+/* Tema Escuro */
+[data-theme="dark"] {
+    --primary-color: #495057;
+    --primary-hover: #3d4449;
+    --primary-active: #343a40;
+    --primary-rgb: 73, 80, 87;
+}
+
+/* Tema Teal */
+[data-theme="teal"] {
+    --primary-color: #20c997;
+    --primary-hover: #1aa179;
+    --primary-active: #198c6b;
+    --primary-rgb: 32, 201, 151;
+}
+
+/* Tema Indigo */
+[data-theme="indigo"] {
+    --primary-color: #6610f2;
+    --primary-hover: #5a0dcf;
+    --primary-active: #520dc2;
+    --primary-rgb: 102, 16, 242;
+}
+
+/* Tema Rosa */
+[data-theme="pink"] {
+    --primary-color: #e83e8c;
+    --primary-hover: #d91a72;
+    --primary-active: #c51162;
+    --primary-rgb: 232, 62, 140;
+}
+
+/* Tema Amarelo */
+[data-theme="yellow"] {
+    --primary-color: #ffc107;
+    --primary-hover: #e0a800;
+    --primary-active: #d39e00;
+    --primary-rgb: 255, 193, 7;
+}
+
+/* Tema Ciano */
+[data-theme="cyan"] {
+    --primary-color: #0dcaf0;
+    --primary-hover: #0aa2c0;
+    --primary-active: #0995b3;
+    --primary-rgb: 13, 202, 240;
+}
+
+/* Tema Lima */
+[data-theme="lime"] {
+    --primary-color: #32cd32;
+    --primary-hover: #28a428;
+    --primary-active: #228b22;
+    --primary-rgb: 50, 205, 50;
+}
+
+/* ===== APLICAÇÃO DAS VARIÁVEIS ===== */
+/* Sobrescrever cores primárias do Bootstrap */
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.btn-primary:active,
+.btn-primary.active {
+    background-color: var(--primary-active);
+    border-color: var(--primary-active);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.border-primary {
+    border-color: var(--primary-color) !important;
+}
+
+.alert-primary {
+    background-color: rgba(var(--primary-rgb), 0.1);
+    border-color: rgba(var(--primary-rgb), 0.2);
+    color: var(--primary-color);
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+}
+
+a:hover {
+    color: var(--primary-hover);
+}
+
+
+
+/* Color Picker Styles */
+.theme-color-picker {
+    margin-bottom: 1rem;
+}
+
+.color-options {
+    max-width: 100%;
+}
+
+.color-option {
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+    border-color: #dee2e6;
+}
+
+.color-option.active {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+.color-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.color-option:hover .color-circle {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.color-option.active .color-circle {
+    border-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 /* Garantir que mensagens de validação do Bootstrap sejam exibidas */
 .invalid-feedback {
     display: block !important;

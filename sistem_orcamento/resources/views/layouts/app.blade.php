@@ -344,6 +344,18 @@
         }); // Fim do document ready
     </script>
     
+    <!-- Script global para aplicar tema -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aplicar tema salvo no banco de dados
+        const savedTheme = '{{ App\Http\Controllers\SettingsController::getCurrentTheme() }}';
+        if (savedTheme && savedTheme !== 'blue') {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+    });
+    </script>
+    
     @stack('scripts')
+    @yield('scripts')
 </body>
 </html>
