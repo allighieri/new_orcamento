@@ -319,7 +319,7 @@
                         <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
                         <p class="text-muted mt-2">Nenhum orçamento encontrado</p>
                         <a href="{{ route('budgets.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Criar primeiro orçamento
+                            <i class="bi bi-plus"></i> Novo Orçamento
                         </a>
                     </div>
                 @endif

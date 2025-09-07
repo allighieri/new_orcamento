@@ -106,9 +106,6 @@ class SettingsController extends Controller
         
         // Também manter na sessão para uso imediato
         session(['theme' => $request->theme]);
-        
-        // Flash success message
-        session()->flash('success', 'Tema alterado com sucesso!');
 
         return response()->json([
             'success' => true,

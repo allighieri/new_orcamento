@@ -49,6 +49,25 @@
     --primary-rgb: 73, 80, 87;
 }
 
+/* Temas com cores claras - textos pretos para melhor legibilidade */
+[data-theme="cyan"] .navbar-dark .navbar-nav .nav-link,
+[data-theme="yellow"] .navbar-dark .navbar-nav .nav-link,
+[data-theme="teal"] .navbar-dark .navbar-nav .nav-link {
+    color: #000 !important;
+}
+
+[data-theme="cyan"] .navbar-dark .navbar-brand,
+[data-theme="yellow"] .navbar-dark .navbar-brand,
+[data-theme="teal"] .navbar-dark .navbar-brand {
+    color: #000 !important;
+}
+
+[data-theme="cyan"] .navbar-dark .navbar-toggler-icon,
+[data-theme="yellow"] .navbar-dark .navbar-toggler-icon,
+[data-theme="teal"] .navbar-dark .navbar-toggler-icon {
+    filter: invert(1);
+}
+
 /* Tema Teal */
 [data-theme="teal"] {
     --primary-color: #20c997;
@@ -200,6 +219,49 @@ a:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+/* Estilos para o dropdown de tema no menu */
+.theme-color-options {
+    max-width: 100%;
+}
+
+.theme-color-option {
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.theme-color-option:hover {
+    transform: scale(1.1);
+    border-color: #dee2e6;
+}
+
+.theme-color-option.active {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+.theme-color-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.theme-color-option:hover .theme-color-circle {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.theme-color-option.active .theme-color-circle {
+    border-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+
 /* Garantir que mensagens de validação do Bootstrap sejam exibidas */
 .invalid-feedback {
     display: block !important;
@@ -212,4 +274,42 @@ a:hover {
 .form-control.is-invalid ~ .invalid-feedback,
 .form-select.is-invalid ~ .invalid-feedback {
     display: block !important;
+}
+
+/* Corrigir alinhamento do ícone de tema no navbar */
+#themeDropdown {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+}
+
+#themeDropdown .bi-palette {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+/* Corrigir alinhamento do menu tema no modo responsivo */
+@media (max-width: 991.98px) {
+    #themeDropdown {
+        justify-content: flex-start;
+        padding: 0.5rem 1rem;
+        margin-left: 0;
+        text-align: left;
+    }
+    
+    .navbar-nav .nav-item.dropdown {
+        margin-bottom: 0;
+        width: 100%;
+    }
+    
+    .navbar-collapse .navbar-nav {
+        align-items: stretch;
+    }
+    
+    .navbar-nav .nav-item .nav-link {
+        padding: 0.5rem 1rem;
+        display: flex;
+        align-items: center;
+    }
 }
