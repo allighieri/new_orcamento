@@ -172,18 +172,99 @@ class CompanyController extends Controller
      */
     public function destroy(Company $company): RedirectResponse
     {
+        // Verificar se o usuário é super_admin
+        $user = auth()->guard('web')->user();
+        if ($user->role !== 'super_admin') {
+            return redirect()->route('companies.index')
+                ->with('error', 'Apenas super administradores podem excluir empresas.');
+        }
+
         try {
-            // Desassocia os contatos da empresa (define company_id como null)
-            $company->contacts()->update(['company_id' => null]);
-            
-            // Exclui a empresa
+            DB::beginTransaction();
+
+            // 1. Excluir todos os orçamentos e seus itens relacionados
+            $budgets = $company->budgets();
+            foreach ($budgets->get() as $budget) {
+                // Excluir itens do orçamento
+                $budget->items()->delete();
+                // Excluir pagamentos do orçamento (ANTES de excluir payment_methods)
+                $budget->budgetPayments()->delete();
+                // Excluir contas bancárias do orçamento
+                $budget->budgetBankAccounts()->delete();
+                // Excluir arquivos PDF do orçamento
+                $budget->pdfFiles()->delete();
+            }
+            $budgets->delete();
+
+            // 2. Excluir métodos de pagamento específicos da empresa (APÓS excluir budget_payments)
+            // Usar forceDelete() porque PaymentMethod usa SoftDeletes
+            // Mas primeiro verificar se não há outros budget_payments referenciando eles
+            $paymentMethods = $company->paymentMethods()->get();
+            foreach ($paymentMethods as $paymentMethod) {
+                // Excluir qualquer budget_payment restante que referencie este método
+                $paymentMethod->budgetPayments()->delete();
+                $paymentMethod->forceDelete();
+            }
+
+            // 3. Excluir todos os produtos da empresa
+            $company->products()->delete();
+
+            // 4. Excluir todas as categorias da empresa (incluindo subcategorias)
+            $categories = $company->categories();
+            foreach ($categories->get() as $category) {
+                // Excluir subcategorias recursivamente
+                $this->deleteSubcategories($category);
+            }
+            $categories->delete();
+
+            // 5. Excluir todos os clientes da empresa
+            $clients = $company->clients();
+            foreach ($clients->get() as $client) {
+                // Excluir contatos do cliente
+                $client->contacts()->delete();
+            }
+            $clients->delete();
+
+            // 6. Excluir contatos diretos da empresa
+            $company->contacts()->delete();
+
+            // 7. Excluir formulários de contato da empresa
+            $company->contactForms()->delete();
+
+            // 8. Excluir arquivos PDF da empresa
+            $company->pdfFiles()->delete();
+
+            // 9. Excluir usuários da empresa (exceto super_admin)
+            $company->users()->where('role', '!=', 'super_admin')->delete();
+
+            // 10. Excluir logo da empresa se existir
+            if ($company->logo && Storage::disk('public')->exists($company->logo)) {
+                Storage::disk('public')->delete($company->logo);
+            }
+
+            // 11. Finalmente, excluir a empresa
             $company->delete();
-            
+
+            DB::commit();
+
             return redirect()->route('companies.index')
-                ->with('success', 'Empresa excluída com sucesso! Os contatos foram preservados.');
+                ->with('success', 'Empresa e todos os registros relacionados foram excluídos com sucesso!');
         } catch (\Exception $e) {
+            DB::rollback();
             return redirect()->route('companies.index')
-                ->with('error', 'Erro ao excluir empresa. Verifique se não há registros relacionados.');
+                ->with('error', 'Erro ao excluir empresa: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Excluir subcategorias recursivamente
+     */
+    private function deleteSubcategories($category)
+    {
+        $subcategories = $category->children;
+        foreach ($subcategories as $subcategory) {
+            $this->deleteSubcategories($subcategory);
+            $subcategory->delete();
         }
     }
 }
