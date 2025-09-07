@@ -55,6 +55,46 @@ class Company extends Model
     }
 
     /**
+     * Relacionamento com orçamentos
+     */
+    public function budgets(): HasMany
+    {
+        return $this->hasMany(Budget::class);
+    }
+
+    /**
+     * Relacionamento com produtos
+     */
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    /**
+     * Relacionamento com categorias
+     */
+    public function categories(): HasMany
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    /**
+     * Relacionamento com clientes
+     */
+    public function clients(): HasMany
+    {
+        return $this->hasMany(Client::class);
+    }
+
+    /**
+     * Relacionamento com métodos de pagamento
+     */
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class);
+    }
+
+    /**
      * Método helper para consolidar contatos da empresa
      * Prioriza contact-forms sobre dados da tabela companies
      * Remove duplicatas baseado na descrição
