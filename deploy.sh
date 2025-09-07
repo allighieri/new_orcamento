@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # Variáveis de caminho
-REPO_DIR="/home/karaoke/repositories/new_orcamento"
-DEST_DIR="/home/karaoke/public_html/orcamento"
+REPO_DIR="/home/karaoke/repositories/test_production"
+DEST_DIR="/home/karaoke/public_html/orcamento_test"
 
 echo "Iniciando deploy..."
 
@@ -32,7 +32,7 @@ echo "Compilando assets com o Vite..."
 npm run build
 
 # Executa as migrações (seguro)
-echo "Rodando migrations..."
+echo "Rodando migrations...ok"
 /opt/cpanel/ea-php83/root/usr/bin/php artisan migrate --force
 
 # Limpa todos os caches de uma vez
