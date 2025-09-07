@@ -17,12 +17,19 @@ class PaymentExampleSeeder extends Seeder
      */
     public function run(): void
     {
-        // Buscar métodos de pagamento
+        // Buscar métodos de pagamento disponíveis
         $pix = PaymentMethod::where('slug', 'pix')->first();
-        $creditCard = PaymentMethod::where('slug', 'credit_card')->first();
-        $cash = PaymentMethod::where('slug', 'cash')->first();
-        $bankSlip = PaymentMethod::where('slug', 'bank_slip')->first();
-        $debitCard = PaymentMethod::where('slug', 'debit_card')->first();
+        $creditCard = PaymentMethod::where('slug', 'cartao-credito')->first();
+        $cash = PaymentMethod::where('slug', 'dinheiro')->first();
+        $bankSlip = PaymentMethod::where('slug', 'boleto')->first();
+        $debitCard = PaymentMethod::where('slug', 'cartao-debito')->first();
+        
+        // Se não encontrar métodos específicos, usar os disponíveis
+        if (!$pix) $pix = PaymentMethod::first();
+        if (!$creditCard) $creditCard = PaymentMethod::skip(1)->first() ?: PaymentMethod::first();
+        if (!$cash) $cash = PaymentMethod::first();
+        if (!$bankSlip) $bankSlip = PaymentMethod::first();
+        if (!$debitCard) $debitCard = PaymentMethod::first();
 
         // Exemplo 1: PIX na retirada (R$ 1.500) + Cartão de Crédito 3x (R$ 1.500)
         $this->createExamplePayment1($pix, $creditCard);

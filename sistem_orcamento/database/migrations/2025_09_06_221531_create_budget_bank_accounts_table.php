@@ -13,23 +13,12 @@ return new class extends Migration
     {
         Schema::create('budget_bank_accounts', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('budget_id');
-            $table->unsignedBigInteger('bank_account_id');
-            $table->integer('order')->default(1); // Ordem de exibição
+            $table->foreignId('budget_id')->constrained()->onDelete('cascade');
+            $table->foreignId('bank_account_id')->constrained()->onDelete('cascade');
+            $table->integer('order')->default(0);
             $table->timestamps();
             
-            $table->foreign('budget_id')
-                  ->references('id')
-                  ->on('budgets')
-                  ->onDelete('cascade');
-                  
-            $table->foreign('bank_account_id')
-                  ->references('id')
-                  ->on('bank_accounts')
-                  ->onDelete('cascade');
-                  
             $table->unique(['budget_id', 'bank_account_id']);
-            $table->engine = 'InnoDB';
         });
     }
 

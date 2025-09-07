@@ -14,8 +14,8 @@ class PaymentOptionMethodSeeder extends Seeder
      */
     public function run(): void
     {
-
-        DB::table('payment_option_methods')->truncate();
+        // Não usar truncate devido à foreign key constraint
+        // DB::table('payment_option_methods')->truncate();
 
         $paymentOptionMethods = [
             [
