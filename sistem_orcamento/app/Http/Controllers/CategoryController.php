@@ -39,6 +39,11 @@ class CategoryController extends Controller
         // Organizar categorias em formato de árvore para exibição
         $categoriesTree = $this->buildCategoriesTree($categories);
         $isSuperAdmin = $user->role === 'super_admin';
+        
+        // Se for requisição AJAX, retornar apenas a parte da tabela
+        if ($request->ajax() || $request->has('ajax')) {
+            return view('categories.partials.table', compact('categoriesTree', 'isSuperAdmin'));
+        }
 
         return view('categories.index', compact('categoriesTree', 'isSuperAdmin'));
     }

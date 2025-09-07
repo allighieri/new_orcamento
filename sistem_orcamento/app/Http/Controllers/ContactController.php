@@ -52,6 +52,11 @@ class ContactController extends Controller
         }
         
         $contacts = $query->orderBy('name')->paginate(10)->appends($request->query());
+        
+        // Se for requisição AJAX, retornar apenas a parte da tabela
+        if ($request->ajax() || $request->has('ajax')) {
+            return view('contacts.partials.table', compact('contacts'));
+        }
             
         return view('contacts.index', compact('contacts'));
     }

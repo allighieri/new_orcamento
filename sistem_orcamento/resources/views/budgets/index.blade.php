@@ -57,16 +57,13 @@
                                value="{{ request('search') }}" 
                                placeholder="Nome do cliente ou número do orçamento">
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary me-2">
-                            <i class="bi bi-search"></i>
-                        </button>
-                        @if(request('search'))
+                    @if(request('search'))
+                        <div class="col-md-2 d-flex align-items-end">
                             <a href="{{ route('budgets.index') }}" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-circle"></i>
                             </a>
-                        @endif
-                    </div>
+                        </div>
+                    @endif
                 </form>
             
         </div>
@@ -168,11 +165,16 @@
                 @else
                     <div class="text-center py-5">
                         <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
-                        <h4 class="text-muted mt-3">Nenhum orçamento cadastrado</h4>
-                        <p class="text-muted">Comece cadastrando seu primeiro orçamento</p>
-                        <a href="{{ route('budgets.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Novo Orçamento
-                        </a>
+                        @if(request('search'))
+                            <h4 class="text-muted mt-3">Nenhum orçamento encontrado</h4>
+                            <p class="text-muted">Não há orçamentos que correspondam à sua pesquisa</p>
+                        @else
+                            <h4 class="text-muted mt-3">Nenhum orçamento cadastrado</h4>
+                            <p class="text-muted">Comece criando seu primeiro orçamento</p>
+                            <a href="{{ route('budgets.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus"></i> Novo Orçamento
+                            </a>
+                        @endif
                     </div>
                 @endif
             </div>

@@ -36,6 +36,11 @@ class ProductController extends Controller
         
         $products = $query->paginate(10)->appends($request->query());
         
+        // Se for requisição AJAX, retornar apenas a parte da tabela
+        if ($request->ajax() || $request->has('ajax')) {
+            return view('products.partials.table', compact('products'));
+        }
+        
         return view('products.index', compact('products'));
     }
 

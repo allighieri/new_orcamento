@@ -69,6 +69,11 @@ class BudgetController extends Controller
             }
         }
         
+        // Se for requisição AJAX, retornar apenas a parte da tabela
+        if ($request->ajax() || $request->has('ajax')) {
+            return view('budgets.partials.table', compact('budgets', 'client'));
+        }
+        
         return view('budgets.index', compact('budgets', 'client'));
     }
 

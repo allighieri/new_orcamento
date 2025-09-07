@@ -68,6 +68,11 @@ class DashboardController extends Controller implements HasMiddleware
         // Aplicar paginação (5 itens por página na dashboard)
         $recentBudgets = $budgetsQuery->paginate(10)->appends($request->query());
         
+        // Se for requisição AJAX, retornar apenas a parte da tabela
+        if ($request->ajax() || $request->has('ajax')) {
+            return view('dashboard.partials.table', compact('recentBudgets'));
+        }
+        
         return view('dashboard', compact('user', 'stats', 'recentBudgets'));
     }
 

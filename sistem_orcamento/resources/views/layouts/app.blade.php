@@ -463,6 +463,9 @@
     });
     </script>
     
+    <!-- Live Search JavaScript -->
+    <script src="{{ asset('js/live-search.js') }}"></script>
+    
     @stack('scripts')
     @yield('scripts')
 </body>

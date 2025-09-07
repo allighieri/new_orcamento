@@ -46,6 +46,11 @@ class ClientController extends Controller
         
         $clients = $query->orderBy('fantasy_name')->paginate(10)->appends($request->query());
         
+        // Se for requisição AJAX, retornar apenas a parte da tabela
+        if ($request->ajax() || $request->has('ajax')) {
+            return view('clients.partials.table', compact('clients'));
+        }
+        
         return view('clients.index', compact('clients'));
     }
 

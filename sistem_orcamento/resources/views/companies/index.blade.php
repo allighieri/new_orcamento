@@ -29,16 +29,13 @@
                            value="{{ request('search') }}" 
                            placeholder="Nome da empresa ou CNPJ">
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="bi bi-search"></i>
-                    </button>
-                    @if(request('search'))
+                @if(request('search'))
+                    <div class="col-md-2 d-flex align-items-end">
                         <a href="{{ route('companies.index') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-x-circle"></i>
                         </a>
-                    @endif
-                </div>
+                    </div>
+                @endif
             </form>
         </div>
 

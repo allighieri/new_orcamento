@@ -35,16 +35,13 @@
                            value="{{ request('search') }}" 
                            placeholder="Nome do cliente ou CNPJ/CPF">
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="bi bi-search"></i>
-                    </button>
-                    @if(request('search'))
+                @if(request('search'))
+                    <div class="col-md-2 d-flex align-items-end">
                         <a href="{{ route('clients.index') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-x-circle"></i>
                         </a>
-                    @endif
-                </div>
+                    </div>
+                @endif
             </form>
         </div>
         
@@ -106,11 +103,16 @@
                 @else
                     <div class="text-center py-5">
                         <i class="bi bi-people fs-1 text-muted"></i>
-                        <h4 class="text-muted mt-3">Nenhum cliente cadastrado</h4>
-                        <p class="text-muted">Comece cadastrando seu primeiro cliente</p>
-                        <a href="{{ route('clients.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Novo Cliente
-                        </a>
+                        @if(request('search'))
+                            <h4 class="text-muted mt-3">Nenhum cliente encontrado</h4>
+                            <p class="text-muted">Não há clientes que correspondam à sua pesquisa</p>
+                        @else
+                            <h4 class="text-muted mt-3">Nenhum cliente cadastrado</h4>
+                            <p class="text-muted">Comece cadastrando seu primeiro cliente</p>
+                            <a href="{{ route('clients.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus"></i> Novo Cliente
+                            </a>
+                        @endif
                     </div>
                 @endif
             </div>

@@ -34,16 +34,13 @@
                            value="{{ request('search') }}" 
                            placeholder="Nome da categoria">
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="bi bi-search"></i>
-                    </button>
-                    @if(request('search'))
+                @if(request('search'))
+                    <div class="col-md-2 d-flex align-items-end">
                         <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-x-circle"></i>
                         </a>
-                    @endif
-                </div>
+                    </div>
+                @endif
             </form>
         </div>
         
@@ -114,11 +111,16 @@
                 @else
                     <div class="text-center py-5">
                         <i class="bi bi-tags fs-1 text-muted"></i>
-                        <h4 class="text-muted mt-3">Nenhuma categoria cadastrada</h4>
-                        <p class="text-muted">Comece cadastrando sua primeira categoria</p>
-                        <a href="{{ route('categories.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Nova Categoria
-                        </a>
+                        @if(request('search'))
+                            <h4 class="text-muted mt-3">Nenhuma categoria encontrada</h4>
+                            <p class="text-muted">Não há categorias que correspondam à sua pesquisa</p>
+                        @else
+                            <h4 class="text-muted mt-3">Nenhuma categoria cadastrada</h4>
+                            <p class="text-muted">Comece cadastrando sua primeira categoria</p>
+                            <a href="{{ route('categories.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus"></i> Nova Categoria
+                            </a>
+                        @endif
                     </div>
                 @endif
             </div>

@@ -47,7 +47,13 @@ class CompanyController extends Controller
             });
         }
         
-        $companies = $query->paginate(10)->appends($request->query());
+        $companies = $query->orderBy('fantasy_name')->paginate(10)->appends($request->query());
+        
+        // Se for requisição AJAX, retornar apenas a parte da tabela
+        if ($request->ajax() || $request->has('ajax')) {
+            return view('companies.partials.table', compact('companies'));
+        }
+        
         return view('companies.index', compact('companies'));
     }
 
