@@ -80,6 +80,14 @@ class ProductController extends Controller
         }
         
         $validated = $request->validate($rules);
+        
+        // Converter campos de texto para maiúsculo
+        $fieldsToUppercase = ['name', 'description'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
 
         // Converter preço do formato brasileiro para decimal
         $price = str_replace(['.', ','], ['', '.'], $validated['price']);
@@ -193,6 +201,14 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
         ]);
+        
+        // Converter campos de texto para maiúsculo
+        $fieldsToUppercase = ['name', 'description'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
 
         // Converter preço do formato brasileiro para decimal
         $price = str_replace(['.', ','], ['', '.'], $validated['price']);

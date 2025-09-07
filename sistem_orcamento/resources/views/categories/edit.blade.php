@@ -82,3 +82,14 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Converter campos de texto para maiúsculo durante a digitação
+    $('#name, #description').on('input', function() {
+        this.value = this.value.toUpperCase();
+    });
+});
+</script>
+@endpush

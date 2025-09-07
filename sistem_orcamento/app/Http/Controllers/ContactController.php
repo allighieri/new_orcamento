@@ -114,6 +114,14 @@ class ContactController extends Controller
         
         $validated = $request->validate($rules);
         
+        // Converter campos de texto para maiúsculo (exceto email)
+        $fieldsToUppercase = ['name', 'cpf', 'phone'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
+        
         // Converter valores vazios para null
         if (empty($validated['client_id'])) {
             $validated['client_id'] = null;
@@ -259,6 +267,14 @@ class ContactController extends Controller
         }
         
         $validated = $request->validate($rules);
+        
+        // Converter campos de texto para maiúsculo (exceto email)
+        $fieldsToUppercase = ['name', 'cpf', 'phone'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
         
         // Converter valores vazios para null
         if (empty($validated['client_id'])) {

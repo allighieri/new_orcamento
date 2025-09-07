@@ -92,6 +92,14 @@ class ClientController extends Controller
         
         $validated = $request->validate($rules);
         
+        // Converter campos de texto para maiúsculo (exceto email)
+        $fieldsToUppercase = ['fantasy_name', 'corporate_name', 'state_registration', 'address', 'district', 'city', 'state'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
+        
         // Definir company_id para validação de unicidade
         $companyId = $user->role === 'super_admin' ? $validated['company_id'] : session('tenant_company_id');
         
@@ -206,6 +214,14 @@ class ClientController extends Controller
         }
         
         $validated = $request->validate($rules);
+        
+        // Converter campos de texto para maiúsculo (exceto email)
+        $fieldsToUppercase = ['fantasy_name', 'corporate_name', 'state_registration', 'address', 'district', 'city', 'state'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
         
         // Definir company_id para validação de unicidade
         $companyId = $user->role === 'super_admin' && isset($validated['company_id']) ? $validated['company_id'] : $client->company_id;

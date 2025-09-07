@@ -77,6 +77,14 @@ class UserController extends Controller
             'company_id.required' => 'Campo obrigatório para user ou admin.',
             'email.unique' => 'Já existe um usuário com esse e-mail cadastrado!'
         ]);
+        
+        // Converter campos de texto para maiúsculo (exceto email)
+        $fieldsToUppercase = ['name'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
 
         // Verificar permissões de role
         if ($user->role !== 'super_admin' && $validated['role'] === 'super_admin') {
@@ -167,6 +175,14 @@ class UserController extends Controller
         
         $validated = $request->validate($rules);
         
+        // Converter campos de texto para maiúsculo (exceto email)
+        $fieldsToUppercase = ['name'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
+        
         // Hash da senha apenas se foi fornecida
         if (!empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
@@ -240,6 +256,14 @@ class UserController extends Controller
             'password.confirmed' => 'A confirmação da senha não confere.',
             'company_id.required' => 'Campo obrigatório para user ou admin.'
         ]);
+        
+        // Converter campos de texto para maiúsculo (exceto email)
+        $fieldsToUppercase = ['name'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
 
         // Verificar permissões de role
         if ($currentUser->role !== 'super_admin' && $validated['role'] === 'super_admin') {

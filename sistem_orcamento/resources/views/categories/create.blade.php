@@ -113,10 +113,15 @@
 </div>
 @endsection
 
-@if(auth()->guard('web')->user()->role === 'super_admin')
 @push('scripts')
 <script>
 $(document).ready(function() {
+    // Converter campos de texto para maiúsculo durante a digitação
+    $('#name, #description').on('input', function() {
+        this.value = this.value.toUpperCase();
+    });
+
+    @if(auth()->guard('web')->user()->role === 'super_admin')
     // Carregamento dinâmico de categorias pai baseado na empresa selecionada
     $('#company_id').on('change', function() {
         const companyId = $(this).val();
@@ -154,7 +159,7 @@ $(document).ready(function() {
             parentSelect.prop('disabled', true);
         }
     });
+    @endif
 });
 </script>
 @endpush
-@endif

@@ -83,6 +83,14 @@ class CategoryController extends Controller
         }
         
         $validated = $request->validate($rules);
+        
+        // Converter campos de texto para maiúsculo
+        $fieldsToUppercase = ['name', 'description'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
 
         // Validação adicional para evitar loops
         if ($validated['parent_id']) {
@@ -198,6 +206,14 @@ class CategoryController extends Controller
             'description' => 'nullable|string|max:1000',
             'parent_id' => 'nullable|exists:categories,id|not_in:' . $category->id,
         ]);
+        
+        // Converter campos de texto para maiúsculo
+        $fieldsToUppercase = ['name', 'description'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
 
         // Validação adicional para evitar loops na hierarquia
         if ($validated['parent_id']) {

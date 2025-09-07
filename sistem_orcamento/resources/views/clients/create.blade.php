@@ -209,6 +209,11 @@ $(document).ready(function() {
     $('#state').on('input', function() {
         this.value = this.value.toUpperCase();
     });
+
+    // Converter campos de texto para maiúsculo durante a digitação (exceto email)
+    $('#fantasy_name, #corporate_name, #state_registration, #address, #district, #city').on('input', function() {
+        this.value = this.value.toUpperCase();
+    });
 });
 </script>
 @endpush

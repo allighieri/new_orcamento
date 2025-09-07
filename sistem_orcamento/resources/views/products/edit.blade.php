@@ -245,6 +245,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 <script>
 $(document).ready(function() {
+    // Converter campos de texto para maiúsculo durante a digitação
+    $('#name, #description').on('input', function() {
+        this.value = this.value.toUpperCase();
+    });
+
     // Máscara para preço em formato brasileiro
     $('#price').mask('000.000.000.000.000,00', {
         reverse: true,
