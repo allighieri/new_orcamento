@@ -204,6 +204,8 @@
             </div>
         </div>
     </div>
+
+
 </div>
 
 <div class="container mx-auto row mt-4">
@@ -213,11 +215,35 @@
                 <h5 class="card-title mb-0">
                     <i class="bi bi-clock-history"></i> Últimos Orçamentos
                 </h5>
-                <a href="{{ route('budgets.index') }}" class="btn btn-sm btn-outline-primary">
+                
+                <a href="{{ route('budgets.index') }}" class="btn  btn-outline-primary">
                     Ver todos
                 </a>
             </div>
             <div class="card-body">
+                <!-- Formulário de Pesquisa -->
+                <div class="mb-4">
+                    <form method="GET" action="{{ route('dashboard') }}" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="search" 
+                                   name="search" 
+                                   value="{{ request('search') }}" 
+                                   placeholder="Pesquisar por nome do cliente ou número do orçamento">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bi bi-search"></i>
+                            </button>
+                            @if(request('search'))
+                                <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> Limpar
+                                </a>
+                            @endif
+                        </div>
+                    </form>
+                </div>
                 @if($recentBudgets->count() > 0)
                     <div class="table-responsive">
                         <table class="table table-hover">
@@ -314,6 +340,16 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- Paginação -->
+                    @if($recentBudgets->hasPages())
+                        
+                            
+                            <div class="mt-3">
+                                {{ $recentBudgets->links() }}
+                            </div>
+                        
+                    @endif
                 @else
                     <div class="text-center py-4">
                         <i class="bi bi-file-earmark-text fs-1 text-muted"></i>

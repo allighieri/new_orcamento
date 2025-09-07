@@ -75,7 +75,7 @@
                     <!-- Theme Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link" href="#" id="themeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Alterar Tema">
-                            <i class="bi bi-palette me-1"></i> Tema
+                            <i class="bi bi-palette"></i>&nbsp;Tema
                         </a>
                         <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="themeDropdown" style="min-width: 280px;">
                             
