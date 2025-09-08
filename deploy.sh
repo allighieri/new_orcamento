@@ -24,16 +24,16 @@ echo "Instalando dependencias do Composer..."
 /opt/cpanel/ea-php83/root/usr/bin/php /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
 
 # Instala as dependencias do Node.js
-echo "Instalando dependencias do Node.js..."
-npm install
+#echo "Instalando dependencias do Node.js..."
+#npm install
 
 # Compila os arquivos de front-end com o Vite
-echo "Compilando assets com o Vite..."
-npm run build
+#echo "Compilando assets com o Vite..."
+#npm run build
 
-# Executa as migrações (seguro)
-echo "Rodando migrations...ok"
-/opt/cpanel/ea-php83/root/usr/bin/php artisan migrate --force
+# Executa as migrações e apaga o banco de dados antes
+echo "Rodando migrations e seeds..."
+/opt/cpanel/ea-php83/root/usr/bin/php artisan migrate:fresh --force --seed
 
 # Limpa todos os caches de uma vez
 echo "Limpando caches..."
