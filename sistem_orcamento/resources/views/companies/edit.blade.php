@@ -213,6 +213,11 @@ $(document).ready(function() {
     $('#state').on('input', function() {
         this.value = this.value.toUpperCase();
     });
+    
+    // Converter campos de texto para maiúsculo durante a digitação (exceto email)
+    $('#corporate_name, #fantasy_name, #state_registration, #address, #district, #city').on('input', function() {
+        this.value = this.value.toUpperCase();
+    });
 });
 
 // Função para preview da logo
