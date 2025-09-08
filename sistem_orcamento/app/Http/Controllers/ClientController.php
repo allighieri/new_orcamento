@@ -26,7 +26,7 @@ class ClientController extends Controller
             $query = Client::where('company_id', $companyId);
         }
         
-        // Pesquisar por nome corporativo, fantasia ou CNPJ/CPF do cliente
+        // Pesquisar por nome corporativo, fantasia, CNPJ/CPF, telefone ou email do cliente
         if ($request->has('search') && $request->search) {
             $searchTerm = $request->search;
             // Remove caracteres especiais para busca por documento
@@ -35,7 +35,9 @@ class ClientController extends Controller
             $query->where(function($q) use ($searchTerm, $cleanSearchTerm) {
                 $q->where('corporate_name', 'LIKE', '%' . $searchTerm . '%')
                   ->orWhere('fantasy_name', 'LIKE', '%' . $searchTerm . '%')
-                  ->orWhere('document_number', 'LIKE', '%' . $searchTerm . '%');
+                  ->orWhere('document_number', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('phone', 'LIKE', '%' . $searchTerm . '%');
                   
                 // Se há números no termo de busca, busca também pelo documento sem formatação
                 if (!empty($cleanSearchTerm)) {

@@ -55,7 +55,7 @@
                                id="search" 
                                name="search" 
                                value="{{ request('search') }}" 
-                               placeholder="Nome do cliente ou número do orçamento">
+                               placeholder="Pesquisar por nome do cliente, número do orçamento ou status">
                     </div>
                     @if(request('search'))
                         <div class="col-md-2 d-flex align-items-end">
