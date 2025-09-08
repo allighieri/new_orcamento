@@ -40,7 +40,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="document_number" class="form-label">CNPJ *</label>
+                                    <label for="document_number" class="form-label">CPF/CNPJ *</label>
                                     <input type="text" class="form-control @error('document_number') is-invalid @enderror" 
                                            id="document_number" name="document_number" value="{{ old('document_number') }}" required>
                                     @error('document_number')

@@ -404,11 +404,11 @@
                                                     @endif
                                                 </h6>
                                                 @if($bankAccount->type === 'Conta')
-                                    <p class="mb-1">Agência: {{ $bankAccount->branch }}</p>
-                                    <p class="mb-1">Conta: {{ $bankAccount->account }}</p>
-                                @elseif($bankAccount->type === 'PIX')
-                                    <p class="mb-1">PIX: {{ ucfirst($bankAccount->key) }} - {{ $bankAccount->key_desc }}</p>
-                                @endif
+                                                    <p class="mb-1">Agência: {{ $bankAccount->branch }}</p>
+                                                    <p class="mb-1">Conta: {{ $bankAccount->account }}</p>
+                                                @elseif($bankAccount->type === 'PIX')
+                                                    <p class="mb-1">CHEVE: {{ ucfirst($bankAccount->key) }} - {{ $bankAccount->key_desc }}</p>
+                                                @endif
                                             </div>
                                         </div>
                                         @if(!$loop->last)
