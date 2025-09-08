@@ -9,7 +9,7 @@ echo "Iniciando deploy..."
 # Navega até o diretório do repositório e faz o pull mais recente
 cd $REPO_DIR
 echo "Sincronizando com o GitHub..."
-git pull origin main
+git pull origin test_production
 
 # Copia os arquivos da pasta do projeto para a pasta de produção
 echo "Copiando arquivos para o diretorio de producao..."
