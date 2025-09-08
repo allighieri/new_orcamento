@@ -39,6 +39,7 @@ echo "Executando seeds..."
 /opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=SuperAdminSeeder --force
 /opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=PaymentOptionMethodSeeder --force
 /opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=PaymentMethodSeeder --force
+/opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=CompeSeeder --force
 
 # Limpa todos os caches de uma vez
 echo "Limpando caches..."
