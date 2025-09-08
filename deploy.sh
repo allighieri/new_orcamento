@@ -33,7 +33,12 @@ echo "Instalando dependencias do Composer..."
 
 # Executa as migrações e apaga o banco de dados antes
 echo "Rodando migrations e seeds..."
-/opt/cpanel/ea-php83/root/usr/bin/php artisan migrate:fresh --force --seed
+/opt/cpanel/ea-php83/root/usr/bin/php artisan migrate:fresh --force
+
+echo "Executando seeds..."
+/opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=SuperAdminSeeder --force
+/opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=PaymentOptionMethodSeeder --force
+/opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=PaymentMethodSeeder --force
 
 # Limpa todos os caches de uma vez
 echo "Limpando caches..."
