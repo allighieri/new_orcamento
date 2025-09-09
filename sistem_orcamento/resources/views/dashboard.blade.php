@@ -500,7 +500,7 @@ $(document).ready(function() {
          });
 
          // Mostrar loading no botão
-         generatePdfButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gerando...');
+         generatePdfButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
          generatePdfButton.prop('disabled', true);
 
          // Requisição AJAX para gerar o PDF

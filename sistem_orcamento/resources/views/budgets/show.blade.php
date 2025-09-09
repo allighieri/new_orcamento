@@ -570,7 +570,7 @@ $(document).on('click', '.generate-pdf-btn', function(e) {
     });
 
     // Mostrar loading no botão
-    generatePdfButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gerando...');
+    generatePdfButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
     generatePdfButton.prop('disabled', true); // Desabilitar o botão 
 
     // 2. Requisição AJAX para gerar o PDF
