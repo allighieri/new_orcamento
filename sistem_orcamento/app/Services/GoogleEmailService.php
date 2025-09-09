@@ -34,7 +34,11 @@ class GoogleEmailService
         
         $this->client = new Client();
         $this->client->setApplicationName('Sistema de Orçamento');
-        $this->client->setScopes(Gmail::GMAIL_SEND);
+        $this->client->setScopes([
+            Gmail::GMAIL_SEND,
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile'
+        ]);
         $this->client->setAuthConfig([
             'client_id' => $clientId,
             'client_secret' => $clientSecret,
@@ -341,6 +345,27 @@ class GoogleEmailService
         $message->setRaw(base64url_encode($rawMessage));
         
         return $message;
+    }
+
+    /**
+     * Obtém o email do usuário autenticado
+     */
+    public function getUserEmail()
+    {
+        try {
+            if (!$this->isAuthenticated()) {
+                return null;
+            }
+
+            // Usar a API OAuth2 para obter informações do usuário
+            $oauth2 = new \Google\Service\Oauth2($this->client);
+            $userInfo = $oauth2->userinfo->get();
+            
+            return $userInfo->getEmail();
+        } catch (\Exception $e) {
+            Log::error('Erro ao obter email do usuário Google: ' . $e->getMessage());
+            return null;
+        }
     }
 }
 

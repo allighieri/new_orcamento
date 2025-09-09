@@ -45,16 +45,40 @@ class GoogleAuthController extends Controller
     public function checkStatus()
     {
         try {
-            $googleEmailService = new GoogleEmailService(Auth::user()->company_id);
-            $isAuthenticated = $googleEmailService->isAuthenticated();
-
+            $user = auth()->guard('web')->user();
+            $company = $user->company;
+            
+            // Verificar se existe token do Google para esta empresa
+            $googleToken = $company->googleToken;
+            
+            if (!$googleToken || !$googleToken->isValid()) {
+                return response()->json([
+                    'authenticated' => false,
+                    'email' => null
+                ]);
+            }
+            
+            // Se tem token válido, verificar se há email armazenado
+            $email = null;
+            
+            // Primeiro, tentar obter via API (se os escopos permitirem)
+            try {
+                $googleEmailService = new GoogleEmailService($user->company_id);
+                $email = $googleEmailService->getUserEmail();
+            } catch (\Exception $e) {
+                // Se falhar, usar uma mensagem genérica indicando que está conectado
+                $email = 'Conta conectada';
+            }
+            
             return response()->json([
-                'authenticated' => $isAuthenticated,
-                'message' => $isAuthenticated ? 'Integração ativa' : 'Integração não configurada'
+                'authenticated' => true,
+                'email' => $email
             ]);
+            
         } catch (\Exception $e) {
             return response()->json([
                 'authenticated' => false,
+                'email' => null,
                 'message' => 'Erro ao verificar status: ' . $e->getMessage()
             ], 500);
         }
