@@ -86,6 +86,9 @@
                                     <td class="text-end">
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('products.create', ['category_id' => $item->category->id]) }}" class="btn btn-sm btn-outline-primary" title="Cadastrar Produto">
+                                                <i class="bi bi-box-seam"></i>
+                                            </a>
+                                            <a href="{{ route('categories.create', ['parent_id' => $item->category->id]) }}" class="btn btn-sm btn-outline-success" title="Adicionar Subcategoria">
                                                 <i class="bi bi-plus-circle"></i>
                                             </a>
                                             <a href="{{ route('categories.show', $item->category) }}" class="btn btn-sm btn-outline-info" title="Visualizar">

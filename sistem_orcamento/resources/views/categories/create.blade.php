@@ -62,7 +62,7 @@
                                     @else
                                         <option value="">Sem categoria</option>
                                         @foreach($categoriesTree as $categoryId => $categoryName)
-                                            <option value="{{ $categoryId }}" {{ old('parent_id') == $categoryId ? 'selected' : '' }}>
+                                            <option value="{{ $categoryId }}" {{ (old('parent_id') ?? $parentId) == $categoryId ? 'selected' : '' }}>
                                                 {!! $categoryName !!}
                                             </option>
                                         @endforeach

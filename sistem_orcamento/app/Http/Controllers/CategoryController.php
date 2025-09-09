@@ -51,7 +51,7 @@ class CategoryController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $user = auth()->guard('web')->user();
         
@@ -66,7 +66,9 @@ class CategoryController extends Controller
             $companies = collect();
         }
         
-        return view('categories.create', compact('categoriesTree', 'companies'));
+        $parentId = $request->get('parent_id');
+        
+        return view('categories.create', compact('categoriesTree', 'companies', 'parentId'));
     }
 
     /**
