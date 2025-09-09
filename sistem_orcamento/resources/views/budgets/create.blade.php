@@ -74,7 +74,7 @@
                                     <div class="form-check form-switch me-2">
                                         <input class="form-check-input" type="checkbox" id="delivery_date_enabled" name="delivery_date_enabled" value="1" {{ old('delivery_date_enabled', '1') ? 'checked' : '' }}>
                                     </div>
-                                    <label for="delivery_date_enabled" class="form-label mb-0">Previsão de Entrega</label>
+                                    <label for="delivery_date_enabled" class="form-label mb-0">Entrega</label>
                                 </div>
                                 <div id="delivery_date_container">
                                     <input type="date" class="form-control" id="delivery_date" name="delivery_date" value="{{ old('delivery_date', date('Y-m-d', strtotime('+' . $settings->budget_delivery_days . ' days'))) }}">

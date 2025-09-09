@@ -342,8 +342,8 @@
 @endphp
 
 @if($budget->budgetPayments->count() == 0)
-    <h3 style="margin-bottom: 3px; font-size: 14px;">Formas de Pagamento:</h3>
-    <p style="text-align: left; font-size: 12px; color: #666; margin: 0;">A combinar</p> 
+    <h3 style="margin-bottom: 3px; font-size: 11px;">Formas de Pagamento:</h3>
+    <p style="text-align: left; font-size: 12px; color: #666; margin: 0 0 10px 0;">A combinar</p> 
 @else 
     <h4 style="text-align: center; margin-bottom: 5px">Formas de Pagamento:</h4>
     <table class="items-table" style="width: 100%; border-collapse: collapse; font-size: 10px;">
@@ -393,7 +393,7 @@
      
     @if($budget->bankAccounts->count() > 0)
     <div class="bank-accounts-section" style="margin-bottom: 10px;">
-        <h3 style="margin-bottom: 10px; font-size: 14px;">Dados Bancários:</h3>
+        <h3 style="margin-bottom: 5px; font-size: 12px;">Dados Bancários:</h3>
         @foreach($budget->bankAccounts as $bankAccount)
         <div style="margin:0;">
             <p style="margin:0; font-size: 12px; color: #333;">

@@ -97,7 +97,7 @@
                             <h4 class="text-muted">Nenhum template encontrado</h4>
                             <p class="text-muted">Crie seu primeiro template de email para começar.</p>
                             <a href="{{ route('email-templates.create') }}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Criar Primeiro Template
+                                <i class="bi bi-envelope-paper-heart-fill"></i> Novo Template
                             </a>
                         </div>
                     @endif

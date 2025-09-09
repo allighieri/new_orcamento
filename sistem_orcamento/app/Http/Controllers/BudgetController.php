@@ -1367,9 +1367,9 @@ class BudgetController extends Controller
             $subject = "Orçamento #{$budget->number} - {$budget->company->fantasy_name}";
             
             // Preparar dados para o template HTML
-            $deliveryDate = null;
-            if ($budget->delivery_date_enabled) {
-                $deliveryDate = $budget->delivery_date ? $budget->delivery_date->format('d/m/Y') : 'A combinar';
+            $deliveryDate = 'A combinar';
+            if ($budget->delivery_date_enabled && $budget->delivery_date) {
+                $deliveryDate = $budget->delivery_date->format('d/m/Y');
             }
             
             $budgetData = [
