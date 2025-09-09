@@ -100,7 +100,7 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     // Rotas para autenticação com Google
     Route::get('/google/settings', function() { return view('google.settings'); })->name('google.settings');
     Route::get('/google/auth', [App\Http\Controllers\GoogleAuthController::class, 'redirectToGoogle'])->name('google.auth');
-    Route::get('/google/auth-callback', [App\Http\Controllers\GoogleAuthController::class, 'handleGoogleCallback'])->name('google.callback');
+    Route::get('/google/callback', [App\Http\Controllers\GoogleAuthController::class, 'handleGoogleCallback'])->name('google.callback');
     Route::get('/google/status', [App\Http\Controllers\GoogleAuthController::class, 'checkStatus'])->name('google.status');
     Route::post('/google/disconnect', [App\Http\Controllers\GoogleAuthController::class, 'disconnect'])->name('google.disconnect');
 });
