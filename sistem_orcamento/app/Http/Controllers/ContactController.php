@@ -34,7 +34,7 @@ class ContactController extends Controller
             ->with(['company', 'client']);
         }
         
-        // Pesquisar por nome do contato ou CPF/CNPJ
+        // Pesquisar por nome, CPF, telefone ou email do contato
         if ($request->has('search') && $request->search) {
             $searchTerm = $request->search;
             // Remove caracteres especiais para busca por documento
@@ -42,7 +42,9 @@ class ContactController extends Controller
             
             $query->where(function($q) use ($searchTerm, $cleanSearchTerm) {
                 $q->where('name', 'LIKE', '%' . $searchTerm . '%')
-                  ->orWhere('cpf', 'LIKE', '%' . $searchTerm . '%');
+                  ->orWhere('cpf', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('phone', 'LIKE', '%' . $searchTerm . '%');
                   
                 // Se há números no termo de busca, busca também pelo documento sem formatação
                 if (!empty($cleanSearchTerm)) {

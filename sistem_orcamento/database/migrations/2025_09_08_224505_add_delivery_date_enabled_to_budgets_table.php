@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->boolean('active')->default(0)->after('email');
+        Schema::table('budgets', function (Blueprint $table) {
+            $table->boolean('delivery_date_enabled')->default(true)->after('delivery_date');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('active');
+        Schema::table('budgets', function (Blueprint $table) {
+            $table->dropColumn('delivery_date_enabled');
         });
     }
 };

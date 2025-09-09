@@ -53,7 +53,7 @@
 [data-theme="cyan"] .navbar-dark .navbar-nav .nav-link,
 [data-theme="yellow"] .navbar-dark .navbar-nav .nav-link,
 [data-theme="teal"] .navbar-dark .navbar-nav .nav-link {
-    color: #000 !important;
+    color: #555 !important;
 }
 
 [data-theme="cyan"] .navbar-dark .navbar-brand,

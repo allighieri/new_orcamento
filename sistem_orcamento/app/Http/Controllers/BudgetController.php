@@ -219,6 +219,7 @@ class BudgetController extends Controller
                 'company_id' => $companyId,
                 'issue_date' => $request->issue_date,
                 'delivery_date' => $request->delivery_date,
+                'delivery_date_enabled' => $request->has('delivery_date_enabled') ? 1 : 0,
                 'valid_until' => $request->valid_until,
                 'status' => 'Pendente',
                 'total_discount' => $request->total_discount ?? 0,
@@ -261,7 +262,26 @@ class BudgetController extends Controller
             ]);
 
             // Processar métodos de pagamento se fornecidos e se o usuário optou por incluí-los
-            if ($request->include_payment_methods === 'yes' && $request->has('payment_methods') && is_array($request->payment_methods)) {
+            if ($request->has('include_payment_methods') && $request->include_payment_methods == '1' && $request->has('payment_methods') && is_array($request->payment_methods)) {
+                // Validar se os valores dos métodos de pagamento fecham o orçamento
+                $totalPaymentAmount = 0;
+                $hasValidPayments = false;
+                
+                foreach ($request->payment_methods as $paymentData) {
+                    if (!empty($paymentData['payment_method_id']) && !empty($paymentData['amount'])) {
+                        $convertedAmount = $this->convertMoneyToFloat($paymentData['amount']);
+                        if ($convertedAmount > 0) {
+                            $totalPaymentAmount += $convertedAmount;
+                            $hasValidPayments = true;
+                        }
+                    }
+                }
+                
+                // Se há métodos de pagamento válidos, verificar se o total fecha
+                if ($hasValidPayments && abs($totalPaymentAmount - $finalAmount) > 0.01) {
+                    return back()->withInput()->with('error', 'O valor total dos métodos de pagamento (R$ ' . number_format($totalPaymentAmount, 2, ',', '.') . ') deve ser igual ao valor final do orçamento (R$ ' . number_format($finalAmount, 2, ',', '.') . ').');
+                }
+                
                 foreach ($request->payment_methods as $index => $paymentData) {
                     // Verificar se os campos obrigatórios estão preenchidos
                     $hasPaymentMethodId = !empty($paymentData['payment_method_id']);
@@ -287,7 +307,7 @@ class BudgetController extends Controller
             }
             
             // Processar contas bancárias se fornecidas e se o usuário optou por incluí-las
-            if ($request->include_bank_data === 'yes' && $request->has('bank_accounts') && is_array($request->bank_accounts)) {
+            if ($request->has('include_bank_data') && $request->include_bank_data == '1' && $request->has('bank_accounts') && is_array($request->bank_accounts)) {
                 foreach ($request->bank_accounts as $index => $bankData) {
                     // Verificar se a conta bancária foi selecionada
                     if (!empty($bankData['bank_account_id'])) {
@@ -537,6 +557,7 @@ class BudgetController extends Controller
                 'company_id' => $companyId,
                 'issue_date' => $request->issue_date,
                 'delivery_date' => $request->delivery_date,
+                'delivery_date_enabled' => $request->has('delivery_date_enabled') ? 1 : 0,
                 'valid_until' => $request->valid_until,
                 'status' => 'Pendente',
                 'total_discount' => $request->total_discount ?? 0,
@@ -599,7 +620,26 @@ class BudgetController extends Controller
             $budget->budgetPayments()->delete();
             
             // Processar novos métodos de pagamento se fornecidos e se o usuário optou por incluí-los
-            if ($request->include_payment_methods === 'yes' && $request->has('payment_methods') && is_array($request->payment_methods)) {
+            if ($request->has('include_payment_methods') && $request->include_payment_methods == '1' && $request->has('payment_methods') && is_array($request->payment_methods)) {
+                // Validar se os valores dos métodos de pagamento fecham o orçamento
+                $totalPaymentAmount = 0;
+                $hasValidPayments = false;
+                
+                foreach ($request->payment_methods as $paymentData) {
+                    if (!empty($paymentData['payment_method_id']) && !empty($paymentData['amount'])) {
+                        $convertedAmount = $this->convertMoneyToFloat($paymentData['amount']);
+                        if ($convertedAmount > 0) {
+                            $totalPaymentAmount += $convertedAmount;
+                            $hasValidPayments = true;
+                        }
+                    }
+                }
+                
+                // Se há métodos de pagamento válidos, verificar se o total fecha
+                if ($hasValidPayments && abs($totalPaymentAmount - $finalAmount) > 0.01) {
+                    return back()->withInput()->with('error', 'O valor total dos métodos de pagamento (R$ ' . number_format($totalPaymentAmount, 2, ',', '.') . ') deve ser igual ao valor final do orçamento (R$ ' . number_format($finalAmount, 2, ',', '.') . ').');
+                }
+                
                 foreach ($request->payment_methods as $paymentData) {
                     if (!empty($paymentData['payment_method_id']) && !empty($paymentData['amount'])) {
                         $budgetPayment = $budget->budgetPayments()->create([
@@ -624,7 +664,7 @@ class BudgetController extends Controller
             $budget->bankAccounts()->detach();
             
             // Processar novas contas bancárias se fornecidas e se o usuário optou por incluí-las
-            if ($request->include_bank_data === 'yes' && $request->has('bank_accounts') && is_array($request->bank_accounts)) {
+            if ($request->has('include_bank_data') && $request->include_bank_data == '1' && $request->has('bank_accounts') && is_array($request->bank_accounts)) {
                 foreach ($request->bank_accounts as $index => $bankData) {
                     if (!empty($bankData['bank_account_id'])) {
                         $budget->bankAccounts()->attach($bankData['bank_account_id'], [
@@ -1327,13 +1367,18 @@ class BudgetController extends Controller
             $subject = "Orçamento #{$budget->number} - {$budget->company->fantasy_name}";
             
             // Preparar dados para o template HTML
+            $deliveryDate = 'A combinar';
+            if ($budget->delivery_date_enabled && $budget->delivery_date) {
+                $deliveryDate = $budget->delivery_date->format('d/m/Y');
+            }
+            
             $budgetData = [
                 'recipientName' => $recipientName,
                 'budgetNumber' => $budget->number,
                 'budgetValue' => number_format($budget->final_amount, 2, ',', '.'),
                 'budgetDate' => $budget->created_at->format('d/m/Y'),
                 'budgetValidity' => $budget->valid_until->format('d/m/Y'), // Data de validade do formulário
-                'deliveryDate' => $budget->delivery_date ? $budget->delivery_date->format('d/m/Y') : null,
+                'deliveryDate' => $deliveryDate,
                 'budgetStatus' => 'Aguardando Aprovação',
                 'companyName' => $budget->company->fantasy_name ?? 'Empresa',
                 'companyPhone' => $budget->company->phone ?? '(00) 0000-0000',

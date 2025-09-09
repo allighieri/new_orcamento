@@ -32,7 +32,7 @@
                            id="search" 
                            name="search" 
                            value="{{ request('search') }}" 
-                           placeholder="Nome do contato ou CPF/CNPJ">
+                           placeholder="Pesquisar por nome, CPF, telefone ou email">
                 </div>
                 @if(request('search'))
                     <div class="col-md-2 d-flex align-items-end">

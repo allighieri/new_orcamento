@@ -476,7 +476,9 @@ $(document).ready(function() {
          document.getElementById('emailContactSelect').innerHTML = '<option value="">Selecione um contato...</option>';
          document.getElementById('emailTemplateSelect').innerHTML = '<option value="">Template Padrão</option>';
          document.getElementById('emailContactInfo').classList.add('d-none');
-         document.getElementById('sendEmailBtn').disabled = true;
+         const sendEmailBtn = document.getElementById('sendEmailBtn');
+         sendEmailBtn.innerHTML = '<i class="bi bi-envelope"></i> Enviar';
+         sendEmailBtn.disabled = true;
          currentBudgetIdForEmail = null;
      });
 
@@ -500,7 +502,7 @@ $(document).ready(function() {
          });
 
          // Mostrar loading no botão
-         generatePdfButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gerando...');
+         generatePdfButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
          generatePdfButton.prop('disabled', true);
 
          // Requisição AJAX para gerar o PDF

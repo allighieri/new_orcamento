@@ -78,12 +78,23 @@ class CompanyController extends Controller
             'phone' => 'required|string|min:14|max:15',
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
+            'address_line_2' => 'nullable|string|max:255',
             'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
             'cep' => 'nullable|string|max:10',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // Validação customizada: CEP deve ter 8 dígitos se preenchido
+        if (!empty($validated['cep'])) {
+            $cepDigits = preg_replace('/\D/', '', $validated['cep']);
+            if (strlen($cepDigits) !== 8) {
+                return back()->withErrors([
+                    'cep' => 'CEP incompleto.'
+                ])->withInput();
+            }
+        }
 
         // Validação customizada: pelo menos um dos campos deve estar preenchido
         if (empty($validated['corporate_name']) && empty($validated['fantasy_name'])) {
@@ -135,12 +146,23 @@ class CompanyController extends Controller
             'phone' => 'required|string|min:14|max:15',
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
+            'address_line_2' => 'nullable|string|max:255',
             'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
             'cep' => 'nullable|string|max:10',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // Validação customizada: CEP deve ter 8 dígitos se preenchido
+        if (!empty($validated['cep'])) {
+            $cepDigits = preg_replace('/\D/', '', $validated['cep']);
+            if (strlen($cepDigits) !== 8) {
+                return back()->withErrors([
+                    'cep' => 'CEP incompleto.'
+                ])->withInput();
+            }
+        }
 
         // Validação customizada: pelo menos um dos campos deve estar preenchido
         if (empty($validated['corporate_name']) && empty($validated['fantasy_name'])) {

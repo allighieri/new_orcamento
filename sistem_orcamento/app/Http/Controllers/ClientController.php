@@ -26,7 +26,7 @@ class ClientController extends Controller
             $query = Client::where('company_id', $companyId);
         }
         
-        // Pesquisar por nome corporativo, fantasia ou CNPJ/CPF do cliente
+        // Pesquisar por nome corporativo, fantasia, CNPJ/CPF, telefone ou email do cliente
         if ($request->has('search') && $request->search) {
             $searchTerm = $request->search;
             // Remove caracteres especiais para busca por documento
@@ -35,7 +35,9 @@ class ClientController extends Controller
             $query->where(function($q) use ($searchTerm, $cleanSearchTerm) {
                 $q->where('corporate_name', 'LIKE', '%' . $searchTerm . '%')
                   ->orWhere('fantasy_name', 'LIKE', '%' . $searchTerm . '%')
-                  ->orWhere('document_number', 'LIKE', '%' . $searchTerm . '%');
+                  ->orWhere('document_number', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('phone', 'LIKE', '%' . $searchTerm . '%');
                   
                 // Se há números no termo de busca, busca também pelo documento sem formatação
                 if (!empty($cleanSearchTerm)) {
@@ -84,6 +86,7 @@ class ClientController extends Controller
             'phone' => 'required|string|min:14|max:15',
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
+            'address_line_2' => 'nullable|string|max:255',
             'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
@@ -97,8 +100,18 @@ class ClientController extends Controller
         
         $validated = $request->validate($rules);
         
+        // Validação customizada: CEP deve ter 8 dígitos se preenchido
+        if (!empty($validated['cep'])) {
+            $cepDigits = preg_replace('/\D/', '', $validated['cep']);
+            if (strlen($cepDigits) !== 8) {
+                return back()->withErrors([
+                    'cep' => 'CEP incompleto.'
+                ])->withInput();
+            }
+        }
+        
         // Converter campos de texto para maiúsculo (exceto email)
-        $fieldsToUppercase = ['fantasy_name', 'corporate_name', 'state_registration', 'address', 'district', 'city', 'state'];
+        $fieldsToUppercase = ['fantasy_name', 'corporate_name', 'state_registration', 'address', 'address_line_2', 'district', 'city', 'state'];
         foreach ($fieldsToUppercase as $field) {
             if (isset($validated[$field]) && !empty($validated[$field])) {
                 $validated[$field] = strtoupper($validated[$field]);
@@ -207,6 +220,7 @@ class ClientController extends Controller
             'phone' => 'required|string|min:14|max:15',
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
+            'address_line_2' => 'nullable|string|max:255',
             'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
@@ -220,8 +234,18 @@ class ClientController extends Controller
         
         $validated = $request->validate($rules);
         
+        // Validação customizada: CEP deve ter 8 dígitos se preenchido
+        if (!empty($validated['cep'])) {
+            $cepDigits = preg_replace('/\D/', '', $validated['cep']);
+            if (strlen($cepDigits) !== 8) {
+                return back()->withErrors([
+                    'cep' => 'CEP incompleto.'
+                ])->withInput();
+            }
+        }
+        
         // Converter campos de texto para maiúsculo (exceto email)
-        $fieldsToUppercase = ['fantasy_name', 'corporate_name', 'state_registration', 'address', 'district', 'city', 'state'];
+        $fieldsToUppercase = ['fantasy_name', 'corporate_name', 'state_registration', 'address', 'address_line_2', 'district', 'city', 'state'];
         foreach ($fieldsToUppercase as $field) {
             if (isset($validated[$field]) && !empty($validated[$field])) {
                 $validated[$field] = strtoupper($validated[$field]);

@@ -32,7 +32,7 @@
                            id="search" 
                            name="search" 
                            value="{{ request('search') }}" 
-                           placeholder="Nome da categoria">
+                           placeholder="Pesquisar categoria...">
                 </div>
                 @if(request('search'))
                     <div class="col-md-2 d-flex align-items-end">
