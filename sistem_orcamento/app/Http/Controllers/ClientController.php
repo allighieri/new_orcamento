@@ -86,6 +86,7 @@ class ClientController extends Controller
             'phone' => 'required|string|min:14|max:15',
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
+            'address_line_2' => 'nullable|string|max:255',
             'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
@@ -99,8 +100,18 @@ class ClientController extends Controller
         
         $validated = $request->validate($rules);
         
+        // Validação customizada: CEP deve ter 8 dígitos se preenchido
+        if (!empty($validated['cep'])) {
+            $cepDigits = preg_replace('/\D/', '', $validated['cep']);
+            if (strlen($cepDigits) !== 8) {
+                return back()->withErrors([
+                    'cep' => 'CEP incompleto.'
+                ])->withInput();
+            }
+        }
+        
         // Converter campos de texto para maiúsculo (exceto email)
-        $fieldsToUppercase = ['fantasy_name', 'corporate_name', 'state_registration', 'address', 'district', 'city', 'state'];
+        $fieldsToUppercase = ['fantasy_name', 'corporate_name', 'state_registration', 'address', 'address_line_2', 'district', 'city', 'state'];
         foreach ($fieldsToUppercase as $field) {
             if (isset($validated[$field]) && !empty($validated[$field])) {
                 $validated[$field] = strtoupper($validated[$field]);
@@ -209,6 +220,7 @@ class ClientController extends Controller
             'phone' => 'required|string|min:14|max:15',
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
+            'address_line_2' => 'nullable|string|max:255',
             'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
@@ -222,8 +234,18 @@ class ClientController extends Controller
         
         $validated = $request->validate($rules);
         
+        // Validação customizada: CEP deve ter 8 dígitos se preenchido
+        if (!empty($validated['cep'])) {
+            $cepDigits = preg_replace('/\D/', '', $validated['cep']);
+            if (strlen($cepDigits) !== 8) {
+                return back()->withErrors([
+                    'cep' => 'CEP incompleto.'
+                ])->withInput();
+            }
+        }
+        
         // Converter campos de texto para maiúsculo (exceto email)
-        $fieldsToUppercase = ['fantasy_name', 'corporate_name', 'state_registration', 'address', 'district', 'city', 'state'];
+        $fieldsToUppercase = ['fantasy_name', 'corporate_name', 'state_registration', 'address', 'address_line_2', 'district', 'city', 'state'];
         foreach ($fieldsToUppercase as $field) {
             if (isset($validated[$field]) && !empty($validated[$field])) {
                 $validated[$field] = strtoupper($validated[$field]);

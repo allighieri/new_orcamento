@@ -84,7 +84,17 @@
                         </div>
                         
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-2">
+                                <div class="mb-3">
+                                    <label for="cep" class="form-label">CEP</label>
+                                    <input type="text" class="form-control @error('cep') is-invalid @enderror" 
+                                           id="cep" name="cep" value="{{ old('cep') }}">
+                                    @error('cep')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-5">
                                 <div class="mb-3">
                                     <label for="address" class="form-label">Endereço *</label>
                                     <input type="text" class="form-control @error('address') is-invalid @enderror" 
@@ -94,7 +104,20 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-5">
+                                <div class="mb-3">
+                                    <label for="address_line_2" class="form-label">Complemento</label>
+                                    <input type="text" class="form-control @error('address_line_2') is-invalid @enderror" 
+                                           id="address_line_2" name="address_line_2" value="{{ old('address_line_2') }}">
+                                    @error('address_line_2')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-5">
                                 <div class="mb-3">
                                     <label for="district" class="form-label">Bairro</label>
                                     <input type="text" class="form-control @error('district') is-invalid @enderror" 
@@ -104,10 +127,7 @@
                                     @enderror
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 <div class="mb-3">
                                     <label for="city" class="form-label">Cidade *</label>
                                     <input type="text" class="form-control @error('city') is-invalid @enderror" 
@@ -117,22 +137,12 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="mb-3">
                                     <label for="state" class="form-label">UF *</label>
                                     <input type="text" class="form-control @error('state') is-invalid @enderror" 
                                            id="state" name="state" value="{{ old('state') }}" maxlength="2" required>
                                     @error('state')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="cep" class="form-label">CEP</label>
-                                    <input type="text" class="form-control @error('cep') is-invalid @enderror" 
-                                           id="cep" name="cep" value="{{ old('cep') }}">
-                                    @error('cep')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -206,13 +216,69 @@ $(document).ready(function() {
     // Máscara para CEP
     $('#cep').mask('99.999-999');
     
+    // Busca automática de endereço por CEP
+    $('#cep').on('input', function() {
+        var cep = $(this).val().replace(/\D/g, '');
+        
+        if (cep.length === 8) {
+            // Exibe loading nos campos
+            $('#address, #district, #city, #state').prop('disabled', true).val('Carregando...');
+            
+            $.ajax({
+                url: 'https://viacep.com.br/ws/' + cep + '/json/',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (!data.erro) {
+                        $('#address').val(data.logradouro.toUpperCase());
+                        $('#district').val(data.bairro.toUpperCase());
+                        $('#city').val(data.localidade.toUpperCase());
+                        $('#state').val(data.uf.toUpperCase());
+                    } else {
+                         Swal.fire({
+                              icon: 'warning',
+                              title: 'CEP não encontrado',
+                              text: 'O CEP informado não foi encontrado. Verifique se está correto.',
+                              toast: true,
+                              position: 'bottom-start',
+                              showConfirmButton: false,
+                              timer: 3000
+                          });
+                         $('#address, #district, #city, #state').val('');
+                     }
+                },
+                error: function() {
+                     Swal.fire({
+                          icon: 'error',
+                          title: 'Erro de Conexão',
+                          text: 'Não foi possível conectar ao serviço de CEP. Verifique sua conexão com a internet.',
+                          toast: true,
+                          position: 'bottom-start',
+                          showConfirmButton: false,
+                          timer: 4000
+                      });
+                     $('#address, #district, #city, #state').val('');
+                 },
+                complete: function() {
+                    $('#address, #district, #city, #state').prop('disabled', false);
+                }
+            });
+        } else if (cep.length < 8) {
+             // Limpa os campos quando CEP tem menos de 8 dígitos
+             $('#address').val('');
+             $('#district').val('');
+             $('#city').val('');
+             $('#state').val('');
+        }
+    });
+    
     // Máscara para UF (maiúscula)
     $('#state').on('input', function() {
         this.value = this.value.toUpperCase();
     });
     
     // Converter campos de texto para maiúsculo durante a digitação (exceto email)
-    $('#corporate_name, #fantasy_name, #state_registration, #address, #district, #city').on('input', function() {
+    $('#corporate_name, #fantasy_name, #state_registration, #address, #address_line_2, #district, #city').on('input', function() {
         this.value = this.value.toUpperCase();
     });
 });
