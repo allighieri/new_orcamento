@@ -33,12 +33,12 @@ class GoogleAuthController extends Controller
             $success = $googleEmailService->handleCallback($code);
 
             if ($success) {
-                return redirect()->route('email-templates.index')->with('success', 'Integração com Google configurada com sucesso!');
+                return redirect()->route('google.settings')->with('success', 'Integração com Google configurada com sucesso!');
             } else {
-                return redirect()->route('email-templates.index')->with('error', 'Erro ao configurar integração com Google.');
+                return redirect()->route('google.settings')->with('error', 'Erro ao configurar integração com Google.');
             }
         } catch (\Exception $e) {
-            return redirect()->route('email-templates.index')->with('error', 'Erro ao processar callback: ' . $e->getMessage());
+            return redirect()->route('google.settings')->with('error', 'Erro ao processar callback: ' . $e->getMessage());
         }
     }
 
