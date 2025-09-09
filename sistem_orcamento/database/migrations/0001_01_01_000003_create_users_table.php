@@ -23,6 +23,8 @@ return new class extends Migration
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('set null');
             $table->rememberToken();
             $table->timestamps();
+
+            $table->engine = 'InnoDB';
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
