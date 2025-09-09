@@ -227,8 +227,12 @@
                 <p style="margin: 0 0 3px 0; padding: 0; font-weight: bold">Orçamento</p>
                 <p class="budget-number">Nº. {{ $budget->number }}</p>
                 <p style="margin: 0 0 5px 0; padding-bottom: 0"><strong>Data:</strong> {{ $budget->issue_date->format('d/m/Y') }}</p>
-                @if($budget->delivery_date)
+                @if($budget->delivery_date_enabled && $budget->delivery_date)
                 <p style="margin: 0 0 5px 0; padding-bottom: 0"><strong>Previsão de Entrega:</strong> {{ $budget->delivery_date->format('d/m/Y') }}</p>
+                @elseif($budget->delivery_date_enabled && !$budget->delivery_date)
+                <p style="margin: 0 0 5px 0; padding-bottom: 0"><strong>Previsão de Entrega:</strong> A combinar</p>
+                @elseif(!$budget->delivery_date_enabled)
+                <p style="margin: 0 0 5px 0; padding-bottom: 0"><strong>Previsão de Entrega:</strong> A combinar</p>
                 @endif
                 <p style="margin-top: 0; padding-top: 0"><strong>Validade:</strong> 
                 @if(isset($settings) && $settings->show_validity_as_text)

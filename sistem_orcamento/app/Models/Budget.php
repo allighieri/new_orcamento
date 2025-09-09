@@ -18,6 +18,7 @@ class Budget extends Model
         'final_amount',
         'issue_date',
         'delivery_date',
+        'delivery_date_enabled',
         'valid_until',
         'observations',
         'status'

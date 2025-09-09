@@ -135,8 +135,12 @@
                                 <div class="card-body text-center">
                                     <h4 class="text-primary mb-3">{{ $budget->number }}</h4>
                                     <p class="mb-2"><strong>Data:</strong> {{ $budget->issue_date->format('d/m/Y') }}</p>
-                                    @if($budget->delivery_date)
+                                    @if($budget->delivery_date_enabled && $budget->delivery_date)
                                     <p class="mb-2"><strong>Previsão de Entrega:</strong><br>{{ $budget->delivery_date->format('d/m/Y') }}</p>
+                                    @elseif($budget->delivery_date_enabled && !$budget->delivery_date)
+                                    <p class="mb-2"><strong>Previsão de Entrega:</strong><br>A combinar</p>
+                                    @elseif(!$budget->delivery_date_enabled)
+                                    <p class="mb-2"><strong>Previsão de Entrega:</strong><br>A combinar</p>
                                     @endif
                                     <p class="mb-2"><strong>Validade:</strong><br>
                                     @if(isset($settings) && $settings->show_validity_as_text)

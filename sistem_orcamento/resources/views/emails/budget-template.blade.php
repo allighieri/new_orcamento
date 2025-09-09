@@ -259,10 +259,12 @@
                     <span class="info-value">{{ $budgetDate }}</span>
                 </div>
 
+                @if($deliveryDate)
                 <div class="info-row">
                     <span class="info-label">Previsão de Entrega:</span>
                     <span class="info-value">{{ $deliveryDate }}</span>
                 </div>
+                @endif
                 
                 <div class="info-row">
                     <span class="info-label">Validade:</span>

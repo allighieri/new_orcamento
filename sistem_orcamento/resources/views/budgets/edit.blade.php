@@ -90,10 +90,18 @@
 
                             <div class="col-md-2">
                                 <div class="mb-3">
-                                    <label for="delivery_date" class="form-label">Previsão de Entrega</label>
-                                    <input type="date" class="form-control" 
-                                        id="delivery_date" name="delivery_date" 
-                                        value="{{ old('delivery_date', $budget->delivery_date ? $budget->delivery_date->format('Y-m-d') : '') }}">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="form-check form-switch me-2">
+                                            <input class="form-check-input" type="checkbox" id="delivery_date_enabled" name="delivery_date_enabled" value="1" {{ old('delivery_date_enabled', $budget->delivery_date_enabled ?? true) ? 'checked' : '' }}>
+                                        </div>
+                                        <label for="delivery_date_enabled" class="form-label mb-0">Previsão de Entrega</label>
+                                    </div>
+                                    <div id="delivery_date_container">
+                                        <input type="date" class="form-control" 
+                                            id="delivery_date" name="delivery_date" 
+                                            value="{{ old('delivery_date', $budget->delivery_date ? $budget->delivery_date->format('Y-m-d') : '') }}">
+                                    </div>
+                                    <div id="delivery_date_text" class="text-muted" style="display: none;">A combinar</div>
                                 </div>
                             </div>
                         </div>
@@ -323,38 +331,33 @@
                                 <h5 class="mb-0"><i class="bi bi-credit-card"></i> Métodos de Pagamento</h5>
                             </div>
                             <div class="card-body">
-                                <!-- Radio buttons para controlar exibição dos métodos de pagamento -->
+                                <!-- Checkbox tipo settings para controlar exibição dos métodos de pagamento -->
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Incluir forma de pagamento no orçamento?</label>
                                     @php
                                         // Verificar se há métodos de pagamento disponíveis
                                         $hasAvailablePaymentMethods = $paymentMethods->count() > 0;
                                         
-                                        // Verificar se há pagamentos no orçamento com métodos válidos
-                                        $hasValidPayments = false;
-                                        foreach($budget->budgetPayments as $payment) {
-                                            if($payment->paymentMethod && !$payment->paymentMethod->trashed()) {
-                                                $hasValidPayments = true;
-                                                break;
-                                            }
-                                        }
-                                        
-                                        // Se não há métodos disponíveis ou não há pagamentos válidos, marcar como "Não"
-                                        $shouldIncludePayments = $hasAvailablePaymentMethods && ($hasValidPayments || $budget->budgetPayments->count() > 0);
+                                        // Se há budgetPayments salvos, deve incluir métodos de pagamento
+                                        $shouldIncludePayments = $hasAvailablePaymentMethods && $budget->budgetPayments->count() > 0;
                                     @endphp
                                     
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="include_payment_methods" id="include_payment_no" value="no" {{ !$shouldIncludePayments ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="include_payment_no">
-                                            Não
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               role="switch" 
+                                               id="include_payment_methods" 
+                                               name="include_payment_methods" 
+                                               value="1"
+                                               {{ $shouldIncludePayments ? 'checked' : '' }}
+                                               {{ !$hasAvailablePaymentMethods ? 'disabled' : '' }}>
+                                        <label class="form-check-label fw-bold" for="include_payment_methods">
+                                            <i class="bi bi-credit-card"></i> Incluir Métodos de Pagamento
+                                            {{ !$hasAvailablePaymentMethods ? ' (Nenhum método disponível)' : '' }}
                                         </label>
                                     </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="include_payment_methods" id="include_payment_yes" value="yes" {{ $shouldIncludePayments ? 'checked' : '' }} {{ !$hasAvailablePaymentMethods ? 'disabled' : '' }}>
-                                        <label class="form-check-label" for="include_payment_yes">
-                                            Sim {{ !$hasAvailablePaymentMethods ? '(Nenhum método disponível)' : '' }}
-                                        </label>
-                                    </div>
+                                    <small class="form-text text-muted">
+                                        Quando ativado, permite adicionar formas de pagamento ao orçamento
+                                    </small>
                                 </div>
                                 
                                 <div id="payment-methods-container" style="{{ !$shouldIncludePayments ? 'display: none;' : '' }}">
@@ -524,21 +527,23 @@
                                 <h5 class="mb-0"><i class="bi bi-bank"></i> Dados Bancários</h5>
                             </div>
                             <div class="card-body">
-                                <!-- Radio buttons para controlar exibição dos dados bancários -->
+                                <!-- Checkbox tipo settings para controlar exibição dos dados bancários -->
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Incluir dados bancários?</label>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="include_bank_data" id="include_bank_no" value="no" {{ $budget->bankAccounts->count() == 0 ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="include_bank_no">
-                                            Não
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               role="switch" 
+                                               id="include_bank_data" 
+                                               name="include_bank_data" 
+                                               value="1"
+                                               {{ $budget->bankAccounts->count() > 0 ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-bold" for="include_bank_data">
+                                            <i class="bi bi-bank"></i> Incluir Dados Bancários
                                         </label>
                                     </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="include_bank_data" id="include_bank_yes" value="yes" {{ $budget->bankAccounts->count() > 0 ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="include_bank_yes">
-                                            Sim
-                                        </label>
-                                    </div>
+                                    <small class="form-text text-muted">
+                                        Quando ativado, permite adicionar contas bancárias ao orçamento
+                                    </small>
                                 </div>
                                 
                                 <div id="bank-data-container" style="{{ $budget->bankAccounts->count() == 0 ? 'display: none;' : '' }}">
@@ -891,11 +896,11 @@ $(document).ready(function() {
         const remainingElement = $('#remainingAmount');
         const cardElement = $('#remainingAmountCard');
         
-        // Verificar se a opção de incluir forma de pagamento está marcada como 'não'
-        const includePaymentMethods = $('input[name="include_payment_methods"]:checked').val();
+        // Verificar se a opção de incluir forma de pagamento está desmarcada
+        const includePaymentMethods = $('input[name="include_payment_methods"]').is(':checked');
         
-        if (includePaymentMethods === 'no') {
-            // Ocultar seção quando 'Incluir forma de pagamento no orçamento' estiver marcado como 'NÃO'
+        if (!includePaymentMethods) {
+            // Ocultar seção quando 'Incluir forma de pagamento no orçamento' estiver desmarcado
             cardElement.hide();
         } else if (remaining === 0) {
             // Ocultar quando valor for R$ 0,00
@@ -1640,9 +1645,9 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
         $('#payment-methods-container .payment-method-row:last .add-payment-method').show();
     }
 
-    // Controlar exibição dos métodos de pagamento e card de valor restante com radio buttons
+    // Controlar exibição dos métodos de pagamento e card de valor restante com checkboxes
     $('input[name="include_payment_methods"]').change(function() {
-        if ($(this).val() === 'yes') {
+        if ($(this).is(':checked')) {
             $('#payment-methods-container').show();
             $('#remainingAmountCard').show();
             updatePaymentAddButtons();
@@ -1856,7 +1861,7 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
     function validateBankAccountDuplication() {
         const includeBankData = $('input[name="include_bank_data"]:checked').val();
         
-        if (includeBankData !== 'yes') {
+        if (includeBankData !== '1') {
             return true; // Se não incluir dados bancários, não há duplicação
         }
         
@@ -1909,7 +1914,7 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
         
         const includePaymentMethods = $('input[name="include_payment_methods"]:checked').val();
         
-        if (includePaymentMethods === 'yes') {
+        if (includePaymentMethods === '1') {
             const budgetTotal = calculateSubtotal() - parseMoney($('#total_discount').val());
             const paymentTotal = calculatePaymentMethodsTotal();
             const remaining = budgetTotal - paymentTotal;
@@ -1942,7 +1947,7 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
         const bankDataContainer = $('#bank-data-container');
         const addBankAccountBtn = $('.add-bank-account');
         
-        if ($(this).val() === 'yes') {
+        if ($(this).is(':checked')) {
             bankDataContainer.show();
             addBankAccountBtn.show();
         } else {
@@ -2197,6 +2202,40 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
         $('#calculatorResult').hide();
         $('#resultSuccess').hide();
         $('#resultWarning').hide();
+    });
+
+    // --- Controle do Checkbox de Previsão de Entrega ---
+    
+    function toggleDeliveryDate() {
+        const isEnabled = $('#delivery_date_enabled').is(':checked');
+        
+        if (isEnabled) {
+            $('#delivery_date_container').show();
+            $('#delivery_date_text').hide();
+            $('#delivery_date').prop('required', true);
+            
+            // Se não há data definida, calcular baseado na data do orçamento e prazo das settings
+            if (!$('#delivery_date').val()) {
+                const issueDate = $('#issue_date').val();
+                if (issueDate) {
+                    const deliveryDate = addDays(issueDate, budgetDeliveryDays);
+                    $('#delivery_date').val(deliveryDate);
+                }
+            }
+        } else {
+            $('#delivery_date_container').hide();
+            $('#delivery_date_text').show();
+            $('#delivery_date').prop('required', false);
+            $('#delivery_date').val('');
+        }
+    }
+    
+    // Inicializar estado do checkbox
+    toggleDeliveryDate();
+    
+    // Event listener para mudanças no checkbox
+    $('#delivery_date_enabled').on('change', function() {
+        toggleDeliveryDate();
     });
 
 });
