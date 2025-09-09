@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Company extends Model
 {
@@ -15,6 +16,7 @@ class Company extends Model
         'phone',
         'email',
         'address',
+        'address_line_2',
         'district',
         'city',
         'state',
@@ -52,6 +54,54 @@ class Company extends Model
     public function contactForms(): HasMany
     {
         return $this->hasMany(ContactForm::class);
+    }
+
+    /**
+     * Relacionamento com orçamentos
+     */
+    public function budgets(): HasMany
+    {
+        return $this->hasMany(Budget::class);
+    }
+
+    /**
+     * Relacionamento com produtos
+     */
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    /**
+     * Relacionamento com categorias
+     */
+    public function categories(): HasMany
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    /**
+     * Relacionamento com clientes
+     */
+    public function clients(): HasMany
+    {
+        return $this->hasMany(Client::class);
+    }
+
+    /**
+     * Relacionamento com métodos de pagamento
+     */
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class);
+    }
+
+    /**
+     * Relacionamento com token do Google
+     */
+    public function googleToken(): HasOne
+    {
+        return $this->hasOne(GoogleToken::class);
     }
 
     /**

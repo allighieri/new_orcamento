@@ -24,6 +24,27 @@
 
 <div class="container mx-auto row">
     <div class="col-12">
+        <!-- Formulário de Pesquisa -->
+        <div class="mb-4">
+            <form method="GET" action="{{ route('products.index') }}" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" 
+                           class="form-control" 
+                           id="search" 
+                           name="search" 
+                           value="{{ request('search') }}" 
+                           placeholder="Pesquisar produto...">
+                </div>
+                @if(request('search'))
+                    <div class="col-md-2 d-flex align-items-end">
+                        <a href="{{ route('products.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    </div>
+                @endif
+            </form>
+        </div>
+        
         <div class="card">
             <div class="card-body">
                 @if($products->count() > 0)
@@ -87,11 +108,16 @@
                 @else
                     <div class="text-center py-5">
                         <i class="bi bi-box fs-1 text-muted"></i>
-                        <h4 class="text-muted mt-3">Nenhum produto cadastrado</h4>
-                        <p class="text-muted">Comece cadastrando seu primeiro produto</p>
-                        <a href="{{ route('products.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Produto
-                        </a>
+                        @if(request('search'))
+                            <h4 class="text-muted mt-3">Nenhum produto encontrado</h4>
+                            <p class="text-muted">Não há produtos que correspondam à sua pesquisa</p>
+                        @else
+                            <h4 class="text-muted mt-3">Nenhum produto cadastrado</h4>
+                            <p class="text-muted">Comece cadastrando seu primeiro produto</p>
+                            <a href="{{ route('products.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus"></i> Novo Produto
+                            </a>
+                        @endif
                     </div>
                 @endif
             </div>

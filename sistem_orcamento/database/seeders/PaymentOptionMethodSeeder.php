@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\PaymentOptionMethod;
+use Illuminate\Support\Facades\DB;
 
 class PaymentOptionMethodSeeder extends Seeder
 {
@@ -13,7 +14,15 @@ class PaymentOptionMethodSeeder extends Seeder
      */
     public function run(): void
     {
+        // Não usar truncate devido à foreign key constraint
+        // DB::table('payment_option_methods')->truncate();
+
         $paymentOptionMethods = [
+            [
+                'method' => 'Boleto',
+                'description' => 'Pagamento via boleto bancário.',
+                'active' => 1
+            ],
             [
                 'method' => 'PIX',
                 'description' => 'Pagamento instantâneo 24/7.',
@@ -57,6 +66,11 @@ class PaymentOptionMethodSeeder extends Seeder
             [
                 'method' => 'Transferência Bancária DOC',
                 'description' => 'Para transferências de valores mais altos entre contas de diferentes bancos, compensa até o final do próximo dia útil.',
+                'active' => 1
+            ],
+            [
+                'method' => 'Promissória',
+                'description' => 'Pagamento via promissória.',
                 'active' => 1
             ]
         ];

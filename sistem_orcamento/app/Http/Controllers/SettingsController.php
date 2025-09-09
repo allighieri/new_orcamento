@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CompanySetting;
+use App\Models\UserThemePreference;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -23,7 +24,31 @@ class SettingsController extends Controller
         $companyId = session('tenant_company_id');
         $settings = CompanySetting::getForCompany($companyId);
         
+        // Carregar tema do banco de dados e sincronizar com a sessão
+        $theme = UserThemePreference::getThemeForUser($user->id, $companyId);
+        session(['theme' => $theme]);
+        
         return view('settings.index', compact('settings'));
+    }
+    
+    /**
+     * Obter tema atual do usuário
+     */
+    public static function getCurrentTheme()
+    {
+        $user = auth()->guard('web')->user();
+        
+        if (!$user) {
+            return 'blue'; // tema padrão para usuários não autenticados
+        }
+        
+        $companyId = session('tenant_company_id');
+        
+        if (!$companyId) {
+            return 'blue'; // tema padrão se não houver empresa
+        }
+        
+        return UserThemePreference::getThemeForUser($user->id, $companyId);
     }
     
     /**
@@ -62,5 +87,29 @@ class SettingsController extends Controller
         ]);
         
         return back()->with('success', 'Configurações atualizadas com sucesso!');
+    }
+
+    /**
+     * Update theme setting.
+     */
+    public function updateTheme(Request $request)
+    {
+        $request->validate([
+            'theme' => 'required|in:blue,green,teal,cyan,purple,indigo,pink,red,orange,yellow,lime,dark'
+        ]);
+
+        $user = auth()->guard('web')->user();
+        $companyId = session('tenant_company_id');
+        
+        // Salvar preferência no banco de dados
+        UserThemePreference::setThemeForUser($user->id, $companyId, $request->theme);
+        
+        // Também manter na sessão para uso imediato
+        session(['theme' => $request->theme]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tema salvo no banco de dados'
+        ]);
     }
 }

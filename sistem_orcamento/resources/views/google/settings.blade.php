@@ -53,9 +53,12 @@
 
                     <div id="connected" class="d-none">
                         <div class="alert alert-success">
-                            <i class="bi bi-check2-circle"></i></i>
+                            <i class="bi bi-check2-circle"></i>
                             <strong>Integração ativa!</strong><br>
                             Sua conta Google está conectada e pronta para enviar emails.
+                            <div class="mt-2">
+                                <small class="text-muted">Email conectado: <strong><span id="connected-email">Carregando...</span></strong></small>
+                            </div>
                         </div>
                         
                         <div class="row">
@@ -126,21 +129,35 @@ function confirmDeleteTemplate() {
 }
 
 function checkGoogleStatus() {
-    $.get('{{ route("google.status") }}')
-        .done(function(response) {
-            $('#google-status').addClass('d-none');
+    fetch('{{ route('google.status') }}')
+        .then(response => response.json())
+        .then(data => {
+            const statusDiv = document.getElementById('google-status');
+            const connectedDiv = document.getElementById('connected');
+            const notConnectedDiv = document.getElementById('not-connected');
             
-            if (response.authenticated) {
-                $('#connected').removeClass('d-none');
-                $('#not-connected').addClass('d-none');
+            if (data.authenticated) {
+                statusDiv.classList.add('d-none');
+                connectedDiv.classList.remove('d-none');
+                notConnectedDiv.classList.add('d-none');
+                
+                // Exibir email se disponível
+                const emailSpan = document.getElementById('connected-email');
+                if (data.email) {
+                    emailSpan.textContent = data.email;
+                } else {
+                    emailSpan.textContent = 'Email não disponível';
+                }
             } else {
-                $('#not-connected').removeClass('d-none');
-                $('#connected').addClass('d-none');
+                statusDiv.classList.add('d-none');
+                connectedDiv.classList.add('d-none');
+                notConnectedDiv.classList.remove('d-none');
             }
         })
-        .fail(function() {
-            $('#google-status').addClass('d-none');
-            $('#not-connected').removeClass('d-none');
+        .catch(error => {
+            console.error('Erro ao verificar status:', error);
+            const statusDiv = document.getElementById('google-status');
+            statusDiv.innerHTML = '<div class="alert alert-danger">Erro ao verificar status da integração.</div>';
         });
 }
 

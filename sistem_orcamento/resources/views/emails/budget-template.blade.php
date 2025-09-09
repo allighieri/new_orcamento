@@ -92,6 +92,7 @@
         .info-label {
             font-weight: 500;
             color: #666;
+            margin-right: 5px;
         }
         
         .info-value {
@@ -224,6 +225,7 @@
             
             .info-value {
                 margin-top: 5px;
+                margin-right: 5px;
             }
         }
     </style>
@@ -255,23 +257,23 @@
                 </div>
                 
                 <div class="info-row">
-                    <span class="info-label">Data de emissão:</span>
-                    <span class="info-value">{{ $budgetDate }}</span>
+                    <span class="info-label">Data de emissão: </span>
+                    <span class="info-value"> {{ $budgetDate }}</span>
                 </div>
 
                 <div class="info-row">
-                    <span class="info-label">Previsão de Entrega:</span>
-                    <span class="info-value">{{ $deliveryDate }}</span>
+                    <span class="info-label">Previsão de Entrega: </span>
+                    <span class="info-value"> {{ $deliveryDate ?? ' A combinar' }}</span>
                 </div>
                 
                 <div class="info-row">
                     <span class="info-label">Validade:</span>
-                    <span class="info-value">{{ $budgetValidity }}</span>
+                    <span class="info-value"> {{ $budgetValidity }} </span>
                 </div>
                 
                 <div class="info-row">
                     <span class="info-label">Status:</span>
-                    <span class="info-value">{{ $budgetStatus }}</span>
+                    <span class="info-value"> {{ $budgetStatus }} </span>
                 </div>
             </div>
             

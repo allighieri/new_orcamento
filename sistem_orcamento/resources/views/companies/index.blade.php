@@ -18,6 +18,28 @@
                 </a>
             </div>
         </div>
+        
+        <div class="mb-4">
+            <form method="GET" action="{{ route('companies.index') }}" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" 
+                           class="form-control" 
+                           id="search" 
+                           name="search" 
+                           value="{{ request('search') }}" 
+                           placeholder="Nome da empresa ou CNPJ">
+                </div>
+                @if(request('search'))
+                    <div class="col-md-2 d-flex align-items-end">
+                        <a href="{{ route('companies.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    </div>
+                @endif
+            </form>
+        </div>
+
+
     </div>
 </div>
 
@@ -98,17 +120,58 @@
 <script>
 function confirmDeleteCompany(companyId) {
     Swal.fire({
-        title: 'Confirmação',
-        html: 'Esta ação é irreversível. Todos os registros referente a sua empresa, incluindo orçamentos serão permanentemente perdidos.<br><br>Tem certeza de que deseja excluir a empresa esta empresa?',
-        icon: 'warning',
+        title: '⚠️ ATENÇÃO: Exclusão Permanente',
+        html: `
+            <div class="text-start">
+                <p><strong>Esta ação é IRREVERSÍVEL e excluirá PERMANENTEMENTE:</strong></p>
+                <ul class="text-danger">
+                    <li>✗ Todos os <strong>orçamentos</strong> da empresa</li>
+                    <li>✗ Todos os <strong>clientes</strong> da empresa</li>
+                    <li>✗ Todos os <strong>produtos</strong> da empresa</li>
+                    <li>✗ Todas as <strong>categorias</strong> da empresa</li>
+                    <li>✗ Todos os <strong>contatos</strong> da empresa</li>
+                    <li>✗ Todos os <strong>usuários</strong> da empresa</li>
+                    <li>✗ Todos os <strong>métodos de pagamento</strong> específicos</li>
+                    <li>✗ Todos os <strong>arquivos PDF</strong> gerados</li>
+                    <li>✗ Todos os <strong>dados relacionados</strong></li>
+                </ul>
+                <p class="text-danger mt-3"><strong>Não será possível recuperar estes dados!</strong></p>
+                <p>Tem certeza absoluta de que deseja continuar?</p>
+            </div>
+        `,
+        icon: 'error',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sim, excluir!',
-        cancelButtonText: 'Cancelar'
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '🗑️ Sim, excluir TUDO!',
+        cancelButtonText: '❌ Cancelar',
+        width: '600px',
+        customClass: {
+            popup: 'swal-wide'
+        }
     }).then((result) => {
         if (result.isConfirmed) {
-            document.getElementById('delete-form-company-' + companyId).submit();
+            // Segunda confirmação para ações críticas
+            Swal.fire({
+                title: 'Última confirmação',
+                text: 'Digite "EXCLUIR" para confirmar a exclusão permanente:',
+                input: 'text',
+                inputPlaceholder: 'Digite EXCLUIR',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Confirmar exclusão',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (value !== 'EXCLUIR') {
+                        return 'Você deve digitar "EXCLUIR" para confirmar!';
+                    }
+                }
+            }).then((secondResult) => {
+                if (secondResult.isConfirmed) {
+                    document.getElementById('delete-form-company-' + companyId).submit();
+                }
+            });
         }
     });
 }

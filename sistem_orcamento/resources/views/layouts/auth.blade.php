@@ -80,7 +80,7 @@
                         timer: 5000,
                         showConfirmButton: false,
                         toast: true,
-                        position: 'top-end'
+                        position: 'bottom-start'
                     });
                 </script>
             @endif
@@ -94,7 +94,7 @@
                         timer: 5000,
                         showConfirmButton: false,
                         toast: true,
-                        position: 'top-end'
+                        position: 'bottom-start'
                     });
                 </script>
             @endif
@@ -108,7 +108,7 @@
                         timer: 5000,
                         showConfirmButton: false,
                         toast: true,
-                        position: 'top-end'
+                        position: 'bottom-start'
                     });
                 </script>
             @endif

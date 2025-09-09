@@ -19,7 +19,7 @@ class DashboardController extends Controller implements HasMiddleware
     /**
      * Dashboard padrão para todos os usuários
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $companyId = session('tenant_company_id');
@@ -34,12 +34,10 @@ class DashboardController extends Controller implements HasMiddleware
                 'contacts_count' => Contact::where('company_id', $companyId)->count(),
             ];
             
-            // Últimos orçamentos filtrados por empresa
-            $recentBudgets = Budget::with(['client', 'company'])
+            // Query base para orçamentos filtrados por empresa
+            $budgetsQuery = Budget::with(['client', 'company', 'pdfFiles'])
                 ->where('company_id', $companyId)
-                ->latest()
-                ->take(10)
-                ->get();
+                ->orderBy('created_at', 'desc');
         } else {
             // Super admin vê dados de todas as empresas
             $stats = [
@@ -50,11 +48,29 @@ class DashboardController extends Controller implements HasMiddleware
                 'contacts_count' => Contact::count(),
             ];
             
-            // Últimos orçamentos de todas as empresas
-            $recentBudgets = Budget::with(['client', 'company'])
-                ->latest()
-                ->take(10)
-                ->get();
+            // Query base para orçamentos de todas as empresas
+            $budgetsQuery = Budget::with(['client', 'company', 'pdfFiles'])
+                ->orderBy('created_at', 'desc');
+        }
+        
+        // Aplicar pesquisa se fornecida
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            $budgetsQuery->where(function($q) use ($searchTerm) {
+                $q->where('number', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhereHas('client', function($clientQuery) use ($searchTerm) {
+                      $clientQuery->where('corporate_name', 'LIKE', '%' . $searchTerm . '%')
+                                  ->orWhere('fantasy_name', 'LIKE', '%' . $searchTerm . '%');
+                  });
+            });
+        }
+        
+        // Aplicar paginação (5 itens por página na dashboard)
+        $recentBudgets = $budgetsQuery->paginate(10)->appends($request->query());
+        
+        // Se for requisição AJAX, retornar apenas a parte da tabela
+        if ($request->ajax() || $request->has('ajax')) {
+            return view('dashboard.partials.table', compact('recentBudgets'));
         }
         
         return view('dashboard', compact('user', 'stats', 'recentBudgets'));

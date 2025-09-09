@@ -12,27 +12,38 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $user = auth()->guard('web')->user();
         
         if ($user->role === 'super_admin') {
             // Super admin pode ver todas as categorias
-            $categories = Category::with(['parent', 'allChildren', 'company'])
-                ->withCount('products')
-                ->get();
+            $query = Category::with(['parent', 'allChildren', 'company'])
+                ->withCount('products');
         } else {
             // Admin e user veem apenas categorias da sua empresa
             $companyId = session('tenant_company_id');
-            $categories = Category::where('company_id', $companyId)
+            $query = Category::where('company_id', $companyId)
                 ->with(['parent', 'allChildren'])
-                ->withCount('products')
-                ->get();
+                ->withCount('products');
         }
+        
+        // Pesquisar por nome da categoria
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+        
+        $categories = $query->get();
         
         // Organizar categorias em formato de árvore para exibição
         $categoriesTree = $this->buildCategoriesTree($categories);
         $isSuperAdmin = $user->role === 'super_admin';
+        
+        // Se for requisição AJAX, retornar apenas a parte da tabela
+        if ($request->ajax() || $request->has('ajax')) {
+            return view('categories.partials.table', compact('categoriesTree', 'isSuperAdmin'));
+        }
 
         return view('categories.index', compact('categoriesTree', 'isSuperAdmin'));
     }
@@ -77,6 +88,14 @@ class CategoryController extends Controller
         }
         
         $validated = $request->validate($rules);
+        
+        // Converter campos de texto para maiúsculo
+        $fieldsToUppercase = ['name', 'description'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
 
         // Validação adicional para evitar loops
         if ($validated['parent_id']) {
@@ -192,6 +211,14 @@ class CategoryController extends Controller
             'description' => 'nullable|string|max:1000',
             'parent_id' => 'nullable|exists:categories,id|not_in:' . $category->id,
         ]);
+        
+        // Converter campos de texto para maiúsculo
+        $fieldsToUppercase = ['name', 'description'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
 
         // Validação adicional para evitar loops na hierarquia
         if ($validated['parent_id']) {

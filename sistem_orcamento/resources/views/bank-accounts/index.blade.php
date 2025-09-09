@@ -108,7 +108,7 @@
                         <h4 class="text-muted mt-3">Nenhuma conta bancária cadastrada</h4>
                         <p class="text-muted">Comece cadastrando sua primeira conta bancária</p>
                         <a href="{{ route('bank-accounts.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Conta
+                            <i class="bi bi-plus"></i> Nova Conta
                         </a>
                     </div>
                 @endif

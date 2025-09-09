@@ -28,7 +28,7 @@
                     @method('PUT')
                     
                     <!-- Método de Pagamento -->
-                    <div class="mb-3">
+                    <div class="col-6 mb-3">
                         <label for="payment_option_method_id" class="form-label">Método de Pagamento <span class="text-danger">*</span></label>
                         <select class="form-select @error('payment_option_method_id') is-invalid @enderror" 
                                 id="payment_option_method_id" 
@@ -48,10 +48,36 @@
                             </div>
                         @enderror
                         <div class="form-text">
-                            Tipo de método de pagamento que será exibido nos orçamentos.
+                            Método de pagamento que será exibido nos orçamentos.
                         </div>
                     </div>
                     
+                    @if(auth()->user()->role === 'super_admin')
+                    <!-- Empresa -->
+                    <div class="mb-3">
+                        <label for="company_id" class="form-label">Empresa <span class="text-danger">*</span></label>
+                        <select class="form-select @error('company_id') is-invalid @enderror" 
+                                id="company_id" 
+                                name="company_id" 
+                                required>
+                            <option value="">Selecione uma empresa...</option>
+                            @foreach($companies as $company)
+                                <option value="{{ $company->id }}" 
+                                        {{ old('company_id', $paymentMethod->company_id) == $company->id ? 'selected' : '' }}>
+                                    {{ $company->fantasy_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('company_id')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                        <div class="form-text">
+                            Empresa à qual este método de pagamento pertence.
+                        </div>
+                    </div>
+                    @endif
                     
                 <div class="row">
                     <div class="col-md-6">
@@ -155,22 +181,6 @@
             </div>
             <div class="card-body">
                 <div class="mb-2">
-                    <small class="text-muted">ID:</small>
-                    <strong>{{ $paymentMethod->id }}</strong>
-                </div>
-                <div class="mb-2">
-                    <small class="text-muted">Slug:</small>
-                    <code>{{ $paymentMethod->slug }}</code>
-                </div>
-                <div class="mb-2">
-                    <small class="text-muted">Tipo:</small>
-                    @if($paymentMethod->is_global)
-                        <span class="badge bg-info">Global</span>
-                    @else
-                        <span class="badge bg-secondary">Empresa</span>
-                    @endif
-                </div>
-                <div class="mb-2">
                     <small class="text-muted">Criado em:</small>
                     <strong>{{ $paymentMethod->created_at->format('d/m/Y H:i') }}</strong>
                 </div>
@@ -197,39 +207,7 @@
             </div>
         </div>
         
-        <!-- Dicas -->
-        <div class="card mt-3">
-            <div class="card-header">
-                <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Dicas</h6>
-            </div>
-            <div class="card-body">
-                <ul class="list-unstyled mb-0 small">
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success"></i>
-                        Use nomes claros e descritivos
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success"></i>
-                        Métodos inativos não aparecem nos orçamentos
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success"></i>
-                        Configure o parcelamento conforme necessário
-                    </li>
-                    @if($paymentMethod->is_global)
-                        <li class="mb-0">
-                            <i class="bi bi-info-circle text-info"></i>
-                            Métodos globais ficam disponíveis para todas as empresas
-                        </li>
-                    @else
-                        <li class="mb-0">
-                            <i class="bi bi-info-circle text-info"></i>
-                            Este método é específico da sua empresa
-                        </li>
-                    @endif
-                </ul>
-            </div>
-        </div>
+        
     </div>
 </div>
 
@@ -255,6 +233,22 @@ function toggleInstallments() {
 // Inicializar o estado do formulário
 document.addEventListener('DOMContentLoaded', function() {
     toggleInstallments();
+    
+    // Verificar se há erros de validação e mostrar SweetAlert
+    @if($errors->any())
+        let errorMessages = [];
+        @foreach($errors->all() as $error)
+            errorMessages.push('{{ $error }}');
+        @endforeach
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro de Validação',
+            html: errorMessages.join('<br>'),
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+        });
+    @endif
 });
 </script>
 

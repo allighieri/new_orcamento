@@ -7,13 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class CompanyController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->guard('web')->user();
         
@@ -26,7 +27,33 @@ class CompanyController extends Controller
         }
         
         // Super admin vê a listagem completa
-        $companies = Company::paginate(10);
+        $query = Company::query();
+        
+        // Pesquisar por nome corporativo, fantasia ou CNPJ da empresa
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            // Remove caracteres especiais para busca por documento
+            $cleanSearchTerm = preg_replace('/[^0-9]/', '', $searchTerm);
+            
+            $query->where(function($q) use ($searchTerm, $cleanSearchTerm) {
+                $q->where('corporate_name', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('fantasy_name', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('document_number', 'LIKE', '%' . $searchTerm . '%');
+                  
+                // Se há números no termo de busca, busca também pelo documento sem formatação
+                if (!empty($cleanSearchTerm)) {
+                    $q->orWhere(\DB::raw('REPLACE(REPLACE(REPLACE(REPLACE(document_number, ".", ""), "-", ""), "/", ""), " ", "")'), 'LIKE', '%' . $cleanSearchTerm . '%');
+                }
+            });
+        }
+        
+        $companies = $query->orderBy('fantasy_name')->paginate(10)->appends($request->query());
+        
+        // Se for requisição AJAX, retornar apenas a parte da tabela
+        if ($request->ajax() || $request->has('ajax')) {
+            return view('companies.partials.table', compact('companies'));
+        }
+        
         return view('companies.index', compact('companies'));
     }
 
@@ -51,12 +78,23 @@ class CompanyController extends Controller
             'phone' => 'required|string|min:14|max:15',
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
+            'address_line_2' => 'nullable|string|max:255',
             'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
             'cep' => 'nullable|string|max:10',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // Validação customizada: CEP deve ter 8 dígitos se preenchido
+        if (!empty($validated['cep'])) {
+            $cepDigits = preg_replace('/\D/', '', $validated['cep']);
+            if (strlen($cepDigits) !== 8) {
+                return back()->withErrors([
+                    'cep' => 'CEP incompleto.'
+                ])->withInput();
+            }
+        }
 
         // Validação customizada: pelo menos um dos campos deve estar preenchido
         if (empty($validated['corporate_name']) && empty($validated['fantasy_name'])) {
@@ -108,12 +146,23 @@ class CompanyController extends Controller
             'phone' => 'required|string|min:14|max:15',
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
+            'address_line_2' => 'nullable|string|max:255',
             'district' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:2',
             'cep' => 'nullable|string|max:10',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // Validação customizada: CEP deve ter 8 dígitos se preenchido
+        if (!empty($validated['cep'])) {
+            $cepDigits = preg_replace('/\D/', '', $validated['cep']);
+            if (strlen($cepDigits) !== 8) {
+                return back()->withErrors([
+                    'cep' => 'CEP incompleto.'
+                ])->withInput();
+            }
+        }
 
         // Validação customizada: pelo menos um dos campos deve estar preenchido
         if (empty($validated['corporate_name']) && empty($validated['fantasy_name'])) {
@@ -145,18 +194,99 @@ class CompanyController extends Controller
      */
     public function destroy(Company $company): RedirectResponse
     {
+        // Verificar se o usuário é super_admin
+        $user = auth()->guard('web')->user();
+        if ($user->role !== 'super_admin') {
+            return redirect()->route('companies.index')
+                ->with('error', 'Apenas super administradores podem excluir empresas.');
+        }
+
         try {
-            // Desassocia os contatos da empresa (define company_id como null)
-            $company->contacts()->update(['company_id' => null]);
-            
-            // Exclui a empresa
+            DB::beginTransaction();
+
+            // 1. Excluir todos os orçamentos e seus itens relacionados
+            $budgets = $company->budgets();
+            foreach ($budgets->get() as $budget) {
+                // Excluir itens do orçamento
+                $budget->items()->delete();
+                // Excluir pagamentos do orçamento (ANTES de excluir payment_methods)
+                $budget->budgetPayments()->delete();
+                // Excluir contas bancárias do orçamento
+                $budget->budgetBankAccounts()->delete();
+                // Excluir arquivos PDF do orçamento
+                $budget->pdfFiles()->delete();
+            }
+            $budgets->delete();
+
+            // 2. Excluir métodos de pagamento específicos da empresa (APÓS excluir budget_payments)
+            // Usar forceDelete() porque PaymentMethod usa SoftDeletes
+            // Mas primeiro verificar se não há outros budget_payments referenciando eles
+            $paymentMethods = $company->paymentMethods()->get();
+            foreach ($paymentMethods as $paymentMethod) {
+                // Excluir qualquer budget_payment restante que referencie este método
+                $paymentMethod->budgetPayments()->delete();
+                $paymentMethod->forceDelete();
+            }
+
+            // 3. Excluir todos os produtos da empresa
+            $company->products()->delete();
+
+            // 4. Excluir todas as categorias da empresa (incluindo subcategorias)
+            $categories = $company->categories();
+            foreach ($categories->get() as $category) {
+                // Excluir subcategorias recursivamente
+                $this->deleteSubcategories($category);
+            }
+            $categories->delete();
+
+            // 5. Excluir todos os clientes da empresa
+            $clients = $company->clients();
+            foreach ($clients->get() as $client) {
+                // Excluir contatos do cliente
+                $client->contacts()->delete();
+            }
+            $clients->delete();
+
+            // 6. Excluir contatos diretos da empresa
+            $company->contacts()->delete();
+
+            // 7. Excluir formulários de contato da empresa
+            $company->contactForms()->delete();
+
+            // 8. Excluir arquivos PDF da empresa
+            $company->pdfFiles()->delete();
+
+            // 9. Excluir usuários da empresa (exceto super_admin)
+            $company->users()->where('role', '!=', 'super_admin')->delete();
+
+            // 10. Excluir logo da empresa se existir
+            if ($company->logo && Storage::disk('public')->exists($company->logo)) {
+                Storage::disk('public')->delete($company->logo);
+            }
+
+            // 11. Finalmente, excluir a empresa
             $company->delete();
-            
+
+            DB::commit();
+
             return redirect()->route('companies.index')
-                ->with('success', 'Empresa excluída com sucesso! Os contatos foram preservados.');
+                ->with('success', 'Empresa e todos os registros relacionados foram excluídos com sucesso!');
         } catch (\Exception $e) {
+            DB::rollback();
             return redirect()->route('companies.index')
-                ->with('error', 'Erro ao excluir empresa. Verifique se não há registros relacionados.');
+                ->with('error', 'Erro ao excluir empresa: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Excluir subcategorias recursivamente
+     */
+    private function deleteSubcategories($category)
+    {
+        $subcategories = $category->children;
+        foreach ($subcategories as $subcategory) {
+            $this->deleteSubcategories($subcategory);
+            $subcategory->delete();
         }
     }
 }

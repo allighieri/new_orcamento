@@ -108,7 +108,7 @@
                         <h4 class="text-muted mt-3">Nenhum método de pagamento cadastrado</h4>
                         <p class="text-muted">Comece cadastrando seu primeiro método de pagamento</p>
                         <a href="{{ route('payment-methods.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Método
+                            <i class="bi bi-plus"></i> Novo Método
                         </a>
                     </div>
                 @endif

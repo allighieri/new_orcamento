@@ -14,20 +14,31 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $user = auth()->guard('web')->user();
         
         if ($user->role === 'super_admin') {
             // Super admin pode ver todos os produtos
-            $products = Product::with(['category', 'company'])
-                ->paginate(10);
+            $query = Product::with(['category', 'company']);
         } else {
             // Admin e user veem apenas produtos da sua empresa
             $companyId = session('tenant_company_id');
-            $products = Product::where('company_id', $companyId)
-                ->with('category')
-                ->paginate(10);
+            $query = Product::where('company_id', $companyId)
+                ->with('category');
+        }
+        
+        // Pesquisar por nome do produto
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+        
+        $products = $query->paginate(10)->appends($request->query());
+        
+        // Se for requisição AJAX, retornar apenas a parte da tabela
+        if ($request->ajax() || $request->has('ajax')) {
+            return view('products.partials.table', compact('products'));
         }
         
         return view('products.index', compact('products'));
@@ -74,6 +85,14 @@ class ProductController extends Controller
         }
         
         $validated = $request->validate($rules);
+        
+        // Converter campos de texto para maiúsculo
+        $fieldsToUppercase = ['name', 'description'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
 
         // Converter preço do formato brasileiro para decimal
         $price = str_replace(['.', ','], ['', '.'], $validated['price']);
@@ -187,6 +206,14 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
         ]);
+        
+        // Converter campos de texto para maiúsculo
+        $fieldsToUppercase = ['name', 'description'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
 
         // Converter preço do formato brasileiro para decimal
         $price = str_replace(['.', ','], ['', '.'], $validated['price']);

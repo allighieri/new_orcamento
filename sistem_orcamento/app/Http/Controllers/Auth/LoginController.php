@@ -67,7 +67,7 @@ class LoginController extends Controller implements HasMiddleware
         }
 
         throw ValidationException::withMessages([
-            'email' => ['As credenciais fornecidas não conferem com nossos registros.'],
+            'email' => ['E-mail ou senha inválidos.'],
         ]);
     }
 

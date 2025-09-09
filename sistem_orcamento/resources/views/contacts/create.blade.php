@@ -123,6 +123,11 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
+    // Converter campos de texto para maiúsculo durante a digitação (exceto email)
+    $('#name').on('input', function() {
+        this.value = this.value.toUpperCase();
+    });
+
     /// Máscara dinâmica para CPF/CNPJ
     var documentInput = $('#cpf');
     documentInput.on('input', function() {

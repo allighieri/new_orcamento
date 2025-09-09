@@ -8,33 +8,56 @@ use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
 class ContactController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $user = auth()->guard('web')->user();
         
         if ($user->role === 'super_admin') {
             // Super admin pode ver todos os contatos
-            $contacts = Contact::with(['company', 'client'])
-                ->orderBy('name')
-                ->paginate(10);
+            $query = Contact::with(['company', 'client']);
         } else {
             // Admin e user veem contatos da sua empresa ou de clientes da sua empresa
             $companyId = session('tenant_company_id');
-            $contacts = Contact::where(function($query) use ($companyId) {
-                $query->where('company_id', $companyId)
-                      ->orWhereHas('client', function($q) use ($companyId) {
-                          $q->where('company_id', $companyId);
-                      });
+            $query = Contact::where(function($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                  ->orWhereHas('client', function($subQ) use ($companyId) {
+                      $subQ->where('company_id', $companyId);
+                  });
             })
-            ->with(['company', 'client'])
-            ->orderBy('name')
-            ->paginate(10);
+            ->with(['company', 'client']);
+        }
+        
+        // Pesquisar por nome, CPF, telefone ou email do contato
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            // Remove caracteres especiais para busca por documento
+            $cleanSearchTerm = preg_replace('/[^0-9]/', '', $searchTerm);
+            
+            $query->where(function($q) use ($searchTerm, $cleanSearchTerm) {
+                $q->where('name', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('cpf', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('phone', 'LIKE', '%' . $searchTerm . '%');
+                  
+                // Se há números no termo de busca, busca também pelo documento sem formatação
+                if (!empty($cleanSearchTerm)) {
+                    $q->orWhere(\DB::raw('REPLACE(REPLACE(REPLACE(REPLACE(cpf, ".", ""), "-", ""), "/", ""), " ", "")'), 'LIKE', '%' . $cleanSearchTerm . '%');
+                }
+            });
+        }
+        
+        $contacts = $query->orderBy('name')->paginate(10)->appends($request->query());
+        
+        // Se for requisição AJAX, retornar apenas a parte da tabela
+        if ($request->ajax() || $request->has('ajax')) {
+            return view('contacts.partials.table', compact('contacts'));
         }
             
         return view('contacts.index', compact('contacts'));
@@ -97,6 +120,14 @@ class ContactController extends Controller
         }
         
         $validated = $request->validate($rules);
+        
+        // Converter campos de texto para maiúsculo (exceto email)
+        $fieldsToUppercase = ['name', 'cpf', 'phone'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
         
         // Converter valores vazios para null
         if (empty($validated['client_id'])) {
@@ -243,6 +274,14 @@ class ContactController extends Controller
         }
         
         $validated = $request->validate($rules);
+        
+        // Converter campos de texto para maiúsculo (exceto email)
+        $fieldsToUppercase = ['name', 'cpf', 'phone'];
+        foreach ($fieldsToUppercase as $field) {
+            if (isset($validated[$field]) && !empty($validated[$field])) {
+                $validated[$field] = strtoupper($validated[$field]);
+            }
+        }
         
         // Converter valores vazios para null
         if (empty($validated['client_id'])) {

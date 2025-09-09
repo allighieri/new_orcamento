@@ -23,6 +23,27 @@
 
 <div class="container mx-auto row">
     <div class="col-12">
+        <!-- Formulário de Pesquisa -->
+        <div class="mb-4">
+            <form method="GET" action="{{ route('categories.index') }}" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" 
+                           class="form-control" 
+                           id="search" 
+                           name="search" 
+                           value="{{ request('search') }}" 
+                           placeholder="Pesquisar categoria...">
+                </div>
+                @if(request('search'))
+                    <div class="col-md-2 d-flex align-items-end">
+                        <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    </div>
+                @endif
+            </form>
+        </div>
+        
         <div class="card">
             <div class="card-body">
                 @if($categoriesTree->count() > 0)
@@ -90,11 +111,16 @@
                 @else
                     <div class="text-center py-5">
                         <i class="bi bi-tags fs-1 text-muted"></i>
-                        <h4 class="text-muted mt-3">Nenhuma categoria cadastrada</h4>
-                        <p class="text-muted">Comece cadastrando sua primeira categoria</p>
-                        <a href="{{ route('categories.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Categoria
-                        </a>
+                        @if(request('search'))
+                            <h4 class="text-muted mt-3">Nenhuma categoria encontrada</h4>
+                            <p class="text-muted">Não há categorias que correspondam à sua pesquisa</p>
+                        @else
+                            <h4 class="text-muted mt-3">Nenhuma categoria cadastrada</h4>
+                            <p class="text-muted">Comece cadastrando sua primeira categoria</p>
+                            <a href="{{ route('categories.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus"></i> Nova Categoria
+                            </a>
+                        @endif
                     </div>
                 @endif
             </div>

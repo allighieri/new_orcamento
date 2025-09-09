@@ -169,6 +169,11 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Converter campos de texto para maiúsculo durante a digitação (exceto email)
+    document.getElementById('name').addEventListener('input', function() {
+        this.value = this.value.toUpperCase();
+    });
+
     // Campos de senha
     const passwordField = document.getElementById('password');
     const confirmPasswordField = document.getElementById('password_confirmation');

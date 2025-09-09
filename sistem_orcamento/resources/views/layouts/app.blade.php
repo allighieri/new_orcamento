@@ -22,7 +22,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container mx-auto">
             <a class="navbar-brand" href="{{ route('dashboard') }}">
-                <i class="bi bi-calculator"></i> Orça Fácil!
+                <img src="{{ asset('images/logo-orca-ja.png') }}" alt="Orça Já!" style="height: 40px; margin-left: 8px;">
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -72,9 +72,63 @@
                 <!-- User Dropdown -->
                 @auth
                 <ul class="navbar-nav">
+                    <!-- Theme Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link" href="#" id="themeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Alterar Tema">
+                            <i class="bi bi-palette"></i>&nbsp;Tema
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="themeDropdown" style="min-width: 280px;">
+                            
+                            <div class="theme-color-options d-flex flex-wrap gap-2 justify-content-center">
+                                @php
+                                    $currentTheme = App\Http\Controllers\SettingsController::getCurrentTheme();
+                                @endphp
+                                <div class="theme-color-option {{ $currentTheme == 'blue' ? 'active' : '' }}" data-theme="blue" data-color="#0d6efd" title="Azul">
+                                    <div class="theme-color-circle" style="background-color: #0d6efd;"></div>
+                                </div>
+                                <div class="theme-color-option {{ $currentTheme == 'green' ? 'active' : '' }}" data-theme="green" data-color="#198754" title="Verde">
+                                    <div class="theme-color-circle" style="background-color: #198754;"></div>
+                                </div>
+                                <div class="theme-color-option {{ $currentTheme == 'teal' ? 'active' : '' }}" data-theme="teal" data-color="#20c997" title="Verde-azulado">
+                                    <div class="theme-color-circle" style="background-color: #20c997;"></div>
+                                </div>
+                                <div class="theme-color-option {{ $currentTheme == 'cyan' ? 'active' : '' }}" data-theme="cyan" data-color="#0dcaf0" title="Ciano">
+                                    <div class="theme-color-circle" style="background-color: #0dcaf0;"></div>
+                                </div>
+                                <div class="theme-color-option {{ $currentTheme == 'purple' ? 'active' : '' }}" data-theme="purple" data-color="#6f42c1" title="Roxo">
+                                    <div class="theme-color-circle" style="background-color: #6f42c1;"></div>
+                                </div>
+                                <div class="theme-color-option {{ $currentTheme == 'indigo' ? 'active' : '' }}" data-theme="indigo" data-color="#6610f2" title="Índigo">
+                                    <div class="theme-color-circle" style="background-color: #6610f2;"></div>
+                                </div>
+                                <div class="theme-color-option {{ $currentTheme == 'pink' ? 'active' : '' }}" data-theme="pink" data-color="#e83e8c" title="Rosa">
+                                    <div class="theme-color-circle" style="background-color: #e83e8c;"></div>
+                                </div>
+                                <div class="theme-color-option {{ $currentTheme == 'red' ? 'active' : '' }}" data-theme="red" data-color="#dc3545" title="Vermelho">
+                                    <div class="theme-color-circle" style="background-color: #dc3545;"></div>
+                                </div>
+                                <div class="theme-color-option {{ $currentTheme == 'orange' ? 'active' : '' }}" data-theme="orange" data-color="#fd7e14" title="Laranja">
+                                    <div class="theme-color-circle" style="background-color: #fd7e14;"></div>
+                                </div>
+                                <div class="theme-color-option {{ $currentTheme == 'yellow' ? 'active' : '' }}" data-theme="yellow" data-color="#ffc107" title="Amarelo">
+                                    <div class="theme-color-circle" style="background-color: #ffc107;"></div>
+                                </div>
+                                <div class="theme-color-option {{ $currentTheme == 'lime' ? 'active' : '' }}" data-theme="lime" data-color="#32cd32" title="Lima">
+                                    <div class="theme-color-circle" style="background-color: #32cd32;"></div>
+                                </div>
+                                <div class="theme-color-option {{ $currentTheme == 'dark' ? 'active' : '' }}" data-theme="dark" data-color="#495057" title="Escuro">
+                                    <div class="theme-color-circle" style="background-color: #495057;"></div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-muted">Clique em uma cor para alterar o tema</small>
+                            </div>
+                        </div>
+                    </li>
+                    
+                    <!-- User Profile Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            
                             <i class="bi bi-person-check"></i> {{ explode(' ', Auth::user()->name)[0] }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
@@ -84,7 +138,30 @@
                                 </a>
                             </li>
                             
-                            @if(Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin']) && Auth::user()->company)
+                            @if(Auth::check() && Auth::user()->role === 'super_admin')
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('email-templates.*') ? 'active' : '' }}" href="{{ route('bank-accounts.index') }}">
+                                    <i class="bi bi-envelope-paper"></i> Contas</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('payment-methods.*') ? 'active' : '' }}" href="{{ route('payment-methods.index') }}">
+                                    <i class="bi bi-credit-card"></i> Pagamento</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('payment-option-methods.*') ? 'active' : '' }}" href="{{ route('payment-option-methods.index') }}">
+                                    <i class="bi bi-gear"></i> Métodos de Pagamento</a>
+                            </li>   
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('companies.index') ? 'active' : '' }}" href="{{ route('companies.index') }}">
+                                    <i class="bi bi-building-add"></i> Empresas
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('contact-forms.*') ? 'active' : '' }}" href="{{ route('contact-forms.index') }}">
+                                    <i class="bi bi-telephone"></i> Contatos
+                                </a>
+                            </li>
+                            @elseif(Auth::check() && Auth::user()->role === 'admin' && Auth::user()->company)
                             <li>
                                 <a class="dropdown-item {{ request()->routeIs('email-templates.*') ? 'active' : '' }}" href="{{ route('bank-accounts.index') }}">
                                     <i class="bi bi-envelope-paper"></i> Contas</a>
@@ -163,7 +240,7 @@
                     timer: 4000,
                     showConfirmButton: false,
                     toast: true,
-                    position: 'top-end'
+                    position: 'bottom-start'
                 });
             </script>
         @endif
@@ -177,7 +254,7 @@
                     timer: 5000,
                     showConfirmButton: false,
                     toast: true,
-                    position: 'top-end'
+                    position: 'bottom-start'
                 });
             </script>
         @endif
@@ -321,6 +398,75 @@
         }); // Fim do document ready
     </script>
     
+    <!-- Script global para aplicar tema -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aplicar tema salvo no banco de dados
+        const savedTheme = '{{ App\Http\Controllers\SettingsController::getCurrentTheme() }}';
+        if (savedTheme && savedTheme !== 'blue') {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+        
+        // Funcionalidade do dropdown de tema no menu
+        const themeColorOptions = document.querySelectorAll('.theme-color-option');
+        
+        themeColorOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const theme = this.getAttribute('data-theme');
+                
+                // Remover classe active de todas as opções
+                themeColorOptions.forEach(opt => opt.classList.remove('active'));
+                
+                // Adicionar classe active à opção selecionada
+                this.classList.add('active');
+                
+                // Aplicar tema imediatamente
+                applyThemeFromDropdown(theme);
+                
+                // Fechar o dropdown após seleção
+                const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('themeDropdown'));
+                if (dropdown) {
+                    dropdown.hide();
+                }
+            });
+        });
+        
+        function applyThemeFromDropdown(theme) {
+            // Fazer requisição AJAX para salvar o tema
+            fetch('{{ route("settings.theme") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ theme: theme })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Aplicar tema imediatamente
+                    if (theme === 'blue') {
+                        document.documentElement.removeAttribute('data-theme');
+                    } else {
+                        document.documentElement.setAttribute('data-theme', theme);
+                    }
+                } else {
+                    console.error('Erro ao aplicar tema');
+                }
+            })
+            .catch(error => {
+                console.error('Erro na requisição AJAX:', error);
+            });
+        }
+        
+
+    });
+    </script>
+    
+    <!-- Live Search JavaScript -->
+    <script src="{{ asset('js/live-search.js') }}"></script>
+    
     @stack('scripts')
+    @yield('scripts')
 </body>
 </html>

@@ -85,7 +85,7 @@
                                                 <button type="submit" class="btn btn-sm {{ $user->active ? 'btn-outline-secondary' : 'btn-outline-success' }}" title="{{ $user->active ? 'Desativar' : 'Ativar' }}" onclick="document.getElementById('toggle-form-{{ $user->id }}').submit();">
                                                     <i class="bi {{ $user->active ? 'bi-pause' : 'bi-play' }}"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="if(confirm('Tem certeza que deseja excluir este usuário?')) document.getElementById('delete-form-{{ $user->id }}').submit();">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmDeleteUser({{ $user->id }})">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             @endif
@@ -114,7 +114,7 @@
                         <h4 class="text-muted mt-3">Nenhum usuário cadastrado</h4>
                         <p class="text-muted">Comece cadastrando o primeiro usuário</p>
                         <a href="{{ route('users.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Usuário
+                            <i class="bi bi-plus"></i> Novo Usuário
                         </a>
                     </div>
                 @endif
@@ -122,6 +122,25 @@
         </div>
     </div>
 </div>
+
+<script>
+function confirmDeleteUser(userId) {
+    Swal.fire({
+        title: 'Confirmar Exclusão',
+        text: 'Tem certeza que deseja excluir este usuário?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-' + userId).submit();
+        }
+    });
+}
+</script>
 
 <style>
 .avatar-circle {

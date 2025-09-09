@@ -23,6 +23,27 @@
 
 <div class="container mx-auto row">
     <div class="col-12">
+        <!-- Formulário de Pesquisa -->
+        <div class="mb-4">
+            <form method="GET" action="{{ route('contacts.index') }}" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" 
+                           class="form-control" 
+                           id="search" 
+                           name="search" 
+                           value="{{ request('search') }}" 
+                           placeholder="Pesquisar por nome, CPF, telefone ou email">
+                </div>
+                @if(request('search'))
+                    <div class="col-md-2 d-flex align-items-end">
+                        <a href="{{ route('contacts.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    </div>
+                @endif
+            </form>
+        </div>
+        
         <div class="card">
             <div class="card-body">
                 @if($contacts->count() > 0)
@@ -93,11 +114,16 @@
                 @else
                     <div class="text-center py-5">
                         <i class="bi bi-person-lines-fill fs-1 text-muted"></i>
-                        <h4 class="text-muted mt-3">Nenhum contato cadastrado</h4>
-                        <p class="text-muted">Comece cadastrando seu primeiro contato</p>
-                        <a href="{{ route('contacts.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Contato
-                        </a>
+                        @if(request('search'))
+                            <h4 class="text-muted mt-3">Nenhum contato encontrado</h4>
+                            <p class="text-muted">Não há contatos que correspondam à sua pesquisa</p>
+                        @else
+                            <h4 class="text-muted mt-3">Nenhum contato cadastrado</h4>
+                            <p class="text-muted">Comece cadastrando seu primeiro contato</p>
+                            <a href="{{ route('contacts.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus"></i> Novo Contato
+                            </a>
+                        @endif
                     </div>
                 @endif
             </div>

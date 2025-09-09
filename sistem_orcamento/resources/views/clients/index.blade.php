@@ -24,6 +24,27 @@
 
 <div class="container mx-auto row">
     <div class="col-12">
+        <!-- Formulário de Pesquisa -->
+        <div class="mb-4">
+            <form method="GET" action="{{ route('clients.index') }}" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" 
+                           class="form-control" 
+                           id="search" 
+                           name="search" 
+                           value="{{ request('search') }}" 
+                           placeholder="Pesquisar por nome fantasia, razão social, CNPJ/CPF, telefone ou email">
+                </div>
+                @if(request('search'))
+                    <div class="col-md-2 d-flex align-items-end">
+                        <a href="{{ route('clients.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    </div>
+                @endif
+            </form>
+        </div>
+        
         <div class="card">
             <div class="card-body">
                 @if($clients->count() > 0)
@@ -82,11 +103,16 @@
                 @else
                     <div class="text-center py-5">
                         <i class="bi bi-people fs-1 text-muted"></i>
-                        <h4 class="text-muted mt-3">Nenhum cliente cadastrado</h4>
-                        <p class="text-muted">Comece cadastrando seu primeiro cliente</p>
-                        <a href="{{ route('clients.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Cliente
-                        </a>
+                        @if(request('search'))
+                            <h4 class="text-muted mt-3">Nenhum cliente encontrado</h4>
+                            <p class="text-muted">Não há clientes que correspondam à sua pesquisa</p>
+                        @else
+                            <h4 class="text-muted mt-3">Nenhum cliente cadastrado</h4>
+                            <p class="text-muted">Comece cadastrando seu primeiro cliente</p>
+                            <a href="{{ route('clients.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus"></i> Novo Cliente
+                            </a>
+                        @endif
                     </div>
                 @endif
             </div>

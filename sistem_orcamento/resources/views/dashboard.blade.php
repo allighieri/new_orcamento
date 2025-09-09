@@ -204,6 +204,8 @@
             </div>
         </div>
     </div>
+
+
 </div>
 
 <div class="container mx-auto row mt-4">
@@ -213,32 +215,57 @@
                 <h5 class="card-title mb-0">
                     <i class="bi bi-clock-history"></i> Últimos Orçamentos
                 </h5>
-                <a href="{{ route('budgets.index') }}" class="btn btn-sm btn-outline-primary">
+                
+                <a href="{{ route('budgets.index') }}" class="btn  btn-outline-primary">
                     Ver todos
                 </a>
             </div>
             <div class="card-body">
+                <!-- Formulário de Pesquisa -->
+                <div class="mb-4">
+                    <form method="GET" action="{{ route('dashboard') }}" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="search" 
+                                   name="search" 
+                                   value="{{ request('search') }}" 
+                                   placeholder="Pesquisar por nome do cliente ou número do orçamento">
+                        </div>
+                        @if(request('search'))
+                            <div class="col-md-2 d-flex align-items-end">
+                                <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> Limpar
+                                </a>
+                            </div>
+                        @endif
+                    </form>
+                </div>
                 @if($recentBudgets->count() > 0)
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Número</th>
-                                    <th>Cliente</th>
+                                    <th  style="width: 120px;">Número</th>
+                                    <th style="width: 30%;">Cliente</th>
                                     @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <th>Empresa</th>
                                     @endif
                                     <th>Status</th>
                                     <th>Valor Final</th>
-                                    <th>Data</th>
-                                    <th>Ações</th>
+                                    <th style="width: 120px;">Data</th>
+                                    <th class="text-end">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($recentBudgets as $budget)
                                 <tr>
-                                    <td><strong>#{{ $budget->number }}</strong></td>
-                                    <td>{{ $budget->client->corporate_name ?? $budget->client->fantasy_name }}</td>
+                                    <td><strong>{{ $budget->number }}</strong></td>
+                                    <td>
+                                        <a href="{{ route('clients.show', $budget->client) }}" class="text-decoration-none">
+                                            {{ $budget->client->corporate_name ?? $budget->client->fantasy_name }}
+                                        </a>
+                                    </td>
                                     @if(auth()->guard('web')->user()->role === 'super_admin')
                                         <td>{{ $budget->company->fantasy_name ?? 'N/A' }}</td>
                                     @endif
@@ -261,7 +288,7 @@
                                     </td>
                                     <td>R$ {{ number_format($budget->final_amount, 2, ',', '.') }}</td>
                                     <td>{{ $budget->issue_date->format('d/m/Y') }}</td>
-                                    <td>
+                                    <td class="text-end">
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('budgets.show', $budget) }}" class="btn btn-sm btn-outline-info" title="Visualizar">
                                                 <i class="bi bi-eye"></i>
@@ -310,13 +337,29 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- Paginação -->
+                    @if($recentBudgets->hasPages())
+                        
+                            
+                            <div class="mt-3">
+                                {{ $recentBudgets->links() }}
+                            </div>
+                        
+                    @endif
                 @else
                     <div class="text-center py-4">
                         <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
-                        <p class="text-muted mt-2">Nenhum orçamento encontrado</p>
-                        <a href="{{ route('budgets.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Criar primeiro orçamento
-                        </a>
+                        @if(request('search'))
+                            <h4 class="text-muted mt-3">Nenhum orçamento encontrado</h4>
+                            <p class="text-muted">Não há orçamentos que correspondam à sua pesquisa</p>
+                        @else
+                            <h4 class="text-muted mt-3">Nenhum orçamento cadastrado</h4>
+                            <p class="text-muted">Comece cadastrando seu primeiro orçamento</p>
+                            <a href="{{ route('budgets.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus"></i> Novo Orçamento
+                            </a>
+                        @endif
                     </div>
                 @endif
             </div>
@@ -433,7 +476,9 @@ $(document).ready(function() {
          document.getElementById('emailContactSelect').innerHTML = '<option value="">Selecione um contato...</option>';
          document.getElementById('emailTemplateSelect').innerHTML = '<option value="">Template Padrão</option>';
          document.getElementById('emailContactInfo').classList.add('d-none');
-         document.getElementById('sendEmailBtn').disabled = true;
+         const sendEmailBtn = document.getElementById('sendEmailBtn');
+         sendEmailBtn.innerHTML = '<i class="bi bi-envelope"></i> Enviar';
+         sendEmailBtn.disabled = true;
          currentBudgetIdForEmail = null;
      });
 
@@ -457,7 +502,7 @@ $(document).ready(function() {
          });
 
          // Mostrar loading no botão
-         generatePdfButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gerando...');
+         generatePdfButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
          generatePdfButton.prop('disabled', true);
 
          // Requisição AJAX para gerar o PDF

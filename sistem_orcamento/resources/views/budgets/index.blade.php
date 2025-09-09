@@ -44,6 +44,30 @@
 
 <div class="container mx-auto row">
     <div class="col-12">
+        <!-- Formulário de Pesquisa -->
+        <div class="mb-4">
+           
+                <form method="GET" action="{{ route('budgets.index') }}" class="row g-3">
+                    <div class="col-md-4">
+                       
+                        <input type="text" 
+                               class="form-control" 
+                               id="search" 
+                               name="search" 
+                               value="{{ request('search') }}" 
+                               placeholder="Pesquisar por nome do cliente, número do orçamento ou status">
+                    </div>
+                    @if(request('search'))
+                        <div class="col-md-2 d-flex align-items-end">
+                            <a href="{{ route('budgets.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i>
+                            </a>
+                        </div>
+                    @endif
+                </form>
+            
+        </div>
+        
         <div class="card">
             <div class="card-body">
                 @if($budgets->count() > 0)
@@ -51,14 +75,14 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Número</th>
-                                    <th>Cliente</th>
+                                    <th style="width: 120px;">Número</th>
+                                    <th style="width: 30%;">Cliente</th>
                                     @if(Auth::user()->hasRole('super_admin'))
                                     <th>Empresa</th>
                                     @endif
-                                    <th>Data</th>
-                                    <th>Status</th>
-                                    <th>Total</th>
+                                    <th style="width: 120px;">Data</th>
+                                    <th style="width: 120px;">Status</th>
+                                    <th style="width: 120px;">Total</th>
                                     <th class="text-end" style="width: 1%;">Ações</th>
                                 </tr>
                             </thead>
@@ -141,11 +165,16 @@
                 @else
                     <div class="text-center py-5">
                         <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
-                        <h4 class="text-muted mt-3">Nenhum orçamento cadastrado</h4>
-                        <p class="text-muted">Comece cadastrando seu primeiro orçamento</p>
-                        <a href="{{ route('budgets.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus"></i> Cadastrar Orçamento
-                        </a>
+                        @if(request('search'))
+                            <h4 class="text-muted mt-3">Nenhum orçamento encontrado</h4>
+                            <p class="text-muted">Não há orçamentos que correspondam à sua pesquisa</p>
+                        @else
+                            <h4 class="text-muted mt-3">Nenhum orçamento cadastrado</h4>
+                            <p class="text-muted">Comece criando seu primeiro orçamento</p>
+                            <a href="{{ route('budgets.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus"></i> Novo Orçamento
+                            </a>
+                        @endif
                     </div>
                 @endif
             </div>
@@ -400,11 +429,6 @@ function sendWhatsAppToClient(budgetId) {
             text: 'Erro ao enviar mensagem.',
             icon: 'error'
         });
-    })
-    .finally(() => {
-        // Restaurar botão
-        sendBtn.innerHTML = originalText;
-        sendBtn.disabled = false;
     });
 }
 
@@ -466,11 +490,6 @@ function sendWhatsAppToContact(budgetId, contactId) {
             text: 'Erro ao enviar mensagem.',
             icon: 'error'
         });
-    })
-    .finally(() => {
-        // Restaurar botão
-        sendBtn.innerHTML = originalText;
-        sendBtn.disabled = false;
     });
 }
 
@@ -630,6 +649,10 @@ function sendEmailToClient(budgetId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Restaurar botão antes de fechar modal
+            sendBtn.innerHTML = originalText;
+            sendBtn.disabled = false;
+            
             // Fechar modal e limpar dados
             const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
             modal.hide();
@@ -650,6 +673,17 @@ function sendEmailToClient(budgetId) {
             $('.info-status-badge-' + budgetId).addClass('bg-info');
 
         } else {
+            // Restaurar botão imediatamente em caso de erro
+            sendBtn.innerHTML = originalText;
+            sendBtn.disabled = false;
+            
+            // Resetar select do contato em caso de erro
+            const emailContactSelect = document.getElementById('emailContactSelect');
+            if (emailContactSelect) {
+                emailContactSelect.selectedIndex = 0;
+                document.getElementById('emailContactInfo').classList.add('d-none');
+            }
+            
             if (data.auth_required) {
                 Swal.fire({
                     title: 'Configuração Necessária',
@@ -669,16 +703,23 @@ function sendEmailToClient(budgetId) {
     })
     .catch(error => {
         console.error('Erro:', error);
+        
+        // Restaurar botão imediatamente em caso de erro
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+        
+        // Resetar select do contato em caso de erro
+        const emailContactSelect = document.getElementById('emailContactSelect');
+        if (emailContactSelect) {
+            emailContactSelect.selectedIndex = 0;
+            document.getElementById('emailContactInfo').classList.add('d-none');
+        }
+        
         Swal.fire({
             title: 'Erro',
             text: 'Erro ao enviar email.',
             icon: 'error'
         });
-    })
-    .finally(() => {
-        // Restaurar botão
-        sendBtn.innerHTML = originalText;
-        sendBtn.disabled = false;
     });
 }
 
@@ -708,6 +749,10 @@ function sendEmailToContact(budgetId, contactId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Restaurar botão antes de fechar modal
+            sendBtn.innerHTML = originalText;
+            sendBtn.disabled = false;
+            
             // Fechar modal e limpar dados
             const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
             modal.hide();
@@ -726,6 +771,17 @@ function sendEmailToContact(budgetId, contactId) {
                 $('.info-status-badge-' + budgetId).removeClass('bg-warning');
                 $('.info-status-badge-' + budgetId).addClass('bg-info');
         } else {
+            // Restaurar botão imediatamente em caso de erro
+            sendBtn.innerHTML = originalText;
+            sendBtn.disabled = false;
+            
+            // Resetar select do contato em caso de erro
+            const emailContactSelect = document.getElementById('emailContactSelect');
+            if (emailContactSelect) {
+                emailContactSelect.selectedIndex = 0;
+                document.getElementById('emailContactInfo').classList.add('d-none');
+            }
+            
             if (data.auth_required) {
                 Swal.fire({
                     title: 'Configuração Necessária',
@@ -745,16 +801,23 @@ function sendEmailToContact(budgetId, contactId) {
     })
     .catch(error => {
         console.error('Erro:', error);
+        
+        // Restaurar botão imediatamente em caso de erro
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+        
+        // Resetar select do contato em caso de erro
+        const emailContactSelect = document.getElementById('emailContactSelect');
+        if (emailContactSelect) {
+            emailContactSelect.selectedIndex = 0;
+            document.getElementById('emailContactInfo').classList.add('d-none');
+        }
+        
         Swal.fire({
             title: 'Erro',
             text: 'Erro ao enviar email.',
             icon: 'error'
         });
-    })
-    .finally(() => {
-        // Restaurar botão
-        sendBtn.innerHTML = originalText;
-        sendBtn.disabled = false;
     });
 }
 
@@ -772,8 +835,11 @@ function clearEmailModal() {
     // Ocultar informações do contato
     if (emailContactInfo) emailContactInfo.classList.add('d-none');
     
-    // Desabilitar botão de envio
-    if (sendEmailBtn) sendEmailBtn.disabled = true;
+    // Restaurar botão de envio ao estado original
+    if (sendEmailBtn) {
+        sendEmailBtn.innerHTML = '<i class="bi bi-envelope"></i> Enviar';
+        sendEmailBtn.disabled = true;
+    }
     
     // Limpar variável global se existir
     if (typeof currentBudgetIdForEmail !== 'undefined') {

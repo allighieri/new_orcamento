@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('budget_items', function (Blueprint $table) {
-            $table->unsignedBigInteger('product_id')->nullable()->change();
+        Schema::table('budgets', function (Blueprint $table) {
+            $table->boolean('delivery_date_enabled')->default(true)->after('delivery_date');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('budget_items', function (Blueprint $table) {
-            $table->unsignedBigInteger('product_id')->nullable(false)->change();
+        Schema::table('budgets', function (Blueprint $table) {
+            $table->dropColumn('delivery_date_enabled');
         });
     }
 };
