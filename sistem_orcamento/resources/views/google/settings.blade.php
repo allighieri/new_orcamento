@@ -123,7 +123,6 @@ function confirmDeleteTemplate() {
     }).then((result) => {
         if (result.isConfirmed) {
             disconnectGoogle();
-            location.reload();
         }
     });
 }
@@ -167,14 +166,33 @@ function disconnectGoogle() {
     })
     .done(function(response) {
         if (response.success) {
-            toastr.success(response.message);
-            checkGoogleStatus();
+            Swal.fire({
+                icon: 'success',
+                title: 'Sucesso!',
+                text: response.message,
+                timer: 1500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'bottom-start'
+            }).then(() => {
+                location.reload();
+            });
         } else {
-            toastr.error(response.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro!',
+                text: response.message,
+                confirmButtonText: 'OK'
+            });
         }
     })
     .fail(function() {
-        toastr.error('Erro ao desconectar integração.');
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro!',
+            text: 'Erro ao desconectar integração.',
+            confirmButtonText: 'OK'
+        });
     });
 }
 
