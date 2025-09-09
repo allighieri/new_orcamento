@@ -429,11 +429,6 @@ function sendWhatsAppToClient(budgetId) {
             text: 'Erro ao enviar mensagem.',
             icon: 'error'
         });
-    })
-    .finally(() => {
-        // Restaurar botão
-        sendBtn.innerHTML = originalText;
-        sendBtn.disabled = false;
     });
 }
 
@@ -495,11 +490,6 @@ function sendWhatsAppToContact(budgetId, contactId) {
             text: 'Erro ao enviar mensagem.',
             icon: 'error'
         });
-    })
-    .finally(() => {
-        // Restaurar botão
-        sendBtn.innerHTML = originalText;
-        sendBtn.disabled = false;
     });
 }
 
@@ -659,6 +649,10 @@ function sendEmailToClient(budgetId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Restaurar botão antes de fechar modal
+            sendBtn.innerHTML = originalText;
+            sendBtn.disabled = false;
+            
             // Fechar modal e limpar dados
             const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
             modal.hide();
@@ -679,6 +673,17 @@ function sendEmailToClient(budgetId) {
             $('.info-status-badge-' + budgetId).addClass('bg-info');
 
         } else {
+            // Restaurar botão imediatamente em caso de erro
+            sendBtn.innerHTML = originalText;
+            sendBtn.disabled = false;
+            
+            // Resetar select do contato em caso de erro
+            const emailContactSelect = document.getElementById('emailContactSelect');
+            if (emailContactSelect) {
+                emailContactSelect.selectedIndex = 0;
+                document.getElementById('emailContactInfo').classList.add('d-none');
+            }
+            
             if (data.auth_required) {
                 Swal.fire({
                     title: 'Configuração Necessária',
@@ -698,16 +703,23 @@ function sendEmailToClient(budgetId) {
     })
     .catch(error => {
         console.error('Erro:', error);
+        
+        // Restaurar botão imediatamente em caso de erro
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+        
+        // Resetar select do contato em caso de erro
+        const emailContactSelect = document.getElementById('emailContactSelect');
+        if (emailContactSelect) {
+            emailContactSelect.selectedIndex = 0;
+            document.getElementById('emailContactInfo').classList.add('d-none');
+        }
+        
         Swal.fire({
             title: 'Erro',
             text: 'Erro ao enviar email.',
             icon: 'error'
         });
-    })
-    .finally(() => {
-        // Restaurar botão
-        sendBtn.innerHTML = originalText;
-        sendBtn.disabled = false;
     });
 }
 
@@ -737,6 +749,10 @@ function sendEmailToContact(budgetId, contactId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Restaurar botão antes de fechar modal
+            sendBtn.innerHTML = originalText;
+            sendBtn.disabled = false;
+            
             // Fechar modal e limpar dados
             const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
             modal.hide();
@@ -755,6 +771,17 @@ function sendEmailToContact(budgetId, contactId) {
                 $('.info-status-badge-' + budgetId).removeClass('bg-warning');
                 $('.info-status-badge-' + budgetId).addClass('bg-info');
         } else {
+            // Restaurar botão imediatamente em caso de erro
+            sendBtn.innerHTML = originalText;
+            sendBtn.disabled = false;
+            
+            // Resetar select do contato em caso de erro
+            const emailContactSelect = document.getElementById('emailContactSelect');
+            if (emailContactSelect) {
+                emailContactSelect.selectedIndex = 0;
+                document.getElementById('emailContactInfo').classList.add('d-none');
+            }
+            
             if (data.auth_required) {
                 Swal.fire({
                     title: 'Configuração Necessária',
@@ -774,16 +801,23 @@ function sendEmailToContact(budgetId, contactId) {
     })
     .catch(error => {
         console.error('Erro:', error);
+        
+        // Restaurar botão imediatamente em caso de erro
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+        
+        // Resetar select do contato em caso de erro
+        const emailContactSelect = document.getElementById('emailContactSelect');
+        if (emailContactSelect) {
+            emailContactSelect.selectedIndex = 0;
+            document.getElementById('emailContactInfo').classList.add('d-none');
+        }
+        
         Swal.fire({
             title: 'Erro',
             text: 'Erro ao enviar email.',
             icon: 'error'
         });
-    })
-    .finally(() => {
-        // Restaurar botão
-        sendBtn.innerHTML = originalText;
-        sendBtn.disabled = false;
     });
 }
 
@@ -801,8 +835,11 @@ function clearEmailModal() {
     // Ocultar informações do contato
     if (emailContactInfo) emailContactInfo.classList.add('d-none');
     
-    // Desabilitar botão de envio
-    if (sendEmailBtn) sendEmailBtn.disabled = true;
+    // Restaurar botão de envio ao estado original
+    if (sendEmailBtn) {
+        sendEmailBtn.innerHTML = '<i class="bi bi-envelope"></i> Enviar';
+        sendEmailBtn.disabled = true;
+    }
     
     // Limpar variável global se existir
     if (typeof currentBudgetIdForEmail !== 'undefined') {
