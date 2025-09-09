@@ -22,7 +22,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container mx-auto">
             <a class="navbar-brand" href="{{ route('dashboard') }}">
-                <img src="{{ asset('storage/images/logo-orca-ja.png') }}" alt="Orça Já!" style="height: 40px; margin-left: 8px;">
+                <img src="{{ asset('images/logo-orca-ja.png') }}" alt="Orça Já!" style="height: 40px; margin-left: 8px;">
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
