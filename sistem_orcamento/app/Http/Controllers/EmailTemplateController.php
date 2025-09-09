@@ -29,6 +29,14 @@ class EmailTemplateController extends Controller
     }
 
     /**
+     * Show the visual template builder.
+     */
+    public function builder()
+    {
+        return view('email-templates.builder');
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -45,6 +53,13 @@ class EmailTemplateController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dados inválidos.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -55,7 +70,15 @@ class EmailTemplateController extends Controller
         $data['company_id'] = $companyId;
         $data['is_active'] = $request->has('is_active') ? 1 : 0;
         
-        EmailTemplate::create($data);
+        $template = EmailTemplate::create($data);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Template criado com sucesso!',
+                'template' => $template
+            ]);
+        }
 
         return redirect()->route('email-templates.index')
             ->with('success', 'Template criado com sucesso!');

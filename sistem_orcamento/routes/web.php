@@ -76,6 +76,7 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     Route::post('budgets/{budget}/email-contact', [BudgetController::class, 'sendEmailToContact'])->name('budgets.email-contact');
     
     // Rotas para Templates de Email (todos os usuários autenticados)
+    Route::get('email-templates/builder', [EmailTemplateController::class, 'builder'])->name('email-templates.builder');
     Route::resource('email-templates', EmailTemplateController::class);
     Route::get('email-templates/{emailTemplate}/preview', [EmailTemplateController::class, 'preview'])->name('email-templates.preview');
     

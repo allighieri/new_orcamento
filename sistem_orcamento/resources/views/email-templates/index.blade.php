@@ -14,6 +14,9 @@
                 <a href="{{ url()->previous() }}" class="btn btn-outline-secondary me-2">
                     <i class="bi bi-arrow-left"></i> Voltar
                 </a>
+                <a href="{{ route('email-templates.builder') }}" class="btn btn-success me-2">
+                    <i class="bi bi-palette"></i> Construtor Visual
+                </a>
                 <a href="{{ route('email-templates.create') }}" class="btn btn-primary">
                     <i class="bi bi-envelope-paper-heart-fill"></i> Novo Template
                 </a>
