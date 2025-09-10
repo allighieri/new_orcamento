@@ -527,9 +527,10 @@ $(document).ready(function() {
                          title: 'Sucesso!',
                          text: 'PDF gerado com sucesso!',
                          timer: 2000,
+                         timerProgressBar: true,
                          showConfirmButton: false,
                          toast: true,
-                         position: 'top-end'
+                         position: 'bottom-start'
                      });
                  } else {
                      Swal.fire({
@@ -626,9 +627,10 @@ function handleEmailSend(budgetId) {
                     title: 'Sucesso!',
                     text: data.message || 'Email enviado com sucesso!',
                     timer: 2000,
+                    timerProgressBar: true,
                     showConfirmButton: false,
                     toast: true,
-                    position: 'top-end'
+                    position: 'bottom-start'
                 });
             }
         } else {
@@ -936,9 +938,10 @@ function sendEmailToBudget(budgetId, contactData, templateId) {
                 title: 'Sucesso!',
                 text: data.message || 'Email enviado com sucesso!',
                 timer: 2000,
+                timerProgressBar: true,
                 showConfirmButton: false,
                 toast: true,
-                position: 'top-end'
+                position: 'bottom-start'
             });
         } else {
             Swal.fire({

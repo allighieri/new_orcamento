@@ -71,8 +71,12 @@
                                                        class="btn btn-sm btn-success" title="Preview" target="_blank">
                                                         <i class="bi bi-pc-display"></i>
                                                     </a>
+                                                    <a href="{{ route('email-templates.builder') }}?edit={{ $template->id }}" 
+                                                       class="btn btn-sm btn-primary" title="Editar no Construtor Visual">
+                                                        <i class="bi bi-palette"></i>
+                                                    </a>
                                                     <a href="{{ route('email-templates.edit', $template) }}" 
-                                                       class="btn btn-sm btn-warning" title="Editar">
+                                                       class="btn btn-sm btn-warning" title="Editar Código">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
                                                     <button type="button" class="btn btn-sm btn-danger" title="Excluir" onclick="confirmDeleteTemplate({{ $template->id }})">
@@ -113,6 +117,40 @@
 
 @push('scripts')
 <script>
+    // Verificar se há parâmetro de sucesso na URL e exibir toast
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const success = urlParams.get('success');
+        
+        if (success === 'created') {
+            Swal.fire({
+                toast: true,
+                position: 'bottom-start',
+                icon: 'success',
+                title: 'Template criado com sucesso!',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        } else if (success === 'updated') {
+            Swal.fire({
+                toast: true,
+                position: 'bottom-start',
+                icon: 'success',
+                title: 'Template atualizado com sucesso!',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
+        
+        // Limpar parâmetros da URL após exibir o toast
+        if (success) {
+            const url = new URL(window.location);
+            url.searchParams.delete('success');
+            window.history.replaceState({}, document.title, url);
+        }
+    });
 
     function confirmDeleteTemplate(templateId) {
         Swal.fire({

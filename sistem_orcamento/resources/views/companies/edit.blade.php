@@ -243,9 +243,10 @@ $(document).ready(function() {
                               title: 'CEP não encontrado',
                               text: 'O CEP informado não foi encontrado. Verifique se está correto.',
                               toast: true,
-                              position: 'top-end',
+                              position: 'bottom-start',
                               showConfirmButton: false,
-                              timer: 3000
+                              timer: 3000,
+                              timerProgressBar: true
                           });
                          $('#address, #district, #city, #state').val('');
                      }
@@ -256,9 +257,10 @@ $(document).ready(function() {
                           title: 'Erro de Conexão',
                           text: 'Não foi possível conectar ao serviço de CEP. Verifique sua conexão com a internet.',
                           toast: true,
-                          position: 'top-end',
+                          position: 'bottom-start',
                           showConfirmButton: false,
-                          timer: 4000
+                          timer: 4000,
+                          timerProgressBar: true
                       });
                      $('#address, #district, #city, #state').val('');
                  },

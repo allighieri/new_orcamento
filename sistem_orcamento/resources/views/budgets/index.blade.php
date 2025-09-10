@@ -523,9 +523,10 @@ function handleEmailSend(budgetId) {
                     title: 'Sucesso!',
                     text: data.message || 'Email enviado com sucesso!',
                     timer: 2000,
+                    timerProgressBar: true,
                     showConfirmButton: false,
                     toast: true,
-                    position: 'top-end'
+                    position: 'bottom-start'
                 });
                 
 
@@ -663,9 +664,10 @@ function sendEmailToClient(budgetId) {
                 title: 'Sucesso!',
                 text: data.message || 'Email enviado com sucesso!',
                 timer: 2000,
+                timerProgressBar: true,
                 showConfirmButton: false,
                 toast: true,
-                position: 'top-end'
+                position: 'bottom-start'
             });
 
             $('.info-status-badge-' + budgetId).text('Enviado');
@@ -763,9 +765,10 @@ function sendEmailToContact(budgetId, contactId) {
                     title: 'Sucesso!',
                     text: data.message || 'Email enviado com sucesso!',
                     timer: 2000,
+                    timerProgressBar: true,
                     showConfirmButton: false,
                     toast: true,
-                    position: 'top-end'
+                    position: 'bottom-start'
                 });
                 $('.info-status-badge-' + budgetId).text('Enviado');
                 $('.info-status-badge-' + budgetId).removeClass('bg-warning');
@@ -937,8 +940,9 @@ $(document).on('click', '.generate-pdf-btn', function(e) {
                     text: response.message || 'PDF gerado e salvo com sucesso!',
                     showConfirmButton: false,
                     timer: 2000,
+                    timerProgressBar: true,
                     toast: true,
-                    position: 'top-end'
+                    position: 'bottom-start'
                 });
 
             } else {

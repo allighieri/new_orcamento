@@ -242,7 +242,8 @@ $(document).ready(function() {
                               toast: true,
                               position: 'bottom-start',
                               showConfirmButton: false,
-                              timer: 3000
+                              timer: 3000,
+                              timerProgressBar: true
                           });
                          $('#address, #district, #city, #state').val('');
                      }
@@ -255,7 +256,8 @@ $(document).ready(function() {
                           toast: true,
                           position: 'bottom-start',
                           showConfirmButton: false,
-                          timer: 4000
+                          timer: 4000,
+                          timerProgressBar: true
                       });
                      $('#address, #district, #city, #state').val('');
                  },

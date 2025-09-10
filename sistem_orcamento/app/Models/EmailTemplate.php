@@ -16,12 +16,27 @@ class EmailTemplate extends Model
         'html_content',
         'variables',
         'description',
-        'is_active'
+        'is_active',
+        'header_text',
+        'header2_text',
+        'initial_message',
+        'final_message',
+        'footer_text',
+        'show_budget_number',
+        'show_budget_value',
+        'show_budget_date',
+        'show_budget_validity',
+        'show_delivery_date'
     ];
 
     protected $casts = [
         'variables' => 'array',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'show_budget_number' => 'boolean',
+        'show_budget_value' => 'boolean',
+        'show_budget_date' => 'boolean',
+        'show_budget_validity' => 'boolean',
+        'show_delivery_date' => 'boolean'
     ];
 
     /**

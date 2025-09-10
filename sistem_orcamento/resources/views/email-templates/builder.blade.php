@@ -259,6 +259,19 @@
                 <form id="saveTemplateForm">
                     @csrf
                     <input type="hidden" id="htmlContent" name="html_content">
+                    <!-- Campos específicos do template -->
+                    <input type="hidden" id="headerTextInput" name="header_text">
+                    <input type="hidden" id="header2TextInput" name="header2_text">
+                    <input type="hidden" id="initialMessageInput" name="initial_message">
+                    <input type="hidden" id="finalMessageInput" name="final_message">
+                    <input type="hidden" id="footerTextInput" name="footer_text">
+                    <!-- Campos booleanos dos detalhes do orçamento -->
+                    <input type="hidden" id="showBudgetNumberInput" name="show_budget_number" value="0">
+                    <input type="hidden" id="showBudgetValueInput" name="show_budget_value" value="0">
+                    <input type="hidden" id="showBudgetDateInput" name="show_budget_date" value="0">
+                    <input type="hidden" id="showBudgetValidityInput" name="show_budget_validity" value="0">
+                    <input type="hidden" id="showDeliveryDateInput" name="show_delivery_date" value="0">
+                    
                     <div class="mb-3">
                         <label class="form-label">Nome do Template *</label>
                         <input type="text" class="form-control" name="name" id="finalTemplateName" required>
@@ -475,6 +488,7 @@ window.templates.modern = templates.modern = {
                     <p style="margin: 5px 0;"><strong>Valor:</strong> R$ \{\{budgetValue\}\}</p>
                     <p style="margin: 5px 0;"><strong>Data:</strong> \{\{budgetDate\}\}</p>
                     <p style="margin: 5px 0;"><strong>Validade:</strong> \{\{budgetValidity\}\}</p>
+                    <p style="margin: 5px 0;"><strong>Entrega:</strong> \{\{deliveryDate\}\}</p>
                 </div>
                 <div style="background-color: #f8f9fa; border-radius: 8px; padding: 5px 20px; margin: 20px 0; border-left: 4px solid {TERTIARY_COLOR};">
                     <p style="color: #666; line-height: 1.6;">{FOOTER_MESSAGE}</p>
@@ -524,6 +538,10 @@ window.templates.classic = templates.classic = {
                         <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">Validade</td>
                         <td style="padding: 12px; border: 1px solid #ddd;">\{\{budgetValidity\}\}</td>
                     </tr>
+                    <tr style="background-color: #f8f9fa;">
+                        <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">Data de Entrega</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">\{\{deliveryDate\}\}</td>
+                    </tr>
                 </table>
                 <p style="color: #666; line-height: 1.6;">{FOOTER_MESSAGE}</p>
                 <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
@@ -565,9 +583,13 @@ window.templates.minimal = templates.minimal = {
                         <span style="color: #666;">Data:</span>
                         <span style="color: #333;">\{\{budgetDate\}\}</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <span style="color: #666;">Validade:</span>
                         <span style="color: #333;">\{\{budgetValidity\}\}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #666;">Entrega:</span>
+                        <span style="color: #333;">\{\{deliveryDate\}\}</span>
                     </div>
                 </div>
             </div>
@@ -665,6 +687,7 @@ function updatePreview() {
         .replace(/{BUDGET_VALUE}/g, '{' + '{budgetValue}' + '}')
         .replace(/{BUDGET_DATE}/g, '{' + '{budgetDate}' + '}')
         .replace(/{BUDGET_VALIDITY}/g, '{' + '{budgetValidity}' + '}')
+        .replace(/{DELIVERY_DATE}/g, '{' + '{deliveryDate}' + '}')
         .replace(/{COMPANY_PHONE}/g, '{' + '{companyPhone}' + '}')
         .replace(/{COMPANY_EMAIL}/g, '{' + '{companyEmail}' + '}');
     
@@ -684,8 +707,8 @@ function updatePreview() {
             </div>`);
             
         // For minimal template footer
-        html = html.replace(/<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid [^"]*; color: #666;">([\s\S]*?)<\/div>/g,
-            `<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid ${currentColor}; color: #666;">
+        html = html.replace(/<div style="text-align: center; padding-top: 30px; border-top: 1px solid #eee;">[\s\S]*?<\/div>/g,
+            `<div style="text-align: center; padding-top: 30px; border-top: 1px solid #eee;">
                 <div style="line-height: 1.6;">${footerText}</div>
             </div>`);
     } else {
@@ -728,9 +751,12 @@ function updatePreview() {
         html = html.replace(/<div[^>]*>\s*<span[^>]*>Validade:<\/span>\s*<span[^>]*>\{\{budgetValidity\}\}<\/span>\s*<\/div>/gi, '');
     }
     if (!showDeliveryDate) {
-        // Remove linha da tabela com "Data de Entrega" (template clássico) - não existe no template atual
-        // Remove p com "Entrega:" (template moderno) - não existe no template atual
-        // Remove div com "Entrega:" (template minimalista) - não existe no template atual
+        // Remove linha da tabela com "Data de Entrega" (template clássico)
+        html = html.replace(/<tr[^>]*>\s*<td[^>]*>Data de Entrega<\/td>\s*<td[^>]*>\{\{deliveryDate\}\}<\/td>\s*<\/tr>/gi, '');
+        // Remove p com "Entrega:" (template moderno)
+        html = html.replace(/<p[^>]*>\s*<strong>Entrega:<\/strong>\s*\{\{deliveryDate\}\}\s*<\/p>/gi, '');
+        // Remove div com "Entrega:" (template minimalista)
+        html = html.replace(/<div[^>]*>\s*<span[^>]*>Entrega:<\/span>\s*<span[^>]*>\{\{deliveryDate\}\}<\/span>\s*<\/div>/gi, '');
     }
     
     const previewContainer = document.getElementById('emailPreview');
@@ -969,8 +995,8 @@ window.saveTemplate = function() {
             </div>`);
             
         // For minimal template footer
-        finalHtml = finalHtml.replace(/<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid [^"]*; color: #666;">([\s\S]*?)<\/div>/g,
-            `<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid ${currentColor}; color: #666;">
+        finalHtml = finalHtml.replace(/<div style="text-align: center; padding-top: 30px; border-top: 1px solid #eee;">([\s\S]*?)<\/div>/g,
+            `<div style="text-align: center; padding-top: 30px; border-top: 1px solid #eee;">
                 <div style="line-height: 1.6;">${footerText}</div>
             </div>`);
     } else {
@@ -1013,9 +1039,12 @@ window.saveTemplate = function() {
         finalHtml = finalHtml.replace(/<div[^>]*>\s*<span[^>]*>Validade:<\/span>\s*<span[^>]*>\{\{budgetValidity\}\}<\/span>\s*<\/div>/gi, '');
     }
     if (!showDeliveryDate) {
-        // Remove linha da tabela com "Data de Entrega" (template clássico) - não existe no template atual
-        // Remove p com "Entrega:" (template moderno) - não existe no template atual
-        // Remove div com "Entrega:" (template minimalista) - não existe no template atual
+        // Remove linha da tabela com "Data de Entrega" (template clássico)
+        finalHtml = finalHtml.replace(/<tr[^>]*>\s*<td[^>]*>Data de Entrega<\/td>\s*<td[^>]*>\{\{deliveryDate\}\}<\/td>\s*<\/tr>/gi, '');
+        // Remove p com "Entrega:" (template moderno)
+        finalHtml = finalHtml.replace(/<p[^>]*>\s*<strong>Entrega:<\/strong>\s*\{\{deliveryDate\}\}\s*<\/p>/gi, '');
+        // Remove div com "Entrega:" (template minimalista)
+        finalHtml = finalHtml.replace(/<div[^>]*>\s*<span[^>]*>Entrega:<\/span>\s*<span[^>]*>\{\{deliveryDate\}\}<\/span>\s*<\/div>/gi, '');
     }
     
     document.getElementById('htmlContent').value = finalHtml;
@@ -1025,40 +1054,83 @@ window.saveTemplate = function() {
 }
 
 function submitTemplate() {
+    // Coletar dados dos campos específicos antes de enviar
+    document.getElementById('headerTextInput').value = document.getElementById('companyHeader').value || '';
+    document.getElementById('header2TextInput').value = document.getElementById('budgetHeader').value || '';
+    document.getElementById('initialMessageInput').value = document.getElementById('mainMessage').innerHTML || '';
+    document.getElementById('finalMessageInput').value = document.getElementById('footerMessage').innerHTML || '';
+    document.getElementById('footerTextInput').value = document.getElementById('footerText').innerHTML || '';
+    
+    // Coletar estado dos checkboxes
+    document.getElementById('showBudgetNumberInput').value = document.getElementById('showBudgetNumber').checked ? '1' : '0';
+    document.getElementById('showBudgetValueInput').value = document.getElementById('showBudgetValue').checked ? '1' : '0';
+    document.getElementById('showBudgetDateInput').value = document.getElementById('showBudgetDate').checked ? '1' : '0';
+    document.getElementById('showBudgetValidityInput').value = document.getElementById('showBudgetValidity').checked ? '1' : '0';
+    document.getElementById('showDeliveryDateInput').value = document.getElementById('showDeliveryDate').checked ? '1' : '0';
+    
     const form = document.getElementById('saveTemplateForm');
     const formData = new FormData(form);
     
-    fetch('{{ route("email-templates.store") }}', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Accept': 'application/json'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(err => Promise.reject(err));
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                title: 'Sucesso!',
-                text: 'Template criado com sucesso!',
-                icon: 'success'
-            }).then(() => {
-                window.location.href = '{{ route("email-templates.index") }}';
-            });
-        } else {
-            Swal.fire({
-                title: 'Erro!',
-                text: data.message || 'Erro ao criar template.',
-                icon: 'error'
-            });
-        }
-    })
+    @if(isset($template) && $template)
+        // Estamos editando um template existente
+        const templateId = {{ $template->id }};
+        formData.append('_method', 'PUT');
+        
+        fetch(`{{ route("email-templates.index") }}/${templateId}`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Redirecionar para a listagem
+                window.location.href = '{{ route("email-templates.index") }}?success=updated';
+            } else {
+                Swal.fire({
+                    title: 'Erro!',
+                    text: data.message || 'Erro ao atualizar template.',
+                    icon: 'error'
+                });
+            }
+        })
+    @else
+        // Estamos criando um novo template
+        fetch('{{ route("email-templates.store") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Redirecionar para a listagem
+                window.location.href = '{{ route("email-templates.index") }}?success=created';
+            } else {
+                Swal.fire({
+                    title: 'Erro!',
+                    text: data.message || 'Erro ao criar template.',
+                    icon: 'error'
+                });
+            }
+        })
+    @endif
     .catch(error => {
         console.error('Error:', error);
         let errorMessage = 'Erro ao processar solicitação.';
@@ -1106,11 +1178,97 @@ document.addEventListener('DOMContentLoaded', function() {
     currentColor = window.currentColor;
     templates = window.templates;
     
-    selectTemplate('modern');
-    // Força a atualização inicial do preview
-    setTimeout(function() {
-        updatePreview();
-    }, 100);
+    @if(isset($template) && $template)
+        // Carregar dados do template existente
+        document.getElementById('templateName').value = '{{ $template->name }}';
+        document.getElementById('templateSubject').value = '{{ $template->subject }}';
+        
+        // Detectar qual template base foi usado (baseado no HTML)
+        const htmlContent = `{!! addslashes($template->html_content) !!}`;
+        
+        // Tentar detectar o tipo de template baseado no conteúdo
+        if (htmlContent.includes('modern-template') || htmlContent.includes('background: linear-gradient')) {
+            selectTemplate('modern');
+        } else if (htmlContent.includes('classic-template') || htmlContent.includes('border: 2px solid')) {
+            selectTemplate('classic');
+        } else if (htmlContent.includes('minimal-template') || htmlContent.includes('font-family: Arial')) {
+            selectTemplate('minimal');
+        } else {
+            selectTemplate('modern'); // padrão
+        }
+        
+        // Extrair dados dos campos personalizáveis do HTML
+        setTimeout(function() {
+            console.log('Iniciando extração de dados do template...');
+            extractTemplateData(htmlContent);
+            console.log('Extração concluída, atualizando preview...');
+            updatePreview();
+        }, 500);
+    @else
+        selectTemplate('modern');
+        // Força a atualização inicial do preview
+        setTimeout(function() {
+            updatePreview();
+        }, 100);
+    @endif
 });
+
+@if(isset($template) && $template)
+// Função para carregar dados do template existente dos campos específicos
+function loadTemplateData() {
+    const templateData = @json($template);
+    
+    console.log('Loading template data:', templateData);
+    
+    // Preencher campos básicos
+    if (templateData.name) {
+        document.getElementById('templateName').value = templateData.name;
+    }
+    
+    if (templateData.subject) {
+        document.getElementById('templateSubject').value = templateData.subject;
+    }
+    
+    // Preencher campos específicos do template
+    if (templateData.header_text) {
+        document.getElementById('companyHeader').value = templateData.header_text;
+    }
+    
+    if (templateData.header2_text) {
+        document.getElementById('budgetHeader').value = templateData.header2_text;
+    }
+    
+    if (templateData.initial_message) {
+        document.getElementById('mainMessage').innerHTML = templateData.initial_message;
+    }
+    
+    if (templateData.final_message) {
+        document.getElementById('footerMessage').innerHTML = templateData.final_message;
+    }
+    
+    if (templateData.footer_text) {
+        document.getElementById('footerText').innerHTML = templateData.footer_text;
+    }
+    
+    // Marcar checkboxes dos detalhes do orçamento baseado nos valores do banco
+    document.getElementById('showBudgetNumber').checked = templateData.show_budget_number == 1;
+    document.getElementById('showBudgetValue').checked = templateData.show_budget_value == 1;
+    document.getElementById('showBudgetDate').checked = templateData.show_budget_date == 1;
+    document.getElementById('showBudgetValidity').checked = templateData.show_budget_validity == 1;
+    document.getElementById('showDeliveryDate').checked = templateData.show_delivery_date == 1;
+    
+    console.log('Template data loaded successfully');
+    
+    // Atualizar preview
+    updatePreview();
+}
+
+// Chamar quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    loadTemplateData();
+});
+    
+
+@endif
 </script>
 @endpush

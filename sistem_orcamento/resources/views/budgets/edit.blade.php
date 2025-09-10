@@ -1421,9 +1421,10 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
                         title: 'Sucesso!',
                         text: 'Produto criado com sucesso!',
                         timer: 2000,
+                        timerProgressBar: true,
                         showConfirmButton: false,
                         toast: true,
-                        position: 'top-end'
+                        position: 'bottom-start'
                     });
                 } else {
                     Swal.fire({
@@ -1518,9 +1519,10 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
                         title: 'Sucesso!',
                         text: 'Categoria criada com sucesso!',
                         timer: 2000,
+                        timerProgressBar: true,
                         showConfirmButton: false,
                         toast: true,
-                        position: 'top-end'
+                        position: 'bottom-start'
                     });
                 } else {
                     Swal.fire({
@@ -2165,9 +2167,10 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
                 title: 'Sucesso!',
                 text: 'Preço e quantidade aplicados com sucesso!',
                 timer: 1500,
+                timerProgressBar: true,
                 showConfirmButton: false,
                 toast: true,
-                position: 'top-end'
+                position: 'bottom-start'
             });
         }
     });
@@ -2190,9 +2193,10 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
                 title: 'Sucesso!',
                 text: 'Preço sugerido e quantidade aplicados com sucesso!',
                 timer: 1500,
+                timerProgressBar: true,
                 showConfirmButton: false,
                 toast: true,
-                position: 'top-end'
+                position: 'bottom-start'
             });
         }
     });

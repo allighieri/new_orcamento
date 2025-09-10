@@ -223,7 +223,8 @@
                     icon: 'success',
                     title: 'Sucesso!',
                     text: '{{ session('success') }}',
-                    timer: 2000,
+                    timer: 3000,
+                    timerProgressBar: true,
                     showConfirmButton: false,
                     toast: true,
                     position: 'bottom-start'
@@ -238,6 +239,7 @@
                     title: 'Atenção!',
                     text: '{{ session('warning') }}',
                     timer: 4000,
+                    timerProgressBar: true,
                     showConfirmButton: false,
                     toast: true,
                     position: 'bottom-start'
@@ -252,6 +254,7 @@
                     title: 'Erro!',
                     text: '{{ session('error') }}',
                     timer: 5000,
+                    timerProgressBar: true,
                     showConfirmButton: false,
                     toast: true,
                     position: 'bottom-start'
@@ -343,9 +346,10 @@
                         title: 'Atenção!',
                         text: 'Por favor, selecione um status.',
                         timer: 2000,
+                        timerProgressBar: true,
                         showConfirmButton: false,
                         toast: true,
-                        position: 'top-end'
+                        position: 'bottom-start'
                     });
 
                     return;

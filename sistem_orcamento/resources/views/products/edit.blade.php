@@ -310,9 +310,10 @@ $(document).ready(function() {
                         title: 'Sucesso!',
                         text: 'Categoria criada com sucesso!',
                         timer: 2000,
+                        timerProgressBar: true,
                         showConfirmButton: false,
                         toast: true,
-                        position: 'top-end'
+                        position: 'bottom-start'
                     });
                 }
             },
@@ -508,9 +509,10 @@ $(document).ready(function() {
             title: 'Sucesso!',
             text: 'Preço aplicado com sucesso!',
             timer: 1500,
+            timerProgressBar: true,
             showConfirmButton: false,
             toast: true,
-            position: 'top-end'
+            position: 'bottom-start'
         });
     });
     
@@ -524,9 +526,10 @@ $(document).ready(function() {
             title: 'Sucesso!',
             text: 'Preço sugerido aplicado com sucesso!',
             timer: 1500,
+            timerProgressBar: true,
             showConfirmButton: false,
             toast: true,
-            position: 'top-end'
+            position: 'bottom-start'
         });
     });
     
