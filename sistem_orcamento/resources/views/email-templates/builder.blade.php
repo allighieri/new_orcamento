@@ -74,12 +74,15 @@
                                 <div class="mb-4">
                                     <label class="form-label fw-bold">Cor Principal</label>
                                     <div class="color-options">
+                                        <div class="color-option" style="background: #0dcaf0" onclick="changeColor('#0dcaf0')"></div>
+                                        <div class="color-option" style="background: #17a2b8" onclick="changeColor('#17a2b8')"></div>
+                                        <div class="color-option" style="background: #20c997" onclick="changeColor('#20c997')"></div>
                                         <div class="color-option" style="background: #8A2BE2" onclick="changeColor('#8A2BE2')"></div>
                                         <div class="color-option" style="background: #007bff" onclick="changeColor('#007bff')"></div>
                                         <div class="color-option" style="background: #28a745" onclick="changeColor('#28a745')"></div>
                                         <div class="color-option" style="background: #dc3545" onclick="changeColor('#dc3545')"></div>
                                         <div class="color-option" style="background: #fd7e14" onclick="changeColor('#fd7e14')"></div>
-                                        <div class="color-option" style="background: #6f42c1" onclick="changeColor('#6f42c1')"></div>
+                                        <div class="color-option" style="background: #ffc107" onclick="changeColor('#ffc107')"></div>
                                     </div>
                                     <input type="color" class="form-control form-control-color mt-2" id="customColor" onchange="changeColor(this.value)" title="Cor personalizada">
                                 </div>
@@ -129,7 +132,7 @@
                         </div>
                         <input type="color" class="btn btn-outline-secondary ms-2" id="footerMessageColor" onchange="formatText('footerMessage', 'foreColor', this.value)" title="Cor do texto" style="width: 40px; height: 31px;">
                     </div>
-                    <div contenteditable="true" class="form-control form-control-sm" id="footerMessage" style="min-height: 60px; white-space: pre-wrap;" placeholder="Obrigado pela preferência!" oninput="updatePreview()"><h6>💡 Sobre este orçamento:</h6><small> Este orçamento foi elaborado especialmente para atender às suas necessidades. Todos os valores e especificações foram cuidadosamente calculados para oferecer a melhor relação custo-benefício.</small><br><small> Caso tenha alguma dúvida ou precise de ajustes, não hesite em entrar em contato conosco!</small></div>
+                    <div contenteditable="true" class="form-control form-control-sm" id="footerMessage" style="min-height: 60px; white-space: pre-wrap;" placeholder="Obrigado pela preferência!" oninput="updatePreview()"><h4>💡 Sobre este orçamento:</h4><p> Este orçamento foi elaborado especialmente para atender às suas necessidades. Todos os valores e especificações foram cuidadosamente calculados para oferecer a melhor relação custo-benefício.</p><p> Caso tenha alguma dúvida ou precise de ajustes, não hesite em entrar em contato conosco!</p></div>
                 </div>
                                 
                                 <!-- Rodapé -->
@@ -358,8 +361,8 @@
 
 .color-options {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 2px;
     margin-bottom: 10px;
 }
 
@@ -465,7 +468,7 @@ window.templates.modern = templates.modern = {
             <div style="padding: 30px 20px;">
                 <p style="font-size: 18px; margin-bottom: 20px; color: #333;">{MAIN_MESSAGE}</p>
                 <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid {PRIMARY_COLOR};">
-                    <h3 style="margin: 0 0 15px 0; color: #333;">Detalhes do Orçamento</h3>
+                    <h3 style="margin: 0 0 15px 0; color:{PRIMARY_COLOR};">Detalhes do Orçamento</h3>
                     <p style="margin: 5px 0;"><strong>Número:</strong> \{\{budgetNumber\}\}</p>
                     <p style="margin: 5px 0;"><strong>Valor:</strong> R$ \{\{budgetValue\}\}</p>
                     <p style="margin: 5px 0;"><strong>Data:</strong> \{\{budgetDate\}\}</p>
@@ -607,10 +610,13 @@ function changeColor(color) {
         option.classList.remove('active');
     });
     
-    const colorOption = document.querySelector(`[style*="${color}"]`);
-    if (colorOption) {
-        colorOption.classList.add('active');
-    }
+    // Encontrar a opção de cor específica pelo valor exato do background
+    document.querySelectorAll('.color-option').forEach(option => {
+        const bgColor = option.style.background || option.style.backgroundColor;
+        if (bgColor === color || bgColor.toLowerCase() === color.toLowerCase()) {
+            option.classList.add('active');
+        }
+    });
     
     updatePreview();
 }
@@ -627,7 +633,7 @@ function updatePreview() {
     
     const template = templates[currentTemplate];
     const mainMessage = document.getElementById('mainMessage').innerHTML || 'Olá {RECIPIENT_NAME}!👋 <br />Esperamos que você esteja bem! Conforme nossa conversa, preparamos um orçamento personalizado para você.';
-    const footerMessage = document.getElementById('footerMessage').innerHTML || '<h6>💡 Sobre este orçamento:</h6><p><small> Este orçamento foi elaborado especialmente para atender às suas necessidades. Todos os valores e especificações foram cuidadosamente calculados para oferecer a melhor relação custo-benefício.</small></p> <p><small> Caso tenha alguma dúvida ou precise de ajustes, não hesite em entrar em contato conosco!</small></p>';
+    const footerMessage = document.getElementById('footerMessage').innerHTML || '<h4>💡 Sobre este orçamento:</h4><p> Este orçamento foi elaborado especialmente para atender às suas necessidades. Todos os valores e especificações foram cuidadosamente calculados para oferecer a melhor relação custo-benefício.</p><p> Caso tenha alguma dúvida ou precise de ajustes, não hesite em entrar em contato conosco!</p>';
     const footerText = document.getElementById('footerText').innerHTML || '';
     const companyHeader = document.getElementById('companyHeader').value || '{COMPANY_NAME}';
     const budgetHeader = document.getElementById('budgetHeader').value || 'Orçamento #{BUDGET_NUMBER}';
@@ -832,8 +838,8 @@ window.saveTemplate = function() {
     
     // Generate final HTML
     const template = templates[currentTemplate];
-    const mainMessage = document.getElementById('mainMessage').innerHTML || 'Olá \{\{recipientName\}\}, segue em anexo o orçamento solicitado.';
-    const footerMessage = document.getElementById('footerMessage').innerHTML || '<h6>💡 Sobre este orçamento:</h6><p><small> Este orçamento foi elaborado especialmente para atender às suas necessidades. Todos os valores e especificações foram cuidadosamente calculados para oferecer a melhor relação custo-benefício.</small></p> <p><small> Caso tenha alguma dúvida ou precise de ajustes, não hesite em entrar em contato conosco!</small></p>';
+    const mainMessage = document.getElementById('mainMessage').innerHTML || 'Olá {RECIPIENT_NAME}!👋 <br />Esperamos que você esteja bem! Conforme nossa conversa, preparamos um orçamento personalizado para você.';
+    const footerMessage = document.getElementById('footerMessage').innerHTML || '<h4>💡 Sobre este orçamento:</h4><p> Este orçamento foi elaborado especialmente para atender às suas necessidades. Todos os valores e especificações foram cuidadosamente calculados para oferecer a melhor relação custo-benefício.</p><p> Caso tenha alguma dúvida ou precise de ajustes, não hesite em entrar em contato conosco!</p>';
     const footerText = document.getElementById('footerText').innerHTML || '';
     const companyHeader = document.getElementById('companyHeader').value || '\{\{companyName\}\}';
     const budgetHeader = document.getElementById('budgetHeader').value || 'Orçamento #\{\{budgetNumber\}\}';
