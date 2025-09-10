@@ -86,24 +86,69 @@
                                 
                                 <!-- Personalização do Cabeçalho -->
                                 <div class="mb-4">
-                                    <label class="form-label fw-bold">Nome da Empresa no Cabeçalho</label>
+                                    <label class="form-label fw-bold">Cabeçalho</label>
                                     <input type="text" class="form-control form-control-sm" id="companyHeader" placeholder="Ex: Minha Empresa Ltda">
                                 </div>
                                 
                                 <div class="mb-4">
-                                    <label class="form-label fw-bold">Texto do Orçamento</label>
-                                    <input type="text" class="form-control form-control-sm" id="budgetHeader" placeholder="Ex: Orçamento #{BUDGET_NUMBER}" value="Orçamento #{BUDGET_NUMBER}">
+                                    <label class="form-label fw-bold">Cabeçalho 2</label>
+                                    <input type="text" class="form-control form-control-sm" id="budgetHeader" placeholder="Ex: Orçamento Nº {BUDGET_NUMBER}" value="Orçamento Nº {BUDGET_NUMBER}">
                                 </div>
                                 
                                 <!-- Texto Personalizado -->
                                 <div class="mb-4">
-                                    <label class="form-label fw-bold">Mensagem Principal</label>
-                                    <textarea class="form-control form-control-sm" id="mainMessage" rows="3" placeholder="Olá [Nome do Cliente], segue em anexo seu orçamento..."></textarea>
+                                    <label class="form-label fw-bold">Mensagem Inicial</label>
+                                    <div class="formatting-toolbar mb-2">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('mainMessage', 'bold')" title="Negrito"><i class="bi bi-type-bold"></i></button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('mainMessage', 'italic')" title="Itálico"><i class="bi bi-type-italic"></i></button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('mainMessage', 'underline')" title="Sublinhado"><i class="bi bi-type-underline"></i></button>
+                                        </div>
+                                        <div class="btn-group btn-group-sm ms-2" role="group">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('mainMessage', 'justifyLeft')" title="Alinhar à esquerda"><i class="bi bi-text-left"></i></button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('mainMessage', 'justifyCenter')" title="Centralizar"><i class="bi bi-text-center"></i></button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('mainMessage', 'justifyRight')" title="Alinhar à direita"><i class="bi bi-text-right"></i></button>
+                                        </div>
+                                        <input type="color" class="btn btn-outline-secondary ms-2" id="mainMessageColor" onchange="formatText('mainMessage', 'foreColor', this.value)" title="Cor do texto" style="width: 40px; height: 31px;">
+                                    </div>
+                                    <div contenteditable="true" class="form-control form-control-sm" id="mainMessage" style="min-height: 80px; white-space: pre-wrap;" placeholder="Olá [Nome do Cliente], segue em anexo seu orçamento..." oninput="updatePreview()"></div>
                                 </div>
                                 
                                 <div class="mb-4">
-                                    <label class="form-label fw-bold">Mensagem de Rodapé</label>
-                                    <textarea class="form-control form-control-sm" id="footerMessage" rows="2" placeholder="Obrigado pela preferência!"></textarea>
+                    <label class="form-label fw-bold">Mensagem Final</label>
+                    <div class="formatting-toolbar mb-2">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('footerMessage', 'bold')" title="Negrito"><i class="bi bi-type-bold"></i></button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('footerMessage', 'italic')" title="Itálico"><i class="bi bi-type-italic"></i></button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('footerMessage', 'underline')" title="Sublinhado"><i class="bi bi-type-underline"></i></button>
+                        </div>
+                        <div class="btn-group btn-group-sm ms-2" role="group">
+                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('footerMessage', 'justifyLeft')" title="Alinhar à esquerda"><i class="bi bi-text-left"></i></button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('footerMessage', 'justifyCenter')" title="Centralizar"><i class="bi bi-text-center"></i></button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('footerMessage', 'justifyRight')" title="Alinhar à direita"><i class="bi bi-text-right"></i></button>
+                        </div>
+                        <input type="color" class="btn btn-outline-secondary ms-2" id="footerMessageColor" onchange="formatText('footerMessage', 'foreColor', this.value)" title="Cor do texto" style="width: 40px; height: 31px;">
+                    </div>
+                    <div contenteditable="true" class="form-control form-control-sm" id="footerMessage" style="min-height: 60px; white-space: pre-wrap;" placeholder="Obrigado pela preferência!" oninput="updatePreview()"></div>
+                </div>
+                                
+                                <!-- Rodapé -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Rodapé</label>
+                                    <div class="formatting-toolbar mb-2">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('footerText', 'bold')" title="Negrito"><i class="bi bi-type-bold"></i></button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('footerText', 'italic')" title="Itálico"><i class="bi bi-type-italic"></i></button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('footerText', 'underline')" title="Sublinhado"><i class="bi bi-type-underline"></i></button>
+                                        </div>
+                                        <div class="btn-group btn-group-sm ms-2" role="group">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('footerText', 'justifyLeft')" title="Alinhar à esquerda"><i class="bi bi-text-left"></i></button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('footerText', 'justifyCenter')" title="Centralizar"><i class="bi bi-text-center"></i></button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="formatText('footerText', 'justifyRight')" title="Alinhar à direita"><i class="bi bi-text-right"></i></button>
+                                        </div>
+                                        <input type="color" class="btn btn-outline-secondary ms-2" id="footerTextColor" onchange="formatText('footerText', 'foreColor', this.value)" title="Cor do texto" style="width: 40px; height: 31px;">
+                                    </div>
+                                    <div contenteditable="true" class="form-control form-control-sm" id="footerText" style="min-height: 80px; white-space: pre-wrap;" placeholder="Digite as informações da empresa..." oninput="updatePreview()"></div>
                                 </div>
                                 
                                 <!-- Opções de Detalhes do Orçamento -->
@@ -112,25 +157,25 @@
                                     <div class="budget-options">
                                         <small class="text-muted d-block mb-2">Selecione quais informações incluir:</small>
                                         <div class="form-check form-check-sm">
-                                            <input class="form-check-input" type="checkbox" id="showBudgetNumber" checked>
+                                            <input class="form-check-input" type="checkbox" id="showBudgetNumber" checked onchange="updatePreview()">
                                             <label class="form-check-label" for="showBudgetNumber">Número do Orçamento</label>
                                         </div>
                                         <div class="form-check form-check-sm">
-                                            <input class="form-check-input" type="checkbox" id="showBudgetValue" checked>
+                                            <input class="form-check-input" type="checkbox" id="showBudgetValue" checked onchange="updatePreview()">
                                             <label class="form-check-label" for="showBudgetValue">Valor do Orçamento</label>
                                         </div>
                                         <div class="form-check form-check-sm">
-                                            <input class="form-check-input" type="checkbox" id="showBudgetDate" checked>
+                                            <input class="form-check-input" type="checkbox" id="showBudgetDate" checked onchange="updatePreview()">
                                             <label class="form-check-label" for="showBudgetDate">Data do Orçamento</label>
                                         </div>
                                         <div class="form-check form-check-sm">
-                                            <input class="form-check-input" type="checkbox" id="showBudgetValidity" checked>
+                                            <input class="form-check-input" type="checkbox" id="showBudgetValidity" checked onchange="updatePreview()">
                                             <label class="form-check-label" for="showBudgetValidity">Validade do Orçamento</label>
                                         </div>
                                         <div class="form-check form-check-sm">
-                                            <input class="form-check-input" type="checkbox" id="showDeliveryDate">
-                                            <label class="form-check-label" for="showDeliveryDate">Data de Entrega</label>
-                                        </div>
+                            <input class="form-check-input" type="checkbox" id="showDeliveryDate" onchange="updatePreview()">
+                            <label class="form-check-label" for="showDeliveryDate">Data de Entrega</label>
+                        </div>
                                     </div>
                                 </div>
                                 
@@ -199,7 +244,7 @@
 
 <!-- Modal de Salvamento -->
 <div class="modal fade" id="saveModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Salvar Template</h5>
@@ -390,12 +435,18 @@
 
 @push('scripts')
 <script>
+// Definir variáveis globais
+window.currentTemplate = null;
+window.currentColor = '#8A2BE2';
+window.templates = {};
+
+// Aliases para compatibilidade
 let currentTemplate = null;
 let currentColor = '#8A2BE2';
-let templates = {};
+let templates = window.templates;
 
 // Templates pré-definidos
-templates.modern = {
+window.templates.modern = templates.modern = {
     name: 'Moderno',
     html: `
     <!DOCTYPE html>
@@ -420,7 +471,9 @@ templates.modern = {
                     <p style="margin: 5px 0;"><strong>Data:</strong> \{\{budgetDate\}\}</p>
                     <p style="margin: 5px 0;"><strong>Validade:</strong> \{\{budgetValidity\}\}</p>
                 </div>
-                <p style="color: #666; line-height: 1.6;">{FOOTER_MESSAGE}</p>
+                <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid {TERTIARY_COLOR};">
+                    <p style="color: #666; line-height: 1.6;">{FOOTER_MESSAGE}</p>
+                </div>    
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
                     <p style="margin: 5px 0; color: #666;"><strong>\{\{companyName\}\}</strong></p>
                     <p style="margin: 5px 0; color: #666;">📞 \{\{companyPhone\}\} | 📧 \{\{companyEmail\}\}</p>
@@ -431,7 +484,7 @@ templates.modern = {
     </html>`
 };
 
-templates.classic = {
+window.templates.classic = templates.classic = {
     name: 'Clássico',
     html: `
     <!DOCTYPE html>
@@ -443,11 +496,11 @@ templates.classic = {
     </head>
     <body style="margin: 0; padding: 0; font-family: Georgia, serif; background-color: #f9f9f9;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #ddd;">
-            <div style="background-color: \{\{PRIMARY_COLOR\}\}; color: white; padding: 20px; text-align: center;">
+            <div style="background-color: {PRIMARY_COLOR}; color: white; padding: 20px; text-align: center;">
                 <h1 style="font-size: 28px; margin: 0; font-weight: normal;">{COMPANY_HEADER}</h1>
             </div>
             <div style="padding: 30px;">
-                <h2 style="color: \{\{PRIMARY_COLOR\}\}; border-bottom: 2px solid \{\{PRIMARY_COLOR\}\}; padding-bottom: 10px;">{BUDGET_HEADER}</h2>
+                <h2 style="color: {PRIMARY_COLOR}; border-bottom: 2px solid {PRIMARY_COLOR}; padding-bottom: 10px;">{BUDGET_HEADER}</h2>
                 <p style="font-size: 16px; line-height: 1.6; color: #333;">{MAIN_MESSAGE}</p>
                 <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
                     <tr style="background-color: #f8f9fa;">
@@ -479,7 +532,7 @@ templates.classic = {
     </html>`
 };
 
-templates.minimal = {
+window.templates.minimal = templates.minimal = {
     name: 'Minimalista',
     html: `
     <!DOCTYPE html>
@@ -492,12 +545,12 @@ templates.minimal = {
     <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #ffffff;">
         <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <div style="text-align: center; margin-bottom: 40px;">
-                <h1 style="font-size: 32px; font-weight: 300; color: \{\{PRIMARY_COLOR\}\}; margin: 0;">{COMPANY_HEADER}</h1>
-                <div style="width: 50px; height: 2px; background-color: \{\{PRIMARY_COLOR\}\}; margin: 20px auto;"></div>
+                <h1 style="font-size: 32px; font-weight: 300; color: {PRIMARY_COLOR}; margin: 0;">{COMPANY_HEADER}</h1>
+                <div style="width: 50px; height: 2px; background-color: {PRIMARY_COLOR}; margin: 20px auto;"></div>
             </div>
             <div style="margin-bottom: 40px;">
                 <p style="font-size: 18px; line-height: 1.6; color: #333; margin-bottom: 30px;">{MAIN_MESSAGE}</p>
-                <div style="background-color: #fafafa; padding: 30px; border-left: 3px solid \{\{PRIMARY_COLOR\}\};">
+                <div style="background-color: #fafafa; padding: 30px; border-left: 3px solid {PRIMARY_COLOR};">
                     <h2 style="font-size: 20px; font-weight: 400; color: #333; margin: 0 0 20px 0;">{BUDGET_HEADER}</h2>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <span style="color: #666;">Valor:</span>
@@ -522,17 +575,28 @@ templates.minimal = {
     </html>`
 };
 
-function selectTemplate(templateType) {
+// Definir função no escopo global
+window.selectTemplate = function(templateType) {
     // Remove active class from all options
     document.querySelectorAll('.template-option').forEach(option => {
         option.classList.remove('active');
     });
     
     // Add active class to selected option
-    document.querySelector(`[data-template="${templateType}"]`).classList.add('active');
+    const templateElement = document.querySelector(`[data-template="${templateType}"]`);
+    if (templateElement) {
+        templateElement.classList.add('active');
+    }
     
+    // Sincronizar variáveis globais e locais
+    window.currentTemplate = templateType;
     currentTemplate = templateType;
     updatePreview();
+}
+
+// Alias para compatibilidade
+function selectTemplate(templateType) {
+    return window.selectTemplate(templateType);
 }
 
 function changeColor(color) {
@@ -551,17 +615,33 @@ function changeColor(color) {
     updatePreview();
 }
 
+function formatText(elementId, command, value) {
+    const element = document.getElementById(elementId);
+    element.focus();
+    document.execCommand(command, false, value);
+    updatePreview();
+}
+
 function updatePreview() {
     if (!currentTemplate) return;
     
     const template = templates[currentTemplate];
-    const mainMessage = document.getElementById('mainMessage').value || 'Olá {RECIPIENT_NAME}, segue em anexo o orçamento solicitado.';
-    const footerMessage = document.getElementById('footerMessage').value || 'Obrigado pela preferência! Estamos à disposição para esclarecimentos.';
+    const mainMessage = document.getElementById('mainMessage').innerHTML || 'Olá {RECIPIENT_NAME}!👋 <br />Esperamos que você esteja bem! Conforme nossa conversa, preparamos um orçamento personalizado para você.';
+    const footerMessage = document.getElementById('footerMessage').innerHTML || '<h5>💡 Sobre este orçamento:</h5><p> Este orçamento foi elaborado especialmente para atender às suas necessidades. Todos os valores e especificações foram cuidadosamente calculados para oferecer a melhor relação custo-benefício.</p><p> Caso tenha alguma dúvida ou precise de ajustes, não hesite em entrar em contato conosco!</p>';
+    const footerText = document.getElementById('footerText').innerHTML || '';
     const companyHeader = document.getElementById('companyHeader').value || '{COMPANY_NAME}';
     const budgetHeader = document.getElementById('budgetHeader').value || 'Orçamento #{BUDGET_NUMBER}';
     
+    // Get budget detail options
+    const showBudgetNumber = document.getElementById('showBudgetNumber').checked;
+    const showBudgetValue = document.getElementById('showBudgetValue').checked;
+    const showBudgetDate = document.getElementById('showBudgetDate').checked;
+    const showBudgetValidity = document.getElementById('showBudgetValidity').checked;
+    const showDeliveryDate = document.getElementById('showDeliveryDate').checked;
+    
     // Calculate secondary color (darker version of primary)
     const secondaryColor = darkenColor(currentColor, 20);
+    const tertiaryColor = darkenColor(currentColor, 10);
     
     let html = template.html
         .replace(/{PRIMARY_COLOR}/g, currentColor)
@@ -579,7 +659,78 @@ function updatePreview() {
         .replace(/{COMPANY_PHONE}/g, '{' + '{companyPhone}' + '}')
         .replace(/{COMPANY_EMAIL}/g, '{' + '{companyEmail}' + '}');
     
-    document.getElementById('emailPreview').innerHTML = html;
+    // Replace footer section with custom footer text only if footerText is not empty
+    if (footerText && footerText.trim() !== '') {
+        // Replace footer sections with custom footer text
+        // For modern template footer
+        html = html.replace(/<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">([\s\S]*?)<\/div>/g, 
+            `<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+                <div style="color: #666; line-height: 1.6;">${footerText}</div>
+            </div>`);
+        
+        // For classic template footer
+        html = html.replace(/<div style="text-align: center; color: #666;">([\s\S]*?)<\/div>/g,
+            `<div style="text-align: center; color: #666;">
+                <div style="line-height: 1.6;">${footerText}</div>
+            </div>`);
+            
+        // For minimal template footer
+        html = html.replace(/<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid [^"]*; color: #666;">([\s\S]*?)<\/div>/g,
+            `<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid ${currentColor}; color: #666;">
+                <div style="line-height: 1.6;">${footerText}</div>
+            </div>`);
+    } else {
+        // Restaurar valores padrão quando rodapé estiver vazio
+        html = html.replace(/\{\{companyName\}\}/g, '\{\{companyName\}\}');
+        html = html.replace(/\{\{companyPhone\}\}/g, '\{\{companyPhone\}\}');
+        html = html.replace(/\{\{companyEmail\}\}/g, '\{\{companyEmail\}\}');
+    }
+    
+    // Remove budget details based on user selection
+    if (!showBudgetNumber) {
+        // Remove linha da tabela com "Número do Orçamento" (template clássico)
+        html = html.replace(/<tr[^>]*>\s*<td[^>]*>Número do Orçamento<\/td>\s*<td[^>]*>\{\{budgetNumber\}\}<\/td>\s*<\/tr>/gi, '');
+        // Remove p com "Número:" (template moderno)
+        html = html.replace(/<p[^>]*>\s*<strong>Número:<\/strong>\s*\{\{budgetNumber\}\}\s*<\/p>/gi, '');
+        // Remove div com "Número:" (template minimalista) - não existe no template atual
+    }
+    if (!showBudgetValue) {
+        // Remove linha da tabela com "Valor Total" (template clássico)
+        html = html.replace(/<tr[^>]*>\s*<td[^>]*>Valor Total<\/td>\s*<td[^>]*>R\$ \{\{budgetValue\}\}<\/td>\s*<\/tr>/gi, '');
+        // Remove p com "Valor:" (template moderno)
+        html = html.replace(/<p[^>]*>\s*<strong>Valor:<\/strong>\s*R\$ \{\{budgetValue\}\}\s*<\/p>/gi, '');
+        // Remove div com "Valor:" (template minimalista)
+        html = html.replace(/<div[^>]*>\s*<span[^>]*>Valor:<\/span>\s*<span[^>]*>R\$ \{\{budgetValue\}\}<\/span>\s*<\/div>/gi, '');
+    }
+    if (!showBudgetDate) {
+        // Remove linha da tabela com "Data" (template clássico)
+        html = html.replace(/<tr[^>]*>\s*<td[^>]*>Data<\/td>\s*<td[^>]*>\{\{budgetDate\}\}<\/td>\s*<\/tr>/gi, '');
+        // Remove p com "Data:" (template moderno)
+        html = html.replace(/<p[^>]*>\s*<strong>Data:<\/strong>\s*\{\{budgetDate\}\}\s*<\/p>/gi, '');
+        // Remove div com "Data:" (template minimalista)
+        html = html.replace(/<div[^>]*>\s*<span[^>]*>Data:<\/span>\s*<span[^>]*>\{\{budgetDate\}\}<\/span>\s*<\/div>/gi, '');
+    }
+    if (!showBudgetValidity) {
+        // Remove linha da tabela com "Validade" (template clássico)
+        html = html.replace(/<tr[^>]*>\s*<td[^>]*>Validade<\/td>\s*<td[^>]*>\{\{budgetValidity\}\}<\/td>\s*<\/tr>/gi, '');
+        // Remove p com "Validade:" (template moderno)
+        html = html.replace(/<p[^>]*>\s*<strong>Validade:<\/strong>\s*\{\{budgetValidity\}\}\s*<\/p>/gi, '');
+        // Remove div com "Validade:" (template minimalista)
+        html = html.replace(/<div[^>]*>\s*<span[^>]*>Validade:<\/span>\s*<span[^>]*>\{\{budgetValidity\}\}<\/span>\s*<\/div>/gi, '');
+    }
+    if (!showDeliveryDate) {
+        // Remove linha da tabela com "Data de Entrega" (template clássico) - não existe no template atual
+        // Remove p com "Entrega:" (template moderno) - não existe no template atual
+        // Remove div com "Entrega:" (template minimalista) - não existe no template atual
+    }
+    
+    const previewContainer = document.getElementById('emailPreview');
+    // Remove placeholder content first
+    const placeholder = previewContainer.querySelector('.placeholder-content');
+    if (placeholder) {
+        placeholder.remove();
+    }
+    previewContainer.innerHTML = html;
 }
 
 function darkenColor(color, percent) {
@@ -595,21 +746,22 @@ function darkenColor(color, percent) {
 
 let lastFocusedElement = null;
 
-// Track the last focused text input
+// Track focused elements
 document.addEventListener('focusin', function(e) {
-    if (e.target.matches('input[type="text"], textarea')) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.contentEditable === 'true') {
         lastFocusedElement = e.target;
     }
 });
 
 function insertVariable(variable) {
     const targetElement = lastFocusedElement || document.activeElement;
+    const variableText = `\{\{${variable}\}\}`;
     
     if (targetElement && (targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA')) {
+        // Handle input and textarea elements
         const cursorPos = targetElement.selectionStart || targetElement.value.length;
         const textBefore = targetElement.value.substring(0, cursorPos);
         const textAfter = targetElement.value.substring(cursorPos);
-        const variableText = `\{\{${variable}\}\}`;
         
         targetElement.value = textBefore + variableText + textAfter;
         targetElement.focus();
@@ -619,13 +771,36 @@ function insertVariable(variable) {
         targetElement.setSelectionRange(newCursorPos, newCursorPos);
         
         updatePreview();
+    } else if (targetElement && targetElement.contentEditable === 'true') {
+        // Handle contenteditable elements
+        targetElement.focus();
+        
+        // Insert at cursor position in contenteditable
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+            const textNode = document.createTextNode(variableText);
+            range.insertNode(textNode);
+            
+            // Move cursor after inserted text
+            range.setStartAfter(textNode);
+            range.setEndAfter(textNode);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        } else {
+            // Fallback: append to end
+            targetElement.innerHTML += variableText;
+        }
+        
+        updatePreview();
     } else {
         // If no element is focused, show a message
         alert('Clique em um campo de texto primeiro, depois clique na variável que deseja inserir.');
     }
 }
 
-function saveTemplate() {
+window.saveTemplate = function() {
     if (!currentTemplate) {
         alert('Por favor, selecione um modelo primeiro.');
         return;
@@ -645,11 +820,13 @@ function saveTemplate() {
     
     // Generate final HTML
     const template = templates[currentTemplate];
-    const mainMessage = document.getElementById('mainMessage').value || 'Olá \{\{recipientName\}\}, segue em anexo o orçamento solicitado.';
-    const footerMessage = document.getElementById('footerMessage').value || 'Atenciosamente, Equipe de Vendas';
+    const mainMessage = document.getElementById('mainMessage').innerHTML || 'Olá \{\{recipientName\}\}, segue em anexo o orçamento solicitado.';
+    const footerMessage = document.getElementById('footerMessage').innerHTML || 'Atenciosamente, Equipe de Vendas';
+    const footerText = document.getElementById('footerText').innerHTML || '';
     const companyHeader = document.getElementById('companyHeader').value || '\{\{companyName\}\}';
     const budgetHeader = document.getElementById('budgetHeader').value || 'Orçamento #\{\{budgetNumber\}\}';
     const secondaryColor = darkenColor(currentColor, 20);
+    const tertiaryColor = darkenColor(currentColor, 10);
     
     // Get budget detail options
     const showBudgetNumber = document.getElementById('showBudgetNumber').checked;
@@ -661,6 +838,7 @@ function saveTemplate() {
     let finalHtml = template.html
         .replace(/\{PRIMARY_COLOR\}/g, currentColor)
         .replace(/\{SECONDARY_COLOR\}/g, secondaryColor)
+        .replace(/\{TERTIARY_COLOR\}/g, tertiaryColor)
         .replace(/\{MAIN_MESSAGE\}/g, mainMessage)
         .replace(/\{FOOTER_MESSAGE\}/g, footerMessage)
         .replace(/\{COMPANY_HEADER\}/g, companyHeader)
@@ -674,18 +852,69 @@ function saveTemplate() {
         .replace(/\{BUDGET_VALIDITY\}/g, '\{\{budgetValidity\}\}')
         .replace(/\{RECIPIENT_NAME\}/g, '\{\{recipientName\}\}');
     
+    // Handle footer replacement properly
+    if (footerText && footerText.trim() !== '') {
+        // Replace footer sections with custom footer text
+        // For modern template footer
+        finalHtml = finalHtml.replace(/<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">([\s\S]*?)<\/div>/g, 
+            `<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+                <div style="color: #666; line-height: 1.6;">${footerText}</div>
+            </div>`);
+        
+        // For classic template footer
+        finalHtml = finalHtml.replace(/<div style="text-align: center; color: #666;">([\s\S]*?)<\/div>/g,
+            `<div style="text-align: center; color: #666;">
+                <div style="line-height: 1.6;">${footerText}</div>
+            </div>`);
+            
+        // For minimal template footer
+        finalHtml = finalHtml.replace(/<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid [^"]*; color: #666;">([\s\S]*?)<\/div>/g,
+            `<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid ${currentColor}; color: #666;">
+                <div style="line-height: 1.6;">${footerText}</div>
+            </div>`);
+    } else {
+        // Restore default values when footer text is empty
+        finalHtml = finalHtml.replace(/\{\{companyName\}\}/g, '\{\{companyName\}\}');
+        finalHtml = finalHtml.replace(/\{\{companyPhone\}\}/g, '\{\{companyPhone\}\}');
+        finalHtml = finalHtml.replace(/\{\{companyEmail\}\}/g, '\{\{companyEmail\}\}');
+    }
+    
     // Remove budget details based on user selection
     if (!showBudgetNumber) {
-        finalHtml = finalHtml.replace(/<tr[^>]*>[\s\S]*?Número do Orçamento[\s\S]*?<\/tr>/gi, '');
+        // Remove linha da tabela com "Número do Orçamento" (template clássico)
+        finalHtml = finalHtml.replace(/<tr[^>]*>\s*<td[^>]*>Número do Orçamento<\/td>\s*<td[^>]*>\{\{budgetNumber\}\}<\/td>\s*<\/tr>/gi, '');
+        // Remove p com "Número:" (template moderno)
+        finalHtml = finalHtml.replace(/<p[^>]*>\s*<strong>Número:<\/strong>\s*\{\{budgetNumber\}\}\s*<\/p>/gi, '');
+        // Remove div com "Número:" (template minimalista) - não existe no template atual
     }
     if (!showBudgetValue) {
-        finalHtml = finalHtml.replace(/<tr[^>]*>[\s\S]*?Valor Total[\s\S]*?<\/tr>/gi, '');
+        // Remove linha da tabela com "Valor Total" (template clássico)
+        finalHtml = finalHtml.replace(/<tr[^>]*>\s*<td[^>]*>Valor Total<\/td>\s*<td[^>]*>R\$ \{\{budgetValue\}\}<\/td>\s*<\/tr>/gi, '');
+        // Remove p com "Valor:" (template moderno)
+        finalHtml = finalHtml.replace(/<p[^>]*>\s*<strong>Valor:<\/strong>\s*R\$ \{\{budgetValue\}\}\s*<\/p>/gi, '');
+        // Remove div com "Valor:" (template minimalista)
+        finalHtml = finalHtml.replace(/<div[^>]*>\s*<span[^>]*>Valor:<\/span>\s*<span[^>]*>R\$ \{\{budgetValue\}\}<\/span>\s*<\/div>/gi, '');
     }
     if (!showBudgetDate) {
-        finalHtml = finalHtml.replace(/<tr[^>]*>[\s\S]*?Data[\s\S]*?<\/tr>/gi, '');
+        // Remove linha da tabela com "Data" (template clássico)
+        finalHtml = finalHtml.replace(/<tr[^>]*>\s*<td[^>]*>Data<\/td>\s*<td[^>]*>\{\{budgetDate\}\}<\/td>\s*<\/tr>/gi, '');
+        // Remove p com "Data:" (template moderno)
+        finalHtml = finalHtml.replace(/<p[^>]*>\s*<strong>Data:<\/strong>\s*\{\{budgetDate\}\}\s*<\/p>/gi, '');
+        // Remove div com "Data:" (template minimalista)
+        finalHtml = finalHtml.replace(/<div[^>]*>\s*<span[^>]*>Data:<\/span>\s*<span[^>]*>\{\{budgetDate\}\}<\/span>\s*<\/div>/gi, '');
     }
     if (!showBudgetValidity) {
-        finalHtml = finalHtml.replace(/<tr[^>]*>[\s\S]*?Validade[\s\S]*?<\/tr>/gi, '');
+        // Remove linha da tabela com "Validade" (template clássico)
+        finalHtml = finalHtml.replace(/<tr[^>]*>\s*<td[^>]*>Validade<\/td>\s*<td[^>]*>\{\{budgetValidity\}\}<\/td>\s*<\/tr>/gi, '');
+        // Remove p com "Validade:" (template moderno)
+        finalHtml = finalHtml.replace(/<p[^>]*>\s*<strong>Validade:<\/strong>\s*\{\{budgetValidity\}\}\s*<\/p>/gi, '');
+        // Remove div com "Validade:" (template minimalista)
+        finalHtml = finalHtml.replace(/<div[^>]*>\s*<span[^>]*>Validade:<\/span>\s*<span[^>]*>\{\{budgetValidity\}\}<\/span>\s*<\/div>/gi, '');
+    }
+    if (!showDeliveryDate) {
+        // Remove linha da tabela com "Data de Entrega" (template clássico) - não existe no template atual
+        // Remove p com "Entrega:" (template moderno) - não existe no template atual
+        // Remove div com "Entrega:" (template minimalista) - não existe no template atual
     }
     
     document.getElementById('htmlContent').value = finalHtml;
@@ -766,9 +995,21 @@ document.getElementById('mobile').addEventListener('change', function() {
     }
 });
 
+// Create local aliases for global functions
+const saveTemplate = window.saveTemplate;
+
 // Initialize with modern template
 document.addEventListener('DOMContentLoaded', function() {
+    // Sincronizar variáveis locais com globais
+    currentTemplate = window.currentTemplate;
+    currentColor = window.currentColor;
+    templates = window.templates;
+    
     selectTemplate('modern');
+    // Força a atualização inicial do preview
+    setTimeout(function() {
+        updatePreview();
+    }, 100);
 });
 </script>
 @endpush
