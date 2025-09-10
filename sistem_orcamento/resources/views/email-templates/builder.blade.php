@@ -129,7 +129,7 @@
                         </div>
                         <input type="color" class="btn btn-outline-secondary ms-2" id="footerMessageColor" onchange="formatText('footerMessage', 'foreColor', this.value)" title="Cor do texto" style="width: 40px; height: 31px;">
                     </div>
-                    <div contenteditable="true" class="form-control form-control-sm" id="footerMessage" style="min-height: 60px; white-space: pre-wrap;" placeholder="Obrigado pela preferência!" oninput="updatePreview()"></div>
+                    <div contenteditable="true" class="form-control form-control-sm" id="footerMessage" style="min-height: 60px; white-space: pre-wrap;" placeholder="Obrigado pela preferência!" oninput="updatePreview()"><h6>💡 Sobre este orçamento:</h6><small> Este orçamento foi elaborado especialmente para atender às suas necessidades. Todos os valores e especificações foram cuidadosamente calculados para oferecer a melhor relação custo-benefício.</small><br><small> Caso tenha alguma dúvida ou precise de ajustes, não hesite em entrar em contato conosco!</small></div>
                 </div>
                                 
                                 <!-- Rodapé -->
@@ -471,7 +471,7 @@ window.templates.modern = templates.modern = {
                     <p style="margin: 5px 0;"><strong>Data:</strong> \{\{budgetDate\}\}</p>
                     <p style="margin: 5px 0;"><strong>Validade:</strong> \{\{budgetValidity\}\}</p>
                 </div>
-                <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid {TERTIARY_COLOR};">
+                <div style="background-color: #f8f9fa; border-radius: 8px; padding: 5px 20px; margin: 20px 0; border-left: 4px solid {TERTIARY_COLOR};">
                     <p style="color: #666; line-height: 1.6;">{FOOTER_MESSAGE}</p>
                 </div>    
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
@@ -627,7 +627,7 @@ function updatePreview() {
     
     const template = templates[currentTemplate];
     const mainMessage = document.getElementById('mainMessage').innerHTML || 'Olá {RECIPIENT_NAME}!👋 <br />Esperamos que você esteja bem! Conforme nossa conversa, preparamos um orçamento personalizado para você.';
-    const footerMessage = document.getElementById('footerMessage').innerHTML || '<h5>💡 Sobre este orçamento:</h5><p> Este orçamento foi elaborado especialmente para atender às suas necessidades. Todos os valores e especificações foram cuidadosamente calculados para oferecer a melhor relação custo-benefício.</p><p> Caso tenha alguma dúvida ou precise de ajustes, não hesite em entrar em contato conosco!</p>';
+    const footerMessage = document.getElementById('footerMessage').innerHTML || '<h6>💡 Sobre este orçamento:</h6><p><small> Este orçamento foi elaborado especialmente para atender às suas necessidades. Todos os valores e especificações foram cuidadosamente calculados para oferecer a melhor relação custo-benefício.</small></p> <p><small> Caso tenha alguma dúvida ou precise de ajustes, não hesite em entrar em contato conosco!</small></p>';
     const footerText = document.getElementById('footerText').innerHTML || '';
     const companyHeader = document.getElementById('companyHeader').value || '{COMPANY_NAME}';
     const budgetHeader = document.getElementById('budgetHeader').value || 'Orçamento #{BUDGET_NUMBER}';
@@ -641,11 +641,12 @@ function updatePreview() {
     
     // Calculate secondary color (darker version of primary)
     const secondaryColor = darkenColor(currentColor, 20);
-    const tertiaryColor = darkenColor(currentColor, 10);
+    const tertiaryColor = lightenColor(currentColor, 30);
     
     let html = template.html
         .replace(/{PRIMARY_COLOR}/g, currentColor)
         .replace(/{SECONDARY_COLOR}/g, secondaryColor)
+        .replace(/{TERTIARY_COLOR}/g, tertiaryColor)
         .replace(/{MAIN_MESSAGE}/g, mainMessage)
         .replace(/{FOOTER_MESSAGE}/g, footerMessage)
         .replace(/{COMPANY_HEADER}/g, companyHeader)
@@ -744,6 +745,17 @@ function darkenColor(color, percent) {
         (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
 }
 
+function lightenColor(color, percent) {
+    const num = parseInt(color.replace("#", ""), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) + amt;
+    const G = (num >> 8 & 0x00FF) + amt;
+    const B = (num & 0x0000FF) + amt;
+    return "#" + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
+        (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
+        (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
+}
+
 let lastFocusedElement = null;
 
 // Track focused elements
@@ -821,12 +833,12 @@ window.saveTemplate = function() {
     // Generate final HTML
     const template = templates[currentTemplate];
     const mainMessage = document.getElementById('mainMessage').innerHTML || 'Olá \{\{recipientName\}\}, segue em anexo o orçamento solicitado.';
-    const footerMessage = document.getElementById('footerMessage').innerHTML || 'Atenciosamente, Equipe de Vendas';
+    const footerMessage = document.getElementById('footerMessage').innerHTML || '<h6>💡 Sobre este orçamento:</h6><p><small> Este orçamento foi elaborado especialmente para atender às suas necessidades. Todos os valores e especificações foram cuidadosamente calculados para oferecer a melhor relação custo-benefício.</small></p> <p><small> Caso tenha alguma dúvida ou precise de ajustes, não hesite em entrar em contato conosco!</small></p>';
     const footerText = document.getElementById('footerText').innerHTML || '';
     const companyHeader = document.getElementById('companyHeader').value || '\{\{companyName\}\}';
     const budgetHeader = document.getElementById('budgetHeader').value || 'Orçamento #\{\{budgetNumber\}\}';
     const secondaryColor = darkenColor(currentColor, 20);
-    const tertiaryColor = darkenColor(currentColor, 10);
+    const tertiaryColor = lightenColor(currentColor, 30);
     
     // Get budget detail options
     const showBudgetNumber = document.getElementById('showBudgetNumber').checked;
