@@ -195,7 +195,15 @@ function copyToClipboard() {
             toast.remove();
         }, 3000);
     }).catch(function(err) {
-        alert('Erro ao copiar: ' + err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro!',
+            text: 'Erro ao copiar: ' + err,
+            toast: true,
+            position: 'bottom-start',
+            showConfirmButton: false,
+            timer: 3000
+        });
     });
 }
 </script>

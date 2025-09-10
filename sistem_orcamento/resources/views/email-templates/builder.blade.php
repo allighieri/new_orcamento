@@ -207,31 +207,33 @@
                         
                         <!-- Preview do Template -->
                         <div class="col-md-9">
-                            <div class="p-3">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="fw-bold mb-0">
-                                        <i class="bi bi-eye"></i> Visualização do Template
-                                    </h6>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <input type="radio" class="btn-check" name="previewMode" id="desktop" checked>
-                                        <label class="btn btn-outline-secondary" for="desktop">
-                                            <i class="bi bi-display"></i> Desktop
-                                        </label>
-                                        <input type="radio" class="btn-check" name="previewMode" id="mobile">
-                                        <label class="btn btn-outline-secondary" for="mobile">
-                                            <i class="bi bi-phone"></i> Mobile
-                                        </label>
+                            <div class="sticky-preview-wrapper" style="position: sticky; top: 20px; height: calc(100vh - 40px);">
+                                <div class="p-3 h-100 d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="fw-bold mb-0">
+                                            <i class="bi bi-eye"></i> Visualização do Template
+                                        </h6>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <input type="radio" class="btn-check" name="previewMode" id="desktop" checked>
+                                            <label class="btn btn-outline-secondary" for="desktop">
+                                                <i class="bi bi-display"></i> Desktop
+                                            </label>
+                                            <input type="radio" class="btn-check" name="previewMode" id="mobile">
+                                            <label class="btn btn-outline-secondary" for="mobile">
+                                                <i class="bi bi-phone"></i> Mobile
+                                            </label>
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <div class="template-preview-container" id="templatePreview">
-                                    <div class="email-preview" id="emailPreview">
-                                        <!-- O conteúdo do template será inserido aqui via JavaScript -->
-                                        <div class="placeholder-content">
-                                            <div class="text-center py-5">
-                                                <i class="bi bi-envelope-open text-muted" style="font-size: 3rem;"></i>
-                                                <h5 class="text-muted mt-3">Selecione um modelo para começar</h5>
-                                                <p class="text-muted">Escolha um dos modelos ao lado para visualizar o template</p>
+                                    
+                                    <div class="template-preview-container flex-grow-1" id="templatePreview" style="overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; background: #f8f9fa;">
+                                        <div class="email-preview" id="emailPreview">
+                                            <!-- O conteúdo do template será inserido aqui via JavaScript -->
+                                            <div class="placeholder-content">
+                                                <div class="text-center py-5">
+                                                    <i class="bi bi-envelope-open text-muted" style="font-size: 3rem;"></i>
+                                                    <h5 class="text-muted mt-3">Selecione um modelo para começar</h5>
+                                                    <p class="text-muted">Escolha um dos modelos ao lado para visualizar o template</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -763,64 +765,137 @@ function lightenColor(color, percent) {
 }
 
 let lastFocusedElement = null;
+let savedSelection = null;
+let savedCursorPosition = null;
 
-// Track focused elements
+// Track focused elements and save selection
 document.addEventListener('focusin', function(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.contentEditable === 'true') {
         lastFocusedElement = e.target;
     }
 });
 
+// Save cursor position on mouse up and key up events
+document.addEventListener('mouseup', function(e) {
+    if (e.target.contentEditable === 'true') {
+        lastFocusedElement = e.target;
+        saveSelection();
+    }
+});
+
+document.addEventListener('keyup', function(e) {
+    if (e.target.contentEditable === 'true') {
+        lastFocusedElement = e.target;
+        saveSelection();
+    }
+});
+
+// Prevent losing focus when clicking on variable buttons
+document.addEventListener('mousedown', function(e) {
+    if (e.target.classList.contains('variable-tag')) {
+        e.preventDefault();
+    }
+});
+
+function saveSelection() {
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+        savedSelection = selection.getRangeAt(0).cloneRange();
+    }
+}
+
+function restoreSelection() {
+    if (savedSelection && lastFocusedElement) {
+        lastFocusedElement.focus();
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        try {
+            selection.addRange(savedSelection);
+        } catch (e) {
+            // If range is invalid, place cursor at end
+            const range = document.createRange();
+            range.selectNodeContents(lastFocusedElement);
+            range.collapse(false);
+            selection.addRange(range);
+        }
+    }
+}
+
 function insertVariable(variable) {
-    const targetElement = lastFocusedElement || document.activeElement;
     const variableText = `\{\{${variable}\}\}`;
     
-    if (targetElement && (targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA')) {
-        // Handle input and textarea elements
-        const cursorPos = targetElement.selectionStart || targetElement.value.length;
-        const textBefore = targetElement.value.substring(0, cursorPos);
-        const textAfter = targetElement.value.substring(cursorPos);
+    // If we have a saved selection and focused element, use it
+    if (lastFocusedElement && lastFocusedElement.contentEditable === 'true') {
+        // Restore focus and selection
+        lastFocusedElement.focus();
         
-        targetElement.value = textBefore + variableText + textAfter;
-        targetElement.focus();
+        if (savedSelection) {
+            restoreSelection();
+        }
+        
+        // Use execCommand for better cursor position handling
+        if (document.queryCommandSupported('insertText')) {
+            document.execCommand('insertText', false, variableText);
+        } else {
+            // Fallback for browsers that don't support insertText
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                const textNode = document.createTextNode(variableText);
+                range.insertNode(textNode);
+                
+                // Move cursor after inserted text
+                range.setStartAfter(textNode);
+                range.setEndAfter(textNode);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
+        
+        // Save the new selection
+        saveSelection();
+        updatePreview();
+        
+    } else if (lastFocusedElement && (lastFocusedElement.tagName === 'INPUT' || lastFocusedElement.tagName === 'TEXTAREA')) {
+        // Handle input and textarea elements
+        const cursorPos = lastFocusedElement.selectionStart || lastFocusedElement.value.length;
+        const textBefore = lastFocusedElement.value.substring(0, cursorPos);
+        const textAfter = lastFocusedElement.value.substring(cursorPos);
+        
+        lastFocusedElement.value = textBefore + variableText + textAfter;
+        lastFocusedElement.focus();
         
         // Set cursor position after the inserted variable
         const newCursorPos = cursorPos + variableText.length;
-        targetElement.setSelectionRange(newCursorPos, newCursorPos);
-        
-        updatePreview();
-    } else if (targetElement && targetElement.contentEditable === 'true') {
-        // Handle contenteditable elements
-        targetElement.focus();
-        
-        // Insert at cursor position in contenteditable
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            range.deleteContents();
-            const textNode = document.createTextNode(variableText);
-            range.insertNode(textNode);
-            
-            // Move cursor after inserted text
-            range.setStartAfter(textNode);
-            range.setEndAfter(textNode);
-            selection.removeAllRanges();
-            selection.addRange(range);
-        } else {
-            // Fallback: append to end
-            targetElement.innerHTML += variableText;
-        }
+        lastFocusedElement.setSelectionRange(newCursorPos, newCursorPos);
         
         updatePreview();
     } else {
         // If no element is focused, show a message
-        alert('Clique em um campo de texto primeiro, depois clique na variável que deseja inserir.');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Atenção!',
+            text: 'Clique em um campo de texto primeiro, depois clique na variável que deseja inserir.',
+            toast: true,
+            position: 'bottom-start',
+            showConfirmButton: false,
+            timer: 3000
+        });
     }
 }
 
 window.saveTemplate = function() {
     if (!currentTemplate) {
-        alert('Por favor, selecione um modelo primeiro.');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Atenção!',
+            text: 'Por favor, selecione um modelo primeiro.',
+            toast: true,
+            position: 'bottom-start',
+            showConfirmButton: false,
+            timer: 3000
+        });
         return;
     }
     
@@ -828,7 +903,15 @@ window.saveTemplate = function() {
     const templateSubject = document.getElementById('templateSubject').value;
     
     if (!templateName || !templateSubject) {
-        alert('Por favor, preencha o nome e assunto do template.');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Atenção!',
+            text: 'Por favor, preencha o nome e assunto do template.',
+            toast: true,
+            position: 'bottom-start',
+            showConfirmButton: false,
+            timer: 3000
+        });
         return;
     }
     
