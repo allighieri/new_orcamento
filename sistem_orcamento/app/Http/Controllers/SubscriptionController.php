@@ -24,7 +24,7 @@ class SubscriptionController extends Controller
     }
     
     /**
-     * Criar nova assinatura
+     * Redirecionar para checkout de pagamento
      */
     public function store(Request $request)
     {
@@ -33,42 +33,14 @@ class SubscriptionController extends Controller
             'billing_cycle' => 'required|in:monthly,annual'
         ]);
         
-        $company = Auth::user()->company;
         $plan = Plan::findOrFail($request->plan_id);
         
-        // Cancelar assinatura atual se existir
-        $currentSubscription = $company->activeSubscription();
-        if ($currentSubscription) {
-            $currentSubscription->update([
-                'status' => 'cancelled',
-                'cancelled_at' => now()
-            ]);
-        }
+        // Armazenar o ciclo de cobrança na sessão para usar no checkout
+        session(['selected_billing_cycle' => $request->billing_cycle]);
         
-        // Calcular datas
-        $startDate = now();
-        $endDate = $request->billing_cycle === 'annual' 
-            ? $startDate->copy()->addYear()
-            : $startDate->copy()->addMonth();
-            
-        $price = $request->billing_cycle === 'annual' 
-            ? $plan->annual_price 
-            : $plan->monthly_price;
-        
-        // Criar nova assinatura
-        Subscription::create([
-            'company_id' => $company->id,
-            'plan_id' => $plan->id,
-            'billing_cycle' => $request->billing_cycle,
-            'status' => 'active',
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'next_billing_date' => $endDate,
-            'amount_paid' => $price
-        ]);
-        
-        return redirect()->route('subscriptions.index')
-            ->with('success', 'Plano alterado com sucesso!');
+        // Redirecionar para o checkout de pagamento
+        return redirect()->route('payments.checkout', $plan->id)
+            ->with('info', 'Complete o pagamento para ativar seu novo plano.');
     }
     
     /**

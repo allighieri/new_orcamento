@@ -41,4 +41,9 @@ return [
         'redirect_uri' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'asaas' => [
+        'api_key' => env('ASAAS_API_KEY'),
+        'sandbox' => env('ASAAS_SANDBOX', true),
+    ],
+
 ];

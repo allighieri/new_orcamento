@@ -146,3 +146,16 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     Route::post('subscriptions/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
     Route::post('subscriptions/reactivate', [SubscriptionController::class, 'reactivate'])->name('subscriptions.reactivate');
 });
+
+// Rotas para Sistema de Pagamentos
+Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(function () {
+    Route::get('payments/plans', [App\Http\Controllers\PaymentController::class, 'selectPlan'])->name('payments.select-plan');
+    Route::get('payments/checkout/{plan}', [App\Http\Controllers\PaymentController::class, 'checkout'])->name('payments.checkout');
+    Route::post('payments/pix/{plan}', [App\Http\Controllers\PaymentController::class, 'processPixPayment'])->name('payments.process-pix');
+    Route::post('payments/credit-card/{plan}', [App\Http\Controllers\PaymentController::class, 'processCreditCardPayment'])->name('payments.process-credit-card');
+    Route::get('payments/{payment}/status', [App\Http\Controllers\PaymentController::class, 'checkPaymentStatus'])->name('payments.check-status');
+    Route::get('payments', [App\Http\Controllers\PaymentController::class, 'index'])->name('payments.index');
+});
+
+// Webhook do Asaas (sem middleware de autenticação)
+Route::post('webhook/asaas', [App\Http\Controllers\WebhookController::class, 'handleAsaasWebhook'])->name('webhook.asaas');

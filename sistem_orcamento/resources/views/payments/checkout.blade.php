@@ -1,0 +1,516 @@
+@extends('layouts.app')
+
+@section('title', 'Checkout - ' . $plan->name)
+
+@section('content')
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="page-title">Checkout - Plano {{ $plan->name }}</h4>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('payments.select-plan') }}">Escolher Plano</a></li>
+                    <li class="breadcrumb-item active">Checkout</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Resumo do Plano -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="mb-1">Plano {{ $plan->name }}</h5>
+                            <p class="text-muted mb-0">{{ $plan->budget_limit }} orçamentos por mês</p>
+                            @if(session('selected_billing_cycle'))
+                                <p class="text-info mb-0">
+                                    <i class="mdi mdi-calendar"></i> 
+                                    Ciclo: {{ session('selected_billing_cycle') === 'annual' ? 'Anual' : 'Mensal' }}
+                                </p>
+                            @endif
+                        </div>
+                        <div class="col-md-4 text-end">
+                            @php
+                                $billingCycle = session('selected_billing_cycle', 'monthly');
+                                $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
+                                $period = $billingCycle === 'annual' ? 'ano' : 'mês';
+                            @endphp
+                            <h4 class="mb-0 text-primary">R$ {{ number_format($price, 2, ',', '.') }}/{{ $period }}</h4>
+                            @if($billingCycle === 'annual')
+                                <small class="text-success">
+                                    Economia de R$ {{ number_format((($plan->monthly_price * 12) - $plan->annual_price), 2, ',', '.') }}
+                                </small>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métodos de Pagamento -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Escolha a forma de pagamento</h5>
+                    
+                    <!-- Tabs de Pagamento -->
+                    <ul class="nav nav-pills nav-justified mb-4" id="paymentTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="pix-tab" data-bs-toggle="pill" data-bs-target="#pix" type="button" role="tab">
+                                <i class="mdi mdi-qrcode me-2"></i>PIX
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="credit-card-tab" data-bs-toggle="pill" data-bs-target="#credit-card" type="button" role="tab">
+                                <i class="mdi mdi-credit-card me-2"></i>Cartão de Crédito
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="paymentTabsContent">
+                        <!-- PIX -->
+                        <div class="tab-pane fade show active" id="pix" role="tabpanel">
+                            <form id="pixForm" action="{{ route('payments.process-pix', $plan->id) }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                
+                                <div class="text-center mb-4">
+                                    <i class="mdi mdi-qrcode display-4 text-success"></i>
+                                    <h5 class="mt-2">Pagamento via PIX</h5>
+                                    <p class="text-muted">Aprovação instantânea após o pagamento</p>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="pix_name" class="form-label">Nome Completo</label>
+                                            <input type="text" class="form-control" id="pix_name" name="name" 
+                                                   value="{{ auth()->user()->name }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="pix_cpf_cnpj" class="form-label">CPF/CNPJ</label>
+                                            <input type="text" class="form-control" id="pix_cpf_cnpj" name="cpf_cnpj" 
+                                                   value="{{ auth()->user()->company->document_number ?? '' }}" placeholder="000.000.000-00" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="pix_email" class="form-label">E-mail</label>
+                                            <input type="email" class="form-control" id="pix_email" name="email" 
+                                                   value="{{ auth()->user()->email }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="pix_phone" class="form-label">Telefone</label>
+                                            <input type="text" class="form-control" id="pix_phone" name="phone" 
+                                                   value="{{ auth()->user()->company->phone ?? '' }}" placeholder="(11) 99999-9999" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-success btn-lg w-100">
+                                    <i class="mdi mdi-qrcode me-2"></i>Gerar PIX - R$ {{ number_format($price, 2, ',', '.') }}
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Cartão de Crédito -->
+                        <div class="tab-pane fade" id="credit-card" role="tabpanel">
+                            <form id="creditCardForm" action="{{ route('payments.process-credit-card', $plan->id) }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                
+                                <div class="text-center mb-4">
+                                    <i class="mdi mdi-credit-card display-4 text-primary"></i>
+                                    <h5 class="mt-2">Pagamento com Cartão</h5>
+                                    <p class="text-muted">Aprovação instantânea</p>
+                                </div>
+
+                                <!-- Dados do Cliente -->
+                                <h6 class="mb-3">Dados do Titular</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="cc_name" class="form-label">Nome Completo</label>
+                                            <input type="text" class="form-control" id="cc_name" name="name" 
+                                                   value="{{ auth()->user()->name }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="cc_cpf_cnpj" class="form-label">CPF/CNPJ</label>
+                                            <input type="text" class="form-control" id="cc_cpf_cnpj" name="cpf_cnpj" 
+                                                   placeholder="000.000.000-00" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="cc_email" class="form-label">E-mail</label>
+                                            <input type="email" class="form-control" id="cc_email" name="email" 
+                                                   value="{{ auth()->user()->email }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="cc_phone" class="form-label">Telefone</label>
+                                            <input type="text" class="form-control" id="cc_phone" name="phone" 
+                                                   value="{{ auth()->user()->company->phone ?? '' }}" placeholder="(11) 99999-9999" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Dados do Cartão -->
+                                <h6 class="mb-3 mt-4">Dados do Cartão</h6>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label for="card_number" class="form-label">Número do Cartão</label>
+                                            <input type="text" class="form-control" id="card_number" name="card_number" 
+                                                   placeholder="0000 0000 0000 0000" maxlength="19" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="card_cvv" class="form-label">CVV</label>
+                                            <input type="text" class="form-control" id="card_cvv" name="card_cvv" 
+                                                   placeholder="123" maxlength="4" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="card_expiry_month" class="form-label">Mês de Vencimento</label>
+                                            <select class="form-select" id="card_expiry_month" name="card_expiry_month" required>
+                                                <option value="">Selecione</option>
+                                                @for($i = 1; $i <= 12; $i++)
+                                                <option value="{{ sprintf('%02d', $i) }}">{{ sprintf('%02d', $i) }}</option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="card_expiry_year" class="form-label">Ano de Vencimento</label>
+                                            <select class="form-select" id="card_expiry_year" name="card_expiry_year" required>
+                                                <option value="">Selecione</option>
+                                                @for($i = date('Y'); $i <= date('Y') + 10; $i++)
+                                                <option value="{{ $i }}">{{ $i }}</option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="card_holder_name" class="form-label">Nome no Cartão</label>
+                                    <input type="text" class="form-control" id="card_holder_name" name="card_holder_name" 
+                                           placeholder="Nome como impresso no cartão" required>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <i class="mdi mdi-credit-card me-2"></i>Pagar R$ {{ number_format($price, 2, ',', '.') }}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <h5>Processando pagamento...</h5>
+                <p class="text-muted mb-0">Aguarde enquanto processamos sua solicitação</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Máscara dinâmica para CPF/CNPJ
+    function applyCpfCnpjMask(element) {
+        var value = element.val().replace(/\D/g, '');
+        
+        if (value.length <= 11) {
+            // CPF: 000.000.000-00
+            element.mask('000.000.000-00', {
+                reverse: true,
+                translation: {
+                    '0': {pattern: /[0-9]/}
+                }
+            });
+        } else {
+            // CNPJ: 00.000.000/0001-00
+            element.mask('00.000.000/0000-00', {
+                reverse: true,
+                translation: {
+                    '0': {pattern: /[0-9]/}
+                }
+            });
+        }
+    }
+    
+    // Aplicar máscara inicial
+    applyCpfCnpjMask($('#pix_cpf_cnpj'));
+    applyCpfCnpjMask($('#cc_cpf_cnpj'));
+    
+    // Reaplica máscara quando o usuário digita
+    $('#pix_cpf_cnpj, #cc_cpf_cnpj').on('input', function() {
+        var element = $(this);
+        var value = element.val().replace(/\D/g, '');
+        
+        // Remove a máscara atual
+        element.unmask();
+        
+        // Aplica a nova máscara baseada no tamanho
+        applyCpfCnpjMask(element);
+        
+        // Reaplica o valor
+        element.val(value);
+        element.trigger('input');
+    });
+    
+    // Máscara para telefone
+    $('#pix_phone, #cc_phone').mask('(00) 00000-0000', {
+        translation: {
+            '0': {pattern: /[0-9]/}
+        }
+    });
+    
+    // Máscara para número do cartão
+    $('#card_number').mask('0000 0000 0000 0000');
+    
+    // Máscara para CVV
+    $('#card_cvv').mask('0000');
+    
+    // Submissão do formulário PIX
+    $('#pixForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Mostrar modal de loading
+        $('#loadingModal').modal('show');
+        
+        // Fazer requisição AJAX
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                $('#loadingModal').modal('hide');
+                
+                console.log('Resposta do PIX:', response);
+                console.log('QR Code recebido:', response.pix_qr_code);
+                console.log('Payload recebido:', response.pix_copy_paste);
+                
+                if (response.success) {
+                    // Exibir QR Code
+                    showPixQrCode(response.pix_qr_code, response.pix_copy_paste, response.due_date);
+                } else {
+                    alert('Erro ao processar pagamento: ' + (response.message || 'Tente novamente'));
+                }
+            },
+            error: function(xhr) {
+                $('#loadingModal').modal('hide');
+                var errorMsg = 'Erro ao processar pagamento. Tente novamente.';
+                
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    var errors = Object.values(xhr.responseJSON.errors).flat();
+                    errorMsg = errors.join('\n');
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro no Pagamento PIX',
+                    text: errorMsg,
+                    confirmButtonText: 'Tentar Novamente',
+                    confirmButtonColor: '#d33'
+                });
+            }
+        });
+    });
+    
+    // Submissão do formulário de cartão de crédito
+    $('#creditCardForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Mostrar modal de loading
+        $('#loadingModal').modal('show');
+        
+        // Submeter o formulário
+        this.submit();
+    });
+    
+    // Validação em tempo real do cartão
+    $('#card_number').on('input', function() {
+        var number = $(this).val().replace(/\s/g, '');
+        var cardType = getCardType(number);
+        
+        // Adicionar classe visual baseada no tipo do cartão
+        $(this).removeClass('visa mastercard amex');
+        if (cardType) {
+            $(this).addClass(cardType);
+        }
+    });
+    
+    function getCardType(number) {
+        var patterns = {
+            visa: /^4/,
+            mastercard: /^5[1-5]/,
+            amex: /^3[47]/
+        };
+        
+        for (var type in patterns) {
+            if (patterns[type].test(number)) {
+                return type;
+            }
+        }
+        return null;
+    }
+    
+    // Função para exibir QR Code PIX
+    function showPixQrCode(qrCode, copyPaste, dueDate) {
+        var qrCodeSection = '';
+        
+        if (qrCode && qrCode !== null && qrCode !== 'null') {
+            qrCodeSection = `
+                <h5 class="card-title">Escaneie o QR Code</h5>
+                <div class="mb-3">
+                    <img src="data:image/png;base64,${qrCode}" alt="QR Code PIX" class="img-fluid" style="max-width: 250px;">
+                </div>
+                <p class="text-muted">Ou copie e cole o código PIX:</p>
+            `;
+        } else {
+            qrCodeSection = `
+                <h5 class="card-title">Código PIX Copia e Cola</h5>
+                <p class="text-muted">Copie o código abaixo e cole no seu app do banco:</p>
+            `;
+        }
+        
+        var qrCodeHtml = `
+            <div class="text-center">
+                <h4 class="text-success mb-3">
+                    <i class="mdi mdi-check-circle"></i> PIX Gerado com Sucesso!
+                </h4>
+                <div class="card border-success">
+                    <div class="card-body">
+                        ${qrCodeSection}
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="pixCopyPaste" value="${copyPaste || ''}" readonly>
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyPixCode()">
+                                <i class="mdi mdi-content-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <p class="text-warning"><strong>Vencimento:</strong> ${new Date(dueDate).toLocaleDateString('pt-BR')}</p>
+                        <div class="alert alert-info">
+                            <i class="mdi mdi-information"></i>
+                            Após o pagamento, sua assinatura será ativada automaticamente.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Substituir o conteúdo da aba PIX
+        $('#pix').html(qrCodeHtml);
+    }
+    
+    // Função para copiar código PIX
+    window.copyPixCode = function() {
+        var copyText = document.getElementById('pixCopyPaste');
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        
+        // Feedback visual
+        var btn = event.target.closest('button');
+        var originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="mdi mdi-check"></i> Copiado!';
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(function() {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    };
+});
+</script>
+@endpush
+
+@push('styles')
+<style>
+.nav-pills .nav-link {
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-weight: 500;
+}
+
+.nav-pills .nav-link.active {
+    background: linear-gradient(45deg, #5a67d8, #667eea);
+}
+
+.card {
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 2px solid #e3e6f0;
+    padding: 12px 15px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #5a67d8;
+    box-shadow: 0 0 0 0.2rem rgba(90, 103, 216, 0.25);
+}
+
+.btn-lg {
+    padding: 15px 30px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+#card_number.visa {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCA0MCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjI0IiByeD0iNCIgZmlsbD0iIzAwNTFBNSIvPgo8cGF0aCBkPSJNMTYuNzUgN0gxNC4yNUwxMi41IDE3SDE1TDE2Ljc1IDdaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 30px;
+}
+
+#card_number.mastercard {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCA0MCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjI0IiByeD0iNCIgZmlsbD0iI0VCMDAxQiIvPgo8Y2lyY2xlIGN4PSIxNSIgY3k9IjEyIiByPSI3IiBmaWxsPSIjRkY1RjAwIi8+CjxjaXJjbGUgY3g9IjI1IiBjeT0iMTIiIHI9IjciIGZpbGw9IiNGRkY1RjAiLz4KPC9zdmc+Cg==');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 30px;
+}
+</style>
+@endpush
