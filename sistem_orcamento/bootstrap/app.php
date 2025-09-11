@@ -18,6 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'user.active' => \App\Http\Middleware\CheckUserActive::class,
             'plan.limits' => \App\Http\Middleware\CheckPlanLimits::class,
         ]);
+        
+        // Excluir webhook do Asaas da verificação CSRF
+        $middleware->validateCsrfTokens(except: [
+            'webhook/asaas',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
