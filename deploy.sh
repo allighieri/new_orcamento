@@ -43,7 +43,6 @@ echo "Executando seeds..."
 /opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=SuperAdminSeeder --force
 /opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=PaymentOptionMethodSeeder --force
 /opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=CompeSeeder --force
-/opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=PlanSeeder.php --force
 /opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=PlansSeeder.php --force
 
 echo "Criando link simbólico..."
