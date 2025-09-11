@@ -960,7 +960,17 @@ $(document).ready(function() {
     
     // Recalcular totais quando o desconto muda
     $('#total_discount').on('input', function() {
-        $('#total_discount_perc').val('');
+        // Calcular e preencher a porcentagem correspondente
+        let discountValue = parseMoney($(this).val());
+        let subtotal = calculateSubtotal();
+        
+        if (discountValue > 0 && subtotal > 0) {
+            let percentage = (discountValue / subtotal) * 100;
+            $('#total_discount_perc').val(percentage.toFixed(2));
+        } else {
+            $('#total_discount_perc').val('');
+        }
+        
         updateTotals();
     });
     
