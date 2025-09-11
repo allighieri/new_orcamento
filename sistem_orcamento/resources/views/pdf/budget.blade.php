@@ -163,6 +163,9 @@
         .signature-line{
             height: 50px; border-bottom: 1px solid #aaa; margin-bottom: 10px; text-align: center;
         }
+        .align-middle{
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -308,9 +311,9 @@
         </thead>
         <tbody>
             @foreach($budget->items as $item)
-            <tr>
+            <tr class="align-middle">
                 <td style="text-align: center;">{{ $loop->iteration }}</td>
-                <td>
+                <td style="width: 20%; font-weight:bold">
                     @if($item->product)
                         {{ $item->product->name }}
                     @elseif($item->produto)

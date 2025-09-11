@@ -251,17 +251,17 @@
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>Item</th>
-                                                    <th>Produto</th>
+                                                    <th style="width: 20%;">Produto</th>
                                                     <th>Descrição</th>
                                                     <th class="text-end">Qtd</th>
-                                                    <th class="text-end">Valor Unit.</th>
-                                                    <th class="text-end">Total</th>
+                                                    <th class="text-end" style="width: 15%;">Valor Unit.</th>
+                                                    <th class="text-end" style="width: 15%;">Total</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @foreach($budget->items as $item)
-                                                <tr>
-                                                    <td>{{ $loop->iteration }}</td>
+                                                <tr class="align-middle">
+                                                    <td  class="text-center">{{ $loop->iteration }}</td>
                                                     <td>
                                                         @if($item->product)
                                                             {{ $item->product->name }}
@@ -278,7 +278,7 @@
                                                             <span class="text-muted">-</span>
                                                         @endif
                                                     </td>
-                                                    <td class="text-end">{{ number_format($item->quantity, 2, ',', '.') }}</td>
+                                                    <td class="text-end">{{ $item->quantity }}</td>
                                                     <td class="text-end">R$ {{ number_format($item->unit_price, 2, ',', '.') }}</td>
                                                     <td class="text-end"><strong>R$ {{ number_format($item->total_price, 2, ',', '.') }}</strong></td>
                                                 </tr>
@@ -330,47 +330,14 @@
                                     @if($budget->budgetPayments->count() > 0)
                                     @foreach($budget->budgetPayments as $payment)
                                     <div class="mb-4">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <h6 class="text-primary">{{ $payment->paymentMethod->paymentOptionMethod->method ?? 'N/A' }}</h6>
-                                                <p class="mb-1"><strong>Valor:</strong> R$ {{ number_format($payment->amount, 2, ',', '.') }}</p>
-                                                <p class="mb-1"><strong>Parcelas:</strong> {{ $payment->installments }}x</p>
-                                                <p class="mb-1"><strong>Momento:</strong> {{ $payment->payment_moment_description }}</p>
-                                                @if($payment->notes)
-                                                <p class="mb-1"><strong>Observações:</strong> {{ $payment->notes }}</p>
-                                                @endif
-                                            </div>
-                                            <div class="col-md-6">
-                                                @if($payment->paymentInstallments->count() > 0)
-                                                <h6 class="text-secondary">Parcelas</h6>
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-striped">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Parcela</th>
-                                                                <th>Valor</th>
-                                                                <th>Vencimento</th>
-                                                                <th>Status</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @foreach($payment->paymentInstallments as $installment)
-                                                            <tr>
-                                                                <td>{{ $installment->installment_number }}/{{ $payment->installments }}</td>
-                                                                <td>R$ {{ number_format($installment->amount, 2, ',', '.') }}</td>
-                                                                <td>{{ $installment->due_date->format('d/m/Y') }}</td>
-                                                                <td>
-                                                                    <span class="badge bg-{{ $installment->status == 'paid' ? 'success' : ($installment->status == 'overdue' ? 'danger' : 'warning') }}">
-                                                                        {{ $installment->status_description }}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                            @endforeach
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                                @endif
-                                            </div>
+                                        <div class="mb-3">
+                                            <h6 class="text-primary">{{ $payment->paymentMethod->paymentOptionMethod->method ?? 'N/A' }}</h6>
+                                            <p class="mb-1"><strong>Valor:</strong> R$ {{ number_format($payment->amount, 2, ',', '.') }}</p>
+                                            <p class="mb-1"><strong>Parcelas:</strong> {{ $payment->installments }}x</p>
+                                            <p class="mb-1"><strong>Momento:</strong> {{ $payment->payment_moment_description }}</p>
+                                            @if($payment->notes)
+                                            <p class="mb-1"><strong>Observações:</strong> {{ $payment->notes }}</p>
+                                            @endif
                                         </div>
                                         @if(!$loop->last)
                                         <hr>
