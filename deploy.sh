@@ -34,15 +34,17 @@ echo "Instalando dependencias do Composer..."
 # Executa as migrações e apaga o banco de dados antes
 echo "Rodando migrations e seeds..."
 #desenvolvimento
-/opt/cpanel/ea-php83/root/usr/bin/php artisan migrate:fresh --force
+#/opt/cpanel/ea-php83/root/usr/bin/php artisan migrate:fresh --force
 #produção
-#/opt/cpanel/ea-php83/root/usr/bin/php artisan migrate --force
+/opt/cpanel/ea-php83/root/usr/bin/php artisan migrate --force
 
 
 echo "Executando seeds..."
 /opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=SuperAdminSeeder --force
 /opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=PaymentOptionMethodSeeder --force
 /opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=CompeSeeder --force
+/opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=PlanSeeder.php --force
+/opt/cpanel/ea-php83/root/usr/bin/php artisan db:seed --class=PlansSeeder.php --force
 
 echo "Criando link simbólico..."
 /opt/cpanel/ea-php83/root/usr/bin/php artisan storage:link
