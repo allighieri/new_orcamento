@@ -97,6 +97,32 @@ class Company extends Model
     }
 
     /**
+     * Relacionamento com assinaturas
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Relacionamento com controles de uso
+     */
+    public function usageControls(): HasMany
+    {
+        return $this->hasMany(UsageControl::class);
+    }
+
+    /**
+     * Obtém a assinatura ativa da empresa
+     */
+    public function activeSubscription()
+    {
+        return $this->subscriptions()->where('status', 'active')
+                   ->where('end_date', '>=', now())
+                   ->first();
+    }
+
+    /**
      * Relacionamento com token do Google
      */
     public function googleToken(): HasOne

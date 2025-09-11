@@ -17,6 +17,7 @@ use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PaymentOptionMethodController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SubscriptionController;
 
 // Rotas de Autenticação
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -67,7 +68,14 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     Route::resource('contact-forms', ContactFormController::class);
 
     // Rotas para Orçamentos (todos os usuários autenticados)
-    Route::resource('budgets', BudgetController::class);
+    // Aplicar middleware de verificação de limites apenas na criação e armazenamento
+    Route::get('budgets', [BudgetController::class, 'index'])->name('budgets.index');
+    Route::get('budgets/create', [BudgetController::class, 'create'])->middleware('plan.limits')->name('budgets.create');
+    Route::post('budgets', [BudgetController::class, 'store'])->middleware('plan.limits')->name('budgets.store');
+    Route::get('budgets/{budget}', [BudgetController::class, 'show'])->name('budgets.show');
+    Route::get('budgets/{budget}/edit', [BudgetController::class, 'edit'])->name('budgets.edit');
+    Route::put('budgets/{budget}', [BudgetController::class, 'update'])->name('budgets.update');
+    Route::delete('budgets/{budget}', [BudgetController::class, 'destroy'])->name('budgets.destroy');
     Route::get('budgets/{budget}/pdf', [BudgetController::class, 'generatePdf'])->name('budgets.pdf');
     Route::get('budgets/{budget}/serve-pdf/{filename}', [BudgetController::class, 'servePdf'])->name('budgets.serve-pdf');
     Route::get('budgets/{budget}/whatsapp', [BudgetController::class, 'sendWhatsApp'])->name('budgets.whatsapp');
@@ -129,4 +137,12 @@ Route::middleware(['auth', 'user.active', 'role:super_admin'])->group(function (
     // Rotas para Métodos de Opção de Pagamento - apenas super_admin
     Route::resource('payment-option-methods', PaymentOptionMethodController::class);
     Route::patch('payment-option-methods/{paymentOptionMethod}/toggle-active', [PaymentOptionMethodController::class, 'toggleActive'])->name('payment-option-methods.toggle-active');
+});
+
+// Rotas para Gerenciamento de Assinaturas
+Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(function () {
+    Route::get('subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::post('subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
+    Route::post('subscriptions/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+    Route::post('subscriptions/reactivate', [SubscriptionController::class, 'reactivate'])->name('subscriptions.reactivate');
 });

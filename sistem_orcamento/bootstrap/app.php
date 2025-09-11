@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => \App\Http\Middleware\TenantMiddleware::class,
             'require.company' => \App\Http\Middleware\RequireCompanyMiddleware::class,
             'user.active' => \App\Http\Middleware\CheckUserActive::class,
+            'plan.limits' => \App\Http\Middleware\CheckPlanLimits::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

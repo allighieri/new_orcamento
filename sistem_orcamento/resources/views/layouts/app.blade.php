@@ -67,6 +67,11 @@
                             <i class="bi bi-people"></i> Usuários</a> <!-- um comentário novo para teste futuro -->
                     </li>
                     @endif
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}" href="{{ route('subscriptions.index') }}">
+                            <i class="bi bi-credit-card"></i> Planos</a>
+                    </li>
                 </ul>
                 
                 <!-- User Dropdown -->

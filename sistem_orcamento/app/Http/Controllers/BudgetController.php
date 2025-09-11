@@ -322,6 +322,23 @@ class BudgetController extends Controller
             
             DB::commit();
             
+            // Incrementar uso de orçamentos no controle mensal
+            $user = auth()->guard('web')->user();
+            if ($user && $user->role !== 'super_admin') {
+                $company = $user->company;
+                if ($company) {
+                    $subscription = $company->activeSubscription();
+                    if ($subscription && !$subscription->plan->isUnlimited()) {
+                        $usageControl = \App\Models\UsageControl::getOrCreateForCurrentMonth(
+                            $company->id,
+                            $subscription->id,
+                            $subscription->plan->budget_limit
+                        );
+                        $usageControl->incrementUsage();
+                    }
+                }
+            }
+            
             // Gerar PDF automaticamente após criar o orçamento
             try {
                 $this->generatePdfAutomatically($budget);
