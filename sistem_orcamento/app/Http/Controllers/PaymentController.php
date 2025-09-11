@@ -280,6 +280,21 @@ class PaymentController extends Controller
     public function checkPaymentStatus(Payment $payment)
     {
         try {
+            // Verificar se o webhook já sinalizou aprovação
+            $webhookApproved = \Illuminate\Support\Facades\Cache::get("payment_approved_{$payment->id}", false);
+            
+            if ($webhookApproved) {
+                // Limpar o cache após usar
+                \Illuminate\Support\Facades\Cache::forget("payment_approved_{$payment->id}");
+                
+                return response()->json([
+                    'success' => true,
+                    'status' => $payment->status,
+                    'is_paid' => true,
+                    'should_redirect' => true
+                ]);
+            }
+            
             $asaasPayment = $this->asaasService->getPaymentStatus($payment->asaas_payment_id);
             
             $payment->updateStatus($asaasPayment['status']);
@@ -287,7 +302,8 @@ class PaymentController extends Controller
             return response()->json([
                 'success' => true,
                 'status' => $asaasPayment['status'],
-                'is_paid' => $payment->isPaid()
+                'is_paid' => $payment->isPaid(),
+                'should_redirect' => $payment->isPaid()
             ]);
             
         } catch (\Exception $e) {

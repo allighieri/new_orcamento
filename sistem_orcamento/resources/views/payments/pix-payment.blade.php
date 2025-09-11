@@ -157,8 +157,8 @@
                 <i class="mdi mdi-check-circle display-1 text-success mb-3"></i>
                 <h4 class="text-success">Pagamento Confirmado!</h4>
                 <p class="text-muted">Seu plano foi ativado com sucesso.</p>
-                <button type="button" class="btn btn-success" onclick="window.location.href='{{ route('dashboard') }}'">
-                    Ir para Dashboard
+                <button type="button" class="btn btn-success" onclick="window.location.href='{{ route('subscriptions.index') }}'">
+                    Ver Minhas Assinaturas
                 </button>
             </div>
         </div>
@@ -207,7 +207,7 @@ function checkPaymentStatus() {
         url: '{{ route('payments.check-status', $payment) }}',
         method: 'GET',
         success: function(response) {
-            if (response.status === 'paid') {
+            if (response.should_redirect || response.is_paid) {
                 clearInterval(checkInterval);
                 
                 // Atualizar interface
@@ -215,12 +215,15 @@ function checkPaymentStatus() {
                     <div class="alert alert-success">
                         <i class="mdi mdi-check-circle me-2"></i>
                         <strong>Pagamento confirmado!</strong>
-                        <div class="mt-2">Seu plano foi ativado com sucesso.</div>
+                        <div class="mt-2">Redirecionando para suas assinaturas...</div>
                     </div>
                 `);
                 
-                // Mostrar modal de sucesso
-                $('#successModal').modal('show');
+                // Redirecionar imediatamente se foi via webhook, senão aguardar 1 segundo
+                const redirectDelay = response.should_redirect ? 500 : 1000;
+                setTimeout(function() {
+                    window.location.href = '{{ route('subscriptions.index') }}';
+                }, redirectDelay);
             } else if (response.status === 'overdue') {
                 clearInterval(checkInterval);
                 

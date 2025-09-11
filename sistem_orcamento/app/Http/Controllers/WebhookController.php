@@ -126,6 +126,13 @@ class WebhookController extends Controller
             'amount_paid' => $payment->amount
         ]);
         
+        // Sinalizar para a página de checkout que o pagamento foi aprovado
+        \Illuminate\Support\Facades\Cache::put(
+            "payment_approved_{$payment->id}", 
+            true, 
+            now()->addMinutes(10)
+        );
+        
         Log::info('Pagamento aprovado e assinatura ativada', [
             'payment_id' => $payment->id,
             'company_id' => $payment->company_id,
