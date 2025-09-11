@@ -2075,8 +2075,11 @@ const budgetDeliveryDays = {{ $settings->budget_delivery_days }};
         const productRow = $(this).closest('.row');
         window.currentQuantityInput = productRow.find('.quantity-input');
         
-        // Limpar campos da calculadora
-        $('#calc_quantity').val('');
+        // Preencher o campo quantidade da calculadora com o valor atual do produto
+        const currentQuantity = window.currentQuantityInput.val();
+        $('#calc_quantity').val(currentQuantity || '');
+        
+        // Limpar outros campos da calculadora
         $('#calc_total').val('');
         $('#calculatorResult').hide();
         $('#resultSuccess').hide();
