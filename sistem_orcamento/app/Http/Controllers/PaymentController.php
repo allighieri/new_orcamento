@@ -330,6 +330,9 @@ class PaymentController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
             
-        return view('payments.index', compact('payments'));
+        // Buscar assinatura atual da empresa
+        $currentSubscription = $company->subscription;
+            
+        return view('payments.index', compact('payments', 'currentSubscription'));
     }
 }
