@@ -203,7 +203,7 @@ $(document).ready(function() {
         }
     }).trigger('input'); // O trigger('input') já aplica a máscara inicial
     
-    // Máscara dinâmica para telefone/celular
+    // Máscara dinâmica para telefone
     var phoneOptions = {
         onKeyPress: function(phone, e, field, options) {
             var masks = ['(00) 0000-00009', '(00) 00000-0000'];
