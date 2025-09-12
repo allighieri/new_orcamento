@@ -475,6 +475,22 @@
     <!-- Live Search JavaScript -->
     <script src="{{ asset('js/live-search.js') }}"></script>
     
+    <!-- SweetAlert Handler -->
+    @if(session('sweetalert'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sweetalertData = @json(session('sweetalert'));
+            Swal.fire({
+                icon: sweetalertData.type,
+                title: sweetalertData.title,
+                text: sweetalertData.text,
+                confirmButtonText: sweetalertData.confirmButtonText || 'OK',
+                confirmButtonColor: '#0d6efd'
+            });
+        });
+    </script>
+    @endif
+    
     @stack('scripts')
     @yield('scripts')
 </body>

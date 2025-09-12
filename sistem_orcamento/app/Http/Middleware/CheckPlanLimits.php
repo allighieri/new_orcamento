@@ -71,7 +71,12 @@ class CheckPlanLimits
             
             if (!$usageControl->canCreateBudget()) {
                 return redirect()->route('dashboard')
-                               ->with('error', 'Você atingiu o limite de orçamentos do seu plano. Adquira orçamentos extras ou faça upgrade do plano.');
+                               ->with('sweetalert', [
+                                   'type' => 'warning',
+                                   'title' => 'Limite Atingido!',
+                                   'text' => 'Você atingiu o limite de orçamentos do seu plano. Adquira orçamentos extras ou faça upgrade do plano.',
+                                   'confirmButtonText' => 'OK'
+                               ]);
             }
         }
 

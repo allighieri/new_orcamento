@@ -3,23 +3,27 @@
 @section('title', 'Histórico de Pagamentos')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box">
-                <div class="page-title-right">
-                    <a href="{{ route('payments.select-plan') }}" class="btn btn-primary">
-                        <i class="mdi mdi-plus me-1"></i>Novo Plano
-                    </a>
-                </div>
-                <h4 class="page-title">Histórico de Pagamentos</h4>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Pagamentos</li>
-                </ol>
+<div class="container mx-auto">
+
+    
+
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="bi bi-box"></i> Histórico de Pagamentos
+            </h1>
+            
+           <div>
+                <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                 <a href="{{ route('payments.select-plan') }}" class="btn btn-primary">
+                    <i class="bi bi-plus"></i> Novo Plano
+                </a>
             </div>
         </div>
     </div>
+    
 
     <!-- Resumo da Assinatura Atual -->
     @if($currentSubscription)
@@ -30,7 +34,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-8">
                             <h5 class="text-white mb-1">
-                                <i class="mdi mdi-crown me-2"></i>Plano Atual: {{ $currentSubscription->plan->name }}
+                                <i class="bi bi-gem me-2"></i>Plano Atual: {{ $currentSubscription->plan->name }}
                             </h5>
                             <p class="mb-0 opacity-75">
                                 {{ $currentSubscription->plan->budget_limit }} orçamentos por mês • 
@@ -89,10 +93,10 @@
                         </div>
                         <div class="col-12">
                             <button type="submit" class="btn btn-primary me-2">
-                                <i class="mdi mdi-filter me-1"></i>Filtrar
+                                <i class="bi bi-funnel me-1"></i>Filtrar
                             </button>
                             <a href="{{ route('payments.index') }}" class="btn btn-outline-secondary">
-                                <i class="mdi mdi-refresh me-1"></i>Limpar
+                                <i class="bi bi-arrow-clockwise me-1"></i>Limpar
                             </a>
                         </div>
                     </form>
@@ -134,12 +138,12 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="plan-icon me-2">
                                                     @if($payment->plan->name === 'Bronze')
-                                                        <i class="mdi mdi-medal text-warning"></i>
-                                                    @elseif($payment->plan->name === 'Prata')
-                                                        <i class="mdi mdi-medal text-secondary"></i>
-                                                    @else
-                                                        <i class="mdi mdi-crown text-warning"></i>
-                                                    @endif
+                                        <i class="bi bi-award text-warning"></i>
+                                    @elseif($payment->plan->name === 'Prata')
+                                        <i class="bi bi-award text-secondary"></i>
+                                    @else
+                                        <i class="bi bi-gem text-warning"></i>
+                                    @endif
                                                 </div>
                                                 <div>
                                                     <div class="fw-bold">{{ $payment->plan->name }}</div>
@@ -152,9 +156,9 @@
                                         </td>
                                         <td>
                                             @if($payment->billing_type === 'PIX')
-                                                <span class="badge bg-info"><i class="mdi mdi-qrcode me-1"></i>PIX</span>
-                                            @elseif($payment->billing_type === 'CREDIT_CARD')
-                                                <span class="badge bg-primary"><i class="mdi mdi-credit-card me-1"></i>Cartão</span>
+                                <span class="badge bg-info"><i class="bi bi-qr-code me-1"></i>PIX</span>
+                            @elseif($payment->billing_type === 'CREDIT_CARD')
+                                <span class="badge bg-primary"><i class="bi bi-credit-card me-1"></i>Cartão</span>
                                             @else
                                                 <span class="badge bg-secondary">{{ $payment->billing_type }}</span>
                                             @endif
@@ -185,18 +189,18 @@
                                                 @if($payment->status === 'pending' && $payment->billing_type === 'PIX')
                                                     <a href="{{ route('payments.pix-payment', $payment) }}" 
                                                        class="btn btn-sm btn-outline-primary" title="Ver PIX">
-                                                        <i class="mdi mdi-qrcode"></i>
+                                                        <i class="bi bi-qr-code"></i>
                                                     </a>
                                                 @endif
                                                 
                                                 <button type="button" class="btn btn-sm btn-outline-info" 
                                                         onclick="checkPaymentStatus({{ $payment->id }})" title="Verificar Status">
-                                                    <i class="mdi mdi-refresh"></i>
+                                                    <i class="bi bi-arrow-clockwise"></i>
                                                 </button>
                                                 
                                                 <button type="button" class="btn btn-sm btn-outline-secondary" 
                                                         onclick="showPaymentDetails({{ $payment->id }})" title="Detalhes">
-                                                    <i class="mdi mdi-eye"></i>
+                                                    <i class="bi bi-eye"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -207,16 +211,18 @@
                         </div>
                         
                         <!-- Paginação -->
-                        <div class="d-flex justify-content-center mt-4">
-                            {{ $payments->appends(request()->query())->links() }}
-                        </div>
+                       
+                        <div class="mt-3">
+                          {{ $payments->appends(request()->query())->links() }}
+                         </div>
+
                     @else
                         <div class="text-center py-5">
-                            <i class="mdi mdi-credit-card-off display-1 text-muted mb-3"></i>
+                            <i class="bi bi-credit-card-2-front display-1 text-muted mb-3"></i>
                             <h5 class="text-muted">Nenhum pagamento encontrado</h5>
                             <p class="text-muted">Você ainda não possui pagamentos registrados.</p>
                             <a href="{{ route('payments.select-plan') }}" class="btn btn-primary">
-                                <i class="mdi mdi-plus me-1"></i>Escolher Plano
+                                <i class="bi bi-plus me-1"></i>Escolher Plano
                             </a>
                         </div>
                     @endif
@@ -249,12 +255,15 @@ function checkPaymentStatus(paymentId) {
     const button = event.target.closest('button');
     const originalHtml = button.innerHTML;
     
-    button.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
+    button.innerHTML = '<i class="bi bi-arrow-clockwise"></i>';
     button.disabled = true;
     
     $.ajax({
-        url: `/payments/${paymentId}/check-status`,
-        method: 'GET',
+        url: `/payments/check-status/${paymentId}`,
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
         success: function(response) {
             if (response.status_changed) {
                 // Recarregar a página para mostrar o status atualizado
@@ -286,7 +295,7 @@ function showPaymentDetails(paymentId) {
     $('#paymentDetailsModal').modal('show');
     
     $.ajax({
-        url: `/payments/${paymentId}/details`,
+        url: `/payments/details/${paymentId}`,
         method: 'GET',
         success: function(response) {
             $('#paymentDetailsContent').html(response);
@@ -294,7 +303,7 @@ function showPaymentDetails(paymentId) {
         error: function() {
             $('#paymentDetailsContent').html(`
                 <div class="alert alert-danger">
-                    <i class="mdi mdi-alert me-2"></i>
+                    <i class="bi bi-exclamation-triangle me-2"></i>
                     Erro ao carregar detalhes do pagamento.
                 </div>
             `);

@@ -154,6 +154,8 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
     Route::post('payments/pix/{plan}', [App\Http\Controllers\PaymentController::class, 'processPixPayment'])->name('payments.process-pix');
     Route::post('payments/credit-card/{plan}', [App\Http\Controllers\PaymentController::class, 'processCreditCardPayment'])->name('payments.process-credit-card');
     Route::get('payments/{payment}/status', [App\Http\Controllers\PaymentController::class, 'checkPaymentStatus'])->name('payments.check-status');
+    Route::get('payments/{payment}/details', [App\Http\Controllers\PaymentController::class, 'details'])->name('payments.details');
+    Route::get('payments/{payment}/pix', [App\Http\Controllers\PaymentController::class, 'pixPayment'])->name('payments.pix-payment');
     Route::get('payments', [App\Http\Controllers\PaymentController::class, 'index'])->name('payments.index');
 });
 

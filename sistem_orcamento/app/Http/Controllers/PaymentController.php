@@ -280,6 +280,16 @@ class PaymentController extends Controller
     public function checkPaymentStatus(Payment $payment)
     {
         try {
+            // Verificar se o pagamento pertence à empresa do usuário
+            if ($payment->company_id !== Auth::user()->company_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acesso negado.'
+                ], 403);
+            }
+
+            $originalStatus = $payment->status;
+            
             // Verificar se o webhook já sinalizou aprovação
             $webhookApproved = \Illuminate\Support\Facades\Cache::get("payment_approved_{$payment->id}", false);
             
@@ -290,33 +300,56 @@ class PaymentController extends Controller
                 return response()->json([
                     'success' => true,
                     'status' => $payment->status,
+                    'status_text' => $this->getStatusText($payment->status),
+                    'status_changed' => true,
                     'is_paid' => true,
                     'should_redirect' => true
                 ]);
             }
             
-            $asaasPayment = $this->asaasService->getPaymentStatus($payment->asaas_payment_id);
+            // Buscar status atualizado no Asaas se houver ID
+            if ($payment->asaas_payment_id) {
+                $asaasPayment = $this->asaasService->getPaymentStatus($payment->asaas_payment_id);
+                $payment->updateStatus($asaasPayment['status']);
+            }
             
-            $payment->updateStatus($asaasPayment['status']);
+            $statusChanged = $originalStatus !== $payment->status;
             
             return response()->json([
                 'success' => true,
-                'status' => $asaasPayment['status'],
+                'status' => $payment->status,
+                'status_text' => $this->getStatusText($payment->status),
+                'status_changed' => $statusChanged,
                 'is_paid' => $payment->isPaid(),
                 'should_redirect' => $payment->isPaid()
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Erro ao verificar status do pagamento', [
+            \Log::error('Erro ao verificar status do pagamento', [
                 'error' => $e->getMessage(),
                 'payment_id' => $payment->id
             ]);
             
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao verificar status do pagamento'
+                'message' => 'Não foi possível verificar o status do pagamento'
             ], 500);
         }
+    }
+
+    /**
+     * Obter texto do status do pagamento
+     */
+    private function getStatusText($status)
+    {
+        return match($status) {
+            'PENDING' => 'Aguardando Pagamento',
+            'RECEIVED' => 'Pago',
+            'CONFIRMED' => 'Confirmado',
+            'OVERDUE' => 'Vencido',
+            'CANCELLED' => 'Cancelado',
+            default => ucfirst($status)
+        };
     }
 
     /**
@@ -334,5 +367,68 @@ class PaymentController extends Controller
         $currentSubscription = $company->subscription;
             
         return view('payments.index', compact('payments', 'currentSubscription'));
+    }
+
+    /**
+     * Exibir detalhes do pagamento
+     */
+    public function details(Payment $payment)
+    {
+        // Verificar se o pagamento pertence à empresa do usuário
+        if ($payment->company_id !== Auth::user()->company_id) {
+            abort(403, 'Acesso negado.');
+        }
+
+        try {
+            // Buscar informações atualizadas do Asaas se houver ID
+            $asaasPayment = null;
+            if ($payment->asaas_payment_id) {
+                $asaasPayment = $this->asaasService->getPaymentStatus($payment->asaas_payment_id);
+            }
+
+            return view('payments.details', compact('payment', 'asaasPayment'));
+        } catch (\Exception $e) {
+            \Log::error('Erro ao carregar detalhes do pagamento', [
+                'error' => $e->getMessage(),
+                'payment_id' => $payment->id
+            ]);
+            
+            return view('payments.details', compact('payment'))->with('error', 'Não foi possível carregar informações atualizadas do pagamento.');
+        }
+    }
+
+    /**
+     * Exibir página de pagamento PIX
+     */
+    public function pixPayment(Payment $payment)
+    {
+        // Verificar se o pagamento pertence à empresa do usuário
+        if ($payment->company_id !== Auth::user()->company_id) {
+            abort(403, 'Acesso negado.');
+        }
+
+        // Verificar se é um pagamento PIX
+        if ($payment->billing_type !== 'PIX') {
+            return redirect()->route('payments.index')
+                ->with('error', 'Este pagamento não é do tipo PIX.');
+        }
+
+        try {
+            // Buscar informações do QR Code do Asaas
+            $qrCodeData = null;
+            if ($payment->asaas_payment_id) {
+                $qrCodeData = $this->asaasService->getPixQrCode($payment->asaas_payment_id);
+            }
+
+            return view('payments.pix-payment', compact('payment', 'qrCodeData'));
+        } catch (\Exception $e) {
+            \Log::error('Erro ao carregar QR Code PIX', [
+                'error' => $e->getMessage(),
+                'payment_id' => $payment->id
+            ]);
+            
+            return view('payments.pix-payment', compact('payment'))
+                ->with('error', 'Não foi possível carregar o QR Code PIX.');
+        }
     }
 }

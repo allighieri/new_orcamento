@@ -23,7 +23,7 @@
                 <div class="card-body text-center">
                     <div class="payment-status mb-4">
                         <div class="status-icon mb-3">
-                            <i class="mdi mdi-qrcode display-1 text-warning"></i>
+                            <i class="bi bi-qr-code display-1 text-warning"></i>
                         </div>
                         <h3 class="text-dark">PIX Gerado com Sucesso!</h3>
                         <p class="text-muted">Escaneie o QR Code ou copie o código PIX para realizar o pagamento</p>
@@ -32,11 +32,11 @@
                     <!-- QR Code -->
                     <div class="qr-code-container mb-4">
                         <div class="qr-code-wrapper">
-                            @if(isset($qrCodeImage))
-                                <img src="data:image/png;base64,{{ $qrCodeImage }}" alt="QR Code PIX" class="qr-code-image">
+                            @if(isset($qrCodeData) && isset($qrCodeData['encodedImage']))
+                                <img src="data:image/png;base64,{{ $qrCodeData['encodedImage'] }}" alt="QR Code PIX" class="qr-code-image">
                             @else
                                 <div class="qr-code-placeholder">
-                                    <i class="mdi mdi-qrcode display-4 text-muted"></i>
+                                    <i class="bi bi-qr-code display-4 text-muted"></i>
                                     <p class="text-muted mt-2">QR Code não disponível</p>
                                 </div>
                             @endif
@@ -44,13 +44,13 @@
                     </div>
 
                     <!-- Código PIX Copia e Cola -->
-                    @if(isset($pixCode))
+                    @if(isset($qrCodeData) && isset($qrCodeData['payload']))
                     <div class="pix-code-section mb-4">
                         <h5 class="mb-3">Código PIX Copia e Cola</h5>
                         <div class="input-group">
-                            <input type="text" class="form-control" id="pixCode" value="{{ $pixCode }}" readonly>
+                            <input type="text" class="form-control" id="pixCode" value="{{ $qrCodeData['payload'] }}" readonly>
                             <button class="btn btn-outline-primary" type="button" onclick="copyPixCode()">
-                                <i class="mdi mdi-content-copy me-1"></i>Copiar
+                                <i class="bi bi-clipboard me-1"></i>Copiar
                             </button>
                         </div>
                         <small class="text-muted">Cole este código no seu app do banco para fazer o pagamento</small>
@@ -119,7 +119,7 @@
             <div class="card mt-4">
                 <div class="card-body">
                     <h5 class="card-title">
-                        <i class="mdi mdi-help-circle me-2"></i>Como pagar com PIX
+                        <i class="bi bi-question-circle me-2"></i>Como pagar com PIX
                     </h5>
                     <div class="row">
                         <div class="col-md-6">
