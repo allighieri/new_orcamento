@@ -90,19 +90,31 @@ class UsageControl extends Model
         $year = now()->year;
         $month = now()->month;
 
-        return self::firstOrCreate(
-            [
-                'company_id' => $companyId,
+        // Primeiro tenta encontrar o registro existente
+        $usageControl = self::where('company_id', $companyId)
+            ->where('year', $year)
+            ->where('month', $month)
+            ->first();
+
+        if ($usageControl) {
+            // Se existe, apenas atualiza os campos que podem ter mudado
+            $usageControl->update([
                 'subscription_id' => $subscriptionId,
-                'year' => $year,
-                'month' => $month
-            ],
-            [
-                'budgets_used' => 0,
-                'budgets_limit' => $budgetLimit,
-                'extra_budgets_purchased' => 0,
-                'extra_amount_paid' => 0
-            ]
-        );
+                'budgets_limit' => $budgetLimit
+            ]);
+            return $usageControl;
+        }
+
+        // Se não existe, cria um novo com valores padrão
+        return self::create([
+            'company_id' => $companyId,
+            'year' => $year,
+            'month' => $month,
+            'subscription_id' => $subscriptionId,
+            'budgets_used' => 0,
+            'budgets_limit' => $budgetLimit,
+            'extra_budgets_purchased' => 0,
+            'extra_amount_paid' => 0
+        ]);
     }
 }

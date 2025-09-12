@@ -69,7 +69,7 @@
                     @endif
                     
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}" href="{{ route('subscriptions.index') }}">
+                        <a class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}" href="{{ route('payments.select-plan') }}">
                             <i class="bi bi-credit-card"></i> Planos</a>
                     </li>
                 </ul>

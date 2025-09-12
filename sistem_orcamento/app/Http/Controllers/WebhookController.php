@@ -127,11 +127,27 @@ class WebhookController extends Controller
         ]);
         
         // Sinalizar para a página de checkout que o pagamento foi aprovado
+        $cacheData = [
+            'approved_at' => now()->toISOString(),
+            'status' => $paymentData['status'],
+            'webhook_event' => 'PAYMENT_APPROVED',
+            'payment_id' => $payment->id
+        ];
+        
         \Illuminate\Support\Facades\Cache::put(
             "payment_approved_{$payment->id}", 
-            true, 
-            now()->addMinutes(10)
+            $cacheData, 
+            now()->addMinutes(15)
         );
+        
+        Log::info('Pagamento aprovado via webhook - Cache definido', [
+            'payment_id' => $payment->id,
+            'company_id' => $payment->company_id,
+            'plan_id' => $payment->plan_id,
+            'cache_key' => "payment_approved_{$payment->id}",
+            'cache_expires_at' => now()->addMinutes(15)->toISOString(),
+            'asaas_status' => $paymentData['status']
+        ]);
         
         Log::info('Pagamento aprovado e assinatura ativada', [
             'payment_id' => $payment->id,

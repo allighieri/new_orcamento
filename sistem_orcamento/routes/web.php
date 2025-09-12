@@ -17,7 +17,7 @@ use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PaymentOptionMethodController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\SubscriptionController;
+
 
 // Rotas de Autenticação
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -139,21 +139,17 @@ Route::middleware(['auth', 'user.active', 'role:super_admin'])->group(function (
     Route::patch('payment-option-methods/{paymentOptionMethod}/toggle-active', [PaymentOptionMethodController::class, 'toggleActive'])->name('payment-option-methods.toggle-active');
 });
 
-// Rotas para Gerenciamento de Assinaturas
-Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(function () {
-    Route::get('subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
-    Route::post('subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
-    Route::post('subscriptions/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
-    Route::post('subscriptions/reactivate', [SubscriptionController::class, 'reactivate'])->name('subscriptions.reactivate');
-});
+
 
 // Rotas para Sistema de Pagamentos
 Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(function () {
     Route::get('payments/plans', [App\Http\Controllers\PaymentController::class, 'selectPlan'])->name('payments.select-plan');
-    Route::get('payments/checkout/{plan}', [App\Http\Controllers\PaymentController::class, 'checkout'])->name('payments.checkout');
+Route::get('payments/change-plan', [App\Http\Controllers\PaymentController::class, 'changePlan'])->name('payments.change-plan');
+Route::get('payments/checkout/{plan}', [App\Http\Controllers\PaymentController::class, 'checkout'])->name('payments.checkout');
     Route::post('payments/pix/{plan}', [App\Http\Controllers\PaymentController::class, 'processPixPayment'])->name('payments.process-pix');
     Route::post('payments/credit-card/{plan}', [App\Http\Controllers\PaymentController::class, 'processCreditCardPayment'])->name('payments.process-credit-card');
     Route::get('payments/{payment}/status', [App\Http\Controllers\PaymentController::class, 'checkPaymentStatus'])->name('payments.check-status');
+    Route::get('payments/check-status/{payment}', [App\Http\Controllers\PaymentController::class, 'checkPaymentStatus'])->name('payments.ajax-check-status');
     Route::get('payments/{payment}/details', [App\Http\Controllers\PaymentController::class, 'details'])->name('payments.details');
     Route::get('payments/{payment}/pix', [App\Http\Controllers\PaymentController::class, 'pixPayment'])->name('payments.pix-payment');
     Route::get('payments', [App\Http\Controllers\PaymentController::class, 'index'])->name('payments.index');

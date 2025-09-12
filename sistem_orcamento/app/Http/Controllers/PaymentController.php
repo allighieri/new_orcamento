@@ -26,20 +26,46 @@ class PaymentController extends Controller
      */
     public function selectPlan()
     {
-        $plans = Plan::all();
         $company = Auth::user()->company;
         
-        return view('payments.select-plan', compact('plans', 'company'));
+        // Verificar se já tem uma assinatura ativa
+        $activeSubscription = $company->activeSubscription();
+        
+        if ($activeSubscription) {
+            return redirect()->route('payments.index')
+                           ->with('info', 'Você já possui um plano ativo.');
+        }
+        
+        $plans = Plan::all();
+        $currentSubscription = null; // Definir como null quando não há assinatura
+        
+        return view('payments.select-plan', compact('plans', 'company', 'currentSubscription'));
+    }
+
+    /**
+     * Exibir página de seleção de planos para troca de plano
+     */
+    public function changePlan()
+    {
+        $plans = Plan::all();
+        $company = Auth::user()->company;
+        $currentSubscription = $company->activeSubscription();
+        
+        return view('payments.select-plan', compact('plans', 'company', 'currentSubscription'));
     }
 
     /**
      * Exibir página de checkout
      */
-    public function checkout(Plan $plan)
+    public function checkout(Request $request, Plan $plan)
     {
         $company = Auth::user()->company;
+        $period = $request->get('period', 'yearly'); // Default para anual
         
-        return view('payments.checkout', compact('plan', 'company'));
+        // Determinar o valor baseado no período
+        $amount = $period === 'monthly' ? $plan->monthly_price : $plan->annual_price;
+        
+        return view('payments.checkout', compact('plan', 'company', 'period', 'amount'));
     }
 
     /**
@@ -288,12 +314,44 @@ class PaymentController extends Controller
                 ], 403);
             }
 
+            // Recarregar o pagamento do banco para pegar status mais atual
+            $payment->refresh();
             $originalStatus = $payment->status;
             
             // Verificar se o webhook já sinalizou aprovação
             $webhookApproved = \Illuminate\Support\Facades\Cache::get("payment_approved_{$payment->id}", false);
             
+            // Log para debug
             if ($webhookApproved) {
+                \Log::info('Cache de aprovação encontrado', [
+                    'payment_id' => $payment->id,
+                    'cache_data' => $webhookApproved
+                ]);
+            }
+            
+            // Se o pagamento já está pago no banco de dados, retornar imediatamente
+            if ($payment->isPaid()) {
+                // Limpar o cache se existir
+                if ($webhookApproved) {
+                    \Illuminate\Support\Facades\Cache::forget("payment_approved_{$payment->id}");
+                }
+                
+                return response()->json([
+                    'success' => true,
+                    'status' => $payment->status,
+                    'status_text' => $this->getStatusText($payment->status),
+                    'status_changed' => true,
+                    'is_paid' => true,
+                    'should_redirect' => true,
+                    'webhook_processed' => true
+                ]);
+            }
+            
+            // Se o webhook sinalizou aprovação mas o status ainda não foi atualizado
+            if ($webhookApproved) {
+                // Recarregar novamente para garantir que temos o status mais atual
+                $payment->refresh();
+                
                 // Limpar o cache após usar
                 \Illuminate\Support\Facades\Cache::forget("payment_approved_{$payment->id}");
                 
@@ -302,15 +360,24 @@ class PaymentController extends Controller
                     'status' => $payment->status,
                     'status_text' => $this->getStatusText($payment->status),
                     'status_changed' => true,
-                    'is_paid' => true,
-                    'should_redirect' => true
+                    'is_paid' => $payment->isPaid(),
+                    'should_redirect' => $payment->isPaid(),
+                    'webhook_approved' => true
                 ]);
             }
             
-            // Buscar status atualizado no Asaas se houver ID
+            // Buscar status atualizado no Asaas se houver ID (fallback)
             if ($payment->asaas_payment_id) {
-                $asaasPayment = $this->asaasService->getPaymentStatus($payment->asaas_payment_id);
-                $payment->updateStatus($asaasPayment['status']);
+                try {
+                    $asaasPayment = $this->asaasService->getPaymentStatus($payment->asaas_payment_id);
+                    $payment->updateStatus($asaasPayment['status']);
+                } catch (\Exception $e) {
+                    // Log do erro mas não falha a verificação
+                    \Log::warning('Erro ao consultar Asaas API', [
+                        'error' => $e->getMessage(),
+                        'payment_id' => $payment->id
+                    ]);
+                }
             }
             
             $statusChanged = $originalStatus !== $payment->status;
@@ -321,7 +388,8 @@ class PaymentController extends Controller
                 'status_text' => $this->getStatusText($payment->status),
                 'status_changed' => $statusChanged,
                 'is_paid' => $payment->isPaid(),
-                'should_redirect' => $payment->isPaid()
+                'should_redirect' => $payment->isPaid(),
+                'api_checked' => true
             ]);
             
         } catch (\Exception $e) {

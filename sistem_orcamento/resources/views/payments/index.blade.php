@@ -17,7 +17,7 @@
                 <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary me-2">
                     <i class="bi bi-arrow-left"></i> Voltar
                 </a>
-                 <a href="{{ route('payments.select-plan') }}" class="btn btn-primary">
+                 <a href="{{ route('payments.change-plan') }}" class="btn btn-primary">
                     <i class="bi bi-plus"></i> Novo Plano
                 </a>
             </div>

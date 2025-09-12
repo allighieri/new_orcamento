@@ -28,8 +28,8 @@ class PlansSeeder extends Seeder
                 'slug' => 'bronze',
                 'description' => 'Plano básico ideal para pequenas empresas. Inclui até 10 orçamentos por mês.',
                 'budget_limit' => 10,
-                'monthly_price' => 15.00,
-                'annual_price' => 10.00, // R$ 120,00 anual / 12 meses
+                'monthly_price' => 30.00,
+                'annual_price' => 25.00,
                 'features' => json_encode([
                     'Até 10 orçamentos por mês',
                     'Suporte por email',
@@ -45,8 +45,8 @@ class PlansSeeder extends Seeder
                 'slug' => 'prata',
                 'description' => 'Plano intermediário para empresas em crescimento. Inclui até 50 orçamentos por mês.',
                 'budget_limit' => 50,
-                'monthly_price' => 35.00,
-                'annual_price' => 30.00, // R$ 360,00 anual / 12 meses
+                'monthly_price' => 40.00,
+                'annual_price' => 35.00, 
                 'features' => json_encode([
                     'Até 50 orçamentos por mês',
                     'Suporte prioritário',
@@ -64,8 +64,8 @@ class PlansSeeder extends Seeder
                 'slug' => 'ouro',
                 'description' => 'Plano premium com orçamentos ilimitados. Ideal para grandes empresas.',
                 'budget_limit' => null, // Ilimitado
-                'monthly_price' => 45.00,
-                'annual_price' => 40.00, // R$ 480,00 anual / 12 meses
+                'monthly_price' => 50.00,
+                'annual_price' => 45.00, 
                 'features' => json_encode([
                     'Orçamentos ilimitados',
                     'Suporte 24/7',

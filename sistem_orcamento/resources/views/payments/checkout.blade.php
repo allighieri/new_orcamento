@@ -3,7 +3,7 @@
 @section('title', 'Checkout - ' . $plan->name)
 
 @section('content')
-<div class="container-fluid">
+<div class="container  mx-auto m-4">
     <div class="row">
         <div class="col-12">
             <div class="page-title-box">
@@ -18,7 +18,7 @@
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-12">
             <!-- Resumo do Plano -->
             <div class="card mb-4">
                 <div class="card-body">
@@ -26,21 +26,17 @@
                         <div class="col-md-8">
                             <h5 class="mb-1">Plano {{ $plan->name }}</h5>
                             <p class="text-muted mb-0">{{ $plan->budget_limit }} orçamentos por mês</p>
-                            @if(session('selected_billing_cycle'))
-                                <p class="text-info mb-0">
-                                    <i class="mdi mdi-calendar"></i> 
-                                    Ciclo: {{ session('selected_billing_cycle') === 'annual' ? 'Anual' : 'Mensal' }}
-                                </p>
-                            @endif
+                            <p class="text-info mb-0">
+                                <i class="mdi mdi-calendar"></i> 
+                                Ciclo: {{ $period === 'yearly' ? 'Anual' : 'Mensal' }}
+                            </p>
                         </div>
                         <div class="col-md-4 text-end">
                             @php
-                                $billingCycle = session('selected_billing_cycle', 'monthly');
-                                $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
-                                $period = $billingCycle === 'annual' ? 'ano' : 'mês';
+                                $periodLabel = $period === 'yearly' ? 'ano' : 'mês';
                             @endphp
-                            <h4 class="mb-0 text-primary">R$ {{ number_format($price, 2, ',', '.') }}/{{ $period }}</h4>
-                            @if($billingCycle === 'annual')
+                            <h4 class="mb-0 text-primary">R$ {{ number_format($amount, 2, ',', '.') }}/{{ $periodLabel }}</h4>
+                            @if($period === 'yearly')
                                 <small class="text-success">
                                     Economia de R$ {{ number_format((($plan->monthly_price * 12) - $plan->annual_price), 2, ',', '.') }}
                                 </small>
@@ -117,7 +113,7 @@
                                 </div>
 
                                 <button type="submit" class="btn btn-success btn-lg w-100">
-                                    <i class="mdi mdi-qrcode me-2"></i>Gerar PIX - R$ {{ number_format($price, 2, ',', '.') }}
+                                    <i class="mdi mdi-qrcode me-2"></i>Gerar PIX - R$ {{ number_format($amount, 2, ',', '.') }}
                                 </button>
                             </form>
                         </div>
@@ -221,7 +217,7 @@
                                 </div>
 
                                 <button type="submit" class="btn btn-primary btn-lg w-100">
-                                    <i class="mdi mdi-credit-card me-2"></i>Pagar R$ {{ number_format($price, 2, ',', '.') }}
+                                    <i class="mdi mdi-credit-card me-2"></i>Pagar R$ {{ number_format($amount, 2, ',', '.') }}
                                 </button>
                             </form>
                         </div>
@@ -330,6 +326,11 @@ $(document).ready(function() {
                 if (response.success) {
                     // Exibir QR Code
                     showPixQrCode(response.pix_qr_code, response.pix_copy_paste, response.due_date);
+                    
+                    // Iniciar verificação de status em tempo real
+                    if (response.payment_id) {
+                        startPaymentStatusCheck(response.payment_id);
+                    }
                 } else {
                     alert('Erro ao processar pagamento: ' + (response.message || 'Tente novamente'));
                 }
@@ -392,6 +393,102 @@ $(document).ready(function() {
             }
         }
         return null;
+    }
+    
+    // Variáveis globais para controle de verificação
+    let paymentCheckInterval = null;
+    let paymentCheckTimeout = null;
+    
+    // Função para iniciar verificação de status do pagamento
+    function startPaymentStatusCheck(paymentId) {
+        console.log('Iniciando verificação de status para pagamento:', paymentId);
+        
+        // Verificação inicial imediata
+        checkPaymentStatus(paymentId);
+        
+        // Verificar a cada 3 segundos
+        paymentCheckInterval = setInterval(function() {
+            checkPaymentStatus(paymentId);
+        }, 3000);
+        
+        // Timeout de 30 minutos
+        paymentCheckTimeout = setTimeout(function() {
+            clearInterval(paymentCheckInterval);
+            console.log('Timeout de verificação de pagamento atingido (30 minutos)');
+        }, 30 * 60 * 1000);
+    }
+    
+    // Função para verificar status do pagamento
+    function checkPaymentStatus(paymentId) {
+        $.ajax({
+            url: '{{ route("payments.check-status", ":id") }}'.replace(':id', paymentId),
+            method: 'GET',
+            success: function(response) {
+                console.log('Status do pagamento:', response);
+                
+                if (response.status === 'RECEIVED' || response.status === 'CONFIRMED') {
+                    // Pagamento aprovado!
+                    clearInterval(paymentCheckInterval);
+                    clearTimeout(paymentCheckTimeout);
+                    
+                    showPaymentSuccess(response);
+                } else if (response.status === 'PENDING') {
+                    console.log('Pagamento ainda pendente, continuando verificação...');
+                } else {
+                    console.log('Status do pagamento:', response.status);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Erro ao verificar status do pagamento:', {
+                    status: status,
+                    error: error,
+                    response: xhr.responseText
+                });
+            }
+        });
+    }
+    
+    // Função para mostrar sucesso do pagamento
+    function showPaymentSuccess(paymentData) {
+        // Atualizar a interface com animação
+        $('#pix').fadeOut(500, function() {
+            var successHtml = `
+                <div class="text-center">
+                    <div class="payment-success-animation mb-4">
+                        <i class="mdi mdi-check-circle display-1 text-success"></i>
+                    </div>
+                    <h3 class="text-success mb-3">Pagamento Aprovado!</h3>
+                    <p class="text-muted mb-4">Seu pagamento PIX foi processado com sucesso.</p>
+                    <div class="alert alert-success">
+                        <h6><i class="mdi mdi-information"></i> Próximos Passos:</h6>
+                        <ul class="mb-0 text-start">
+                            <li>Sua assinatura foi ativada automaticamente</li>
+                            <li>Você receberá um e-mail de confirmação</li>
+                            <li>Já pode começar a usar todos os recursos do plano</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4">
+                        <a href="{{ route('dashboard') }}" class="btn btn-success btn-lg me-2">
+                            <i class="mdi mdi-home"></i> Ir para Dashboard
+                        </a>
+                        <a href="{{ route('payments.index') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="mdi mdi-receipt"></i> Ver Pagamentos
+                        </a>
+                    </div>
+                </div>
+            `;
+            
+            $(this).html(successHtml).fadeIn(500);
+        });
+        
+        // Mostrar notificação de sucesso
+        Swal.fire({
+            icon: 'success',
+            title: 'Pagamento Aprovado!',
+            text: 'Seu pagamento PIX foi processado com sucesso. Sua assinatura já está ativa!',
+            confirmButtonText: 'Ótimo!',
+            confirmButtonColor: '#28a745'
+        });
     }
     
     // Função para exibir QR Code PIX
