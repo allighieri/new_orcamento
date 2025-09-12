@@ -503,8 +503,121 @@ class PaymentController extends Controller
     }
 
     /**
-     * Exibir página de pagamento PIX
+     * Exibir fatura personalizada do pagamento
      */
+    public function invoice(Payment $payment)
+    {
+        // Verificar se o pagamento pertence à empresa do usuário
+        if ($payment->company_id !== Auth::user()->company_id) {
+            abort(403, 'Acesso negado.');
+        }
+
+        try {
+            // Buscar informações detalhadas do pagamento no Asaas
+            $asaasPayment = null;
+            $customerData = null;
+            $billingInfo = null;
+
+            if ($payment->asaas_payment_id) {
+                // Buscar dados do pagamento
+                $asaasPayment = $this->asaasService->getPaymentStatus($payment->asaas_payment_id);
+                
+                // Buscar dados do cliente se disponível
+                if (isset($asaasPayment['customer'])) {
+                    $customerData = $this->asaasService->getCustomer($asaasPayment['customer']);
+                }
+                
+                // Tentar buscar informações de cobrança (pode não estar disponível para todos os tipos)
+                try {
+                    $billingInfo = $this->asaasService->getPaymentBillingInfo($payment->asaas_payment_id);
+                } catch (\Exception $e) {
+                    // Informações de cobrança podem não estar disponíveis
+                    \Log::info('Informações de cobrança não disponíveis', [
+                        'payment_id' => $payment->id,
+                        'asaas_payment_id' => $payment->asaas_payment_id
+                    ]);
+                }
+            }
+
+            // Se for requisição AJAX, retornar apenas o conteúdo da view
+            if (request()->ajax()) {
+                return view('payments.invoice-content', compact('payment', 'asaasPayment', 'customerData', 'billingInfo'))->render();
+            }
+
+            return view('payments.invoice', compact('payment', 'asaasPayment', 'customerData', 'billingInfo'));
+        } catch (\Exception $e) {
+            \Log::error('Erro ao carregar fatura do pagamento', [
+                'error' => $e->getMessage(),
+                'payment_id' => $payment->id
+            ]);
+            
+            if (request()->ajax()) {
+                return response()->json([
+                    'error' => 'Não foi possível carregar a fatura. Tente novamente.'
+                ], 500);
+            }
+            
+            return back()->with('error', 'Não foi possível carregar a fatura. Tente novamente.');
+         }
+     }
+
+     /**
+      * Gerar recibo do pagamento
+      */
+     public function receipt(Payment $payment)
+     {
+         // Verificar se o pagamento pertence à empresa do usuário
+         if ($payment->company_id !== Auth::user()->company_id) {
+             abort(403, 'Acesso negado.');
+         }
+
+         // Verificar se o pagamento foi confirmado
+         if ($payment->status !== 'paid') {
+             // Verificar também no Asaas
+             $isPaid = false;
+             if ($payment->asaas_payment_id) {
+                 try {
+                     $asaasPayment = $this->asaasService->getPaymentStatus($payment->asaas_payment_id);
+                     $isPaid = in_array($asaasPayment['status'], ['RECEIVED', 'CONFIRMED']);
+                 } catch (\Exception $e) {
+                     // Se não conseguir verificar no Asaas, usar apenas o status local
+                 }
+             }
+             
+             if (!$isPaid) {
+                 return back()->with('error', 'Recibo disponível apenas para pagamentos confirmados.');
+             }
+         }
+
+         try {
+             // Buscar informações detalhadas do pagamento no Asaas
+             $asaasPayment = null;
+             $customerData = null;
+
+             if ($payment->asaas_payment_id) {
+                 // Buscar dados do pagamento
+                 $asaasPayment = $this->asaasService->getPaymentStatus($payment->asaas_payment_id);
+                 
+                 // Buscar dados do cliente se disponível
+                 if (isset($asaasPayment['customer'])) {
+                     $customerData = $this->asaasService->getCustomer($asaasPayment['customer']);
+                 }
+             }
+
+             return view('payments.receipt', compact('payment', 'asaasPayment', 'customerData'));
+         } catch (\Exception $e) {
+             \Log::error('Erro ao gerar recibo do pagamento', [
+                 'error' => $e->getMessage(),
+                 'payment_id' => $payment->id
+             ]);
+             
+             return back()->with('error', 'Não foi possível gerar o recibo. Tente novamente.');
+         }
+     }
+
+     /**
+      * Exibir página de pagamento PIX
+      */
     public function pixPayment(Payment $payment)
     {
         // Verificar se o pagamento pertence à empresa do usuário

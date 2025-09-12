@@ -222,7 +222,7 @@
 
 <!-- Modal de Status do Pagamento -->
 <div class="modal fade" id="paymentStatusModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Status do Pagamento</h5>

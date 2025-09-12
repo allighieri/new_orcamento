@@ -108,6 +108,40 @@ class AsaasService
     }
 
     /**
+     * Buscar informações detalhadas da fatura/cobrança
+     */
+    public function getPaymentBillingInfo($paymentId)
+    {
+        try {
+            $response = $this->client->get("payments/{$paymentId}/billingInfo");
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (RequestException $e) {
+            Log::error('Erro ao buscar informações de cobrança no Asaas', [
+                'error' => $e->getMessage(),
+                'paymentId' => $paymentId
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Buscar dados do cliente
+     */
+    public function getCustomer($customerId)
+    {
+        try {
+            $response = $this->client->get("customers/{$customerId}");
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (RequestException $e) {
+            Log::error('Erro ao buscar dados do cliente no Asaas', [
+                'error' => $e->getMessage(),
+                'customerId' => $customerId
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
      * Criar cliente no Asaas
      */
     public function createCustomer($data)

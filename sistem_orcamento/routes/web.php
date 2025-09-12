@@ -152,6 +152,8 @@ Route::get('payments/checkout/{plan}', [App\Http\Controllers\PaymentController::
     Route::get('payments/check-status/{payment}', [App\Http\Controllers\PaymentController::class, 'checkPaymentStatus'])->name('payments.ajax-check-status');
     Route::get('payments/{payment}/details', [App\Http\Controllers\PaymentController::class, 'details'])->name('payments.details');
     Route::get('payments/{payment}/status', [App\Http\Controllers\PaymentController::class, 'status'])->name('payments.status');
+Route::get('payments/{payment}/invoice', [App\Http\Controllers\PaymentController::class, 'invoice'])->name('payments.invoice');
+Route::get('payments/{payment}/receipt', [App\Http\Controllers\PaymentController::class, 'receipt'])->name('payments.receipt');
     Route::get('payments/extra-budgets', [App\Http\Controllers\PaymentController::class, 'extraBudgets'])->name('payments.extra-budgets');
     Route::post('payments/extra-budgets/purchase', [App\Http\Controllers\PaymentController::class, 'purchaseExtraBudgets'])->name('payments.purchase-extra-budgets');
     Route::get('payments/{payment}/pix', [App\Http\Controllers\PaymentController::class, 'pixPayment'])->name('payments.pix-payment');
