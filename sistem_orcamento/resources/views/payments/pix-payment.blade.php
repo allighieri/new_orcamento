@@ -92,7 +92,7 @@
                     <!-- Status de Verificação -->
                     <div class="payment-verification mt-4">
                         <div class="alert alert-info">
-                            <i class="mdi mdi-information me-2"></i>
+                            <i class="bi bi-info-circle me-2"></i>
                             <strong>Verificando pagamento...</strong>
                             <div class="mt-2">
                                 <div class="spinner-border spinner-border-sm me-2" role="status">
@@ -106,10 +106,10 @@
                     <!-- Ações -->
                     <div class="payment-actions mt-4">
                         <button class="btn btn-primary me-2" onclick="checkPaymentStatus()">
-                            <i class="mdi mdi-refresh me-1"></i>Verificar Status
+                            <i class="bi bi-arrow-clockwise me-1"></i>Verificar Status
                         </button>
                         <a href="{{ route('payments.select-plan') }}" class="btn btn-outline-secondary">
-                            <i class="mdi mdi-arrow-left me-1"></i>Voltar
+                            <i class="bi bi-arrow-left me-1"></i>Voltar
                         </a>
                     </div>
                 </div>
@@ -190,7 +190,7 @@ function copyPixCode() {
         // Mostrar feedback visual
         const button = event.target.closest('button');
         const originalText = button.innerHTML;
-        button.innerHTML = '<i class="mdi mdi-check me-1"></i>Copiado!';
+        button.innerHTML = '<i class="bi bi-check me-1"></i>Copiado!';
         button.classList.remove('btn-outline-primary');
         button.classList.add('btn-success');
         
@@ -205,31 +205,36 @@ function copyPixCode() {
 function checkPaymentStatus() {
     $.ajax({
         url: '{{ route('payments.check-status', $payment) }}',
-        method: 'GET',
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
         success: function(response) {
-            if (response.should_redirect || response.is_paid) {
+            console.log('Status do pagamento:', response);
+            
+            if (response.success && (response.is_paid || response.status === 'RECEIVED' || response.status === 'CONFIRMED')) {
                 clearInterval(checkInterval);
                 
                 // Atualizar interface
                 $('.payment-verification').html(`
                     <div class="alert alert-success">
-                        <i class="mdi mdi-check-circle me-2"></i>
+                        <i class="bi bi-check-circle me-2"></i>
                         <strong>Pagamento confirmado!</strong>
+                        <div class="mt-2">Status: ${response.status_text || 'Pago'}</div>
                         <div class="mt-2">Redirecionando para suas assinaturas...</div>
                     </div>
                 `);
                 
-                // Redirecionar imediatamente se foi via webhook, senão aguardar 1 segundo
-                const redirectDelay = response.should_redirect ? 500 : 1000;
+                // Redirecionar após 2 segundos para dar tempo de ver a confirmação
                 setTimeout(function() {
                     window.location.href = '{{ route('subscriptions.index') }}';
-                }, redirectDelay);
-            } else if (response.status === 'overdue') {
+                }, 2000);
+            } else if (response.status === 'OVERDUE' || response.status === 'overdue') {
                 clearInterval(checkInterval);
                 
                 $('.payment-verification').html(`
                     <div class="alert alert-danger">
-                        <i class="mdi mdi-close-circle me-2"></i>
+                        <i class="bi bi-x-circle me-2"></i>
                         <strong>Pagamento vencido</strong>
                         <div class="mt-2">Este PIX expirou. Gere um novo pagamento.</div>
                     </div>
