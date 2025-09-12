@@ -24,6 +24,14 @@ class WebhookController extends Controller
      */
     public function handleAsaasWebhook(Request $request)
     {
+        // Log básico para debug (evitando dados muito grandes)
+        Log::info('Webhook Asaas recebido', [
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+            'content_length' => strlen($request->getContent()),
+            'has_payload' => !empty($request->all())
+        ]);
+        
         try {
             $payload = $request->all();
             
@@ -102,7 +110,7 @@ class WebhookController extends Controller
         if ($payment->extra_budgets_quantity && $payment->extra_budgets_quantity > 0) {
             $this->handleExtraBudgetsPayment($payment);
         } else {
-            $this->handleSubscriptionPayment($payment);
+            $this->handleSubscriptionPayment($payment, $paymentData);
         }
     }
     
@@ -149,10 +157,12 @@ class WebhookController extends Controller
     /**
      * Processar pagamento de assinatura
      */
-    private function handleSubscriptionPayment(Payment $payment)
+    private function handleSubscriptionPayment(Payment $payment, array $paymentData = [])
     {
-        // Criar ou atualizar assinatura da empresa
-        $subscription = Subscription::where('company_id', $payment->company_id)->first();
+        // Buscar assinatura ativa da empresa
+        $subscription = Subscription::where('company_id', $payment->company_id)
+            ->where('status', 'active')
+            ->first();
         
         // Cancelar assinatura atual se existir
         if ($subscription && $subscription->status === 'active') {
@@ -177,29 +187,37 @@ class WebhookController extends Controller
             'start_date' => $startDate,
             'end_date' => $endDate,
             'next_billing_date' => $endDate,
-            'amount_paid' => $payment->amount
+            'amount_paid' => $payment->amount,
+            'created_at' => now(),
+            'updated_at' => now()
         ]);
         
         // Resetar controle de uso para o mês atual com o novo plano
         $plan = \App\Models\Plan::find($payment->plan_id);
+        
         if ($plan) {
             UsageControl::getOrCreateForCurrentMonth(
                 $payment->company_id,
                 $newSubscription->id,
                 $plan->budget_limit
             );
-            
-            Log::info('Controle de uso resetado para nova assinatura', [
-                'company_id' => $payment->company_id,
-                'subscription_id' => $newSubscription->id,
-                'budgets_limit' => $plan->budget_limit
+        } else {
+            Log::warning('Plano não encontrado, usando valor padrão', [
+                'payment_id' => $payment->id,
+                'plan_id' => $payment->plan_id
             ]);
+            
+            UsageControl::getOrCreateForCurrentMonth(
+                $payment->company_id,
+                $newSubscription->id,
+                10
+            );
         }
         
         // Sinalizar para a página de checkout que o pagamento foi aprovado
         $cacheData = [
             'approved_at' => now()->toISOString(),
-            'status' => $paymentData['status'],
+            'status' => $paymentData['status'] ?? $payment->status,
             'webhook_event' => 'PAYMENT_APPROVED',
             'payment_id' => $payment->id
         ];
@@ -216,7 +234,7 @@ class WebhookController extends Controller
             'plan_id' => $payment->plan_id,
             'cache_key' => "payment_approved_{$payment->id}",
             'cache_expires_at' => now()->addMinutes(15)->toISOString(),
-            'asaas_status' => $paymentData['status']
+            'asaas_status' => $paymentData['status'] ?? $payment->status
         ]);
         
         Log::info('Pagamento aprovado e assinatura ativada', [

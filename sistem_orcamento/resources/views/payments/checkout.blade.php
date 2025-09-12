@@ -91,6 +91,7 @@
                             <form id="pixForm" action="{{ route('payments.process-pix', $plan->id) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                <input type="hidden" name="period" value="{{ $period }}">
                                 @if(isset($isExtraBudgets) && $isExtraBudgets)
                                     <input type="hidden" name="type" value="extra_budgets">
                                 @endif
@@ -274,55 +275,32 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Máscara dinâmica para CPF/CNPJ
-    function applyCpfCnpjMask(element) {
-        var value = element.val().replace(/\D/g, '');
-        
-        if (value.length <= 11) {
-            // CPF: 000.000.000-00
-            element.mask('000.000.000-00', {
-                reverse: true,
-                translation: {
-                    '0': {pattern: /[0-9]/}
-                }
-            });
-        } else {
-            // CNPJ: 00.000.000/0001-00
-            element.mask('00.000.000/0000-00', {
-                reverse: true,
-                translation: {
-                    '0': {pattern: /[0-9]/}
-                }
-            });
-        }
-    }
+
+
+   
+
     
-    // Aplicar máscara inicial
-    applyCpfCnpjMask($('#pix_cpf_cnpj'));
-    applyCpfCnpjMask($('#cc_cpf_cnpj'));
-    
-    // Reaplica máscara quando o usuário digita
+
+    // Máscara dinâmica para CPF/CNPJ (baseada na view de clientes)
     $('#pix_cpf_cnpj, #cc_cpf_cnpj').on('input', function() {
-        var element = $(this);
-        var value = element.val().replace(/\D/g, '');
-        
-        // Remove a máscara atual
-        element.unmask();
-        
-        // Aplica a nova máscara baseada no tamanho
-        applyCpfCnpjMask(element);
-        
-        // Reaplica o valor
-        element.val(value);
-        element.trigger('input');
-    });
-    
-    // Máscara para telefone
-    $('#pix_phone, #cc_phone').mask('(00) 00000-0000', {
-        translation: {
-            '0': {pattern: /[0-9]/}
+        var cleanValue = $(this).val().replace(/\D/g, '');
+
+        if (cleanValue.length > 11) {
+            $(this).mask('00.000.000/0000-00');
+        } else {
+            $(this).mask('000.000.000-009');
         }
-    });
+    }).trigger('input'); // Aplica a máscara inicial
+    
+    // Máscara dinâmica para telefone (baseada na view de clientes)
+    var phoneOptions = {
+        onKeyPress: function(phone, e, field, options) {
+            var masks = ['(00) 0000-00009', '(00) 00000-0000'];
+            var mask = (phone.length > 14) ? masks[1] : masks[0];
+            $(field).mask(mask, options);
+        }
+    };
+    $('#pix_phone, #cc_phone').mask('(00) 0000-00009', phoneOptions);
     
     // Máscara para número do cartão
     $('#card_number').mask('0000 0000 0000 0000');
@@ -334,14 +312,28 @@ $(document).ready(function() {
     $('#pixForm').on('submit', function(e) {
         e.preventDefault();
         
+        console.log('=== INÍCIO SUBMISSÃO PIX ===');
+        console.log('Form action:', $(this).attr('action'));
+        console.log('Form data:', $(this).serialize());
+        console.log('CSRF Token:', $('meta[name="csrf-token"]').attr('content'));
+        
+        // Prevenir múltiplas submissões
+        var submitButton = $(this).find('button[type="submit"]');
+        if (submitButton.prop('disabled')) {
+            return false;
+        }
+        
+        submitButton.prop('disabled', true).text('Processando...');
+        
         // Mostrar modal de loading
         $('#loadingModal').modal('show');
         
-        // Fazer requisição AJAX
+        // Fazer requisição AJAX com timeout
         $.ajax({
             url: $(this).attr('action'),
             method: 'POST',
             data: $(this).serialize(),
+            timeout: 90000, // 90 segundos - aumentado devido a possíveis timeouts da API Asaas
             success: function(response) {
                 $('#loadingModal').modal('hide');
                 
@@ -363,6 +355,19 @@ $(document).ready(function() {
             },
             error: function(xhr) {
                 $('#loadingModal').modal('hide');
+                
+                // Log detalhado do erro
+                console.error('Erro na requisição PIX:', {
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                    responseText: xhr.responseText,
+                    responseJSON: xhr.responseJSON,
+                    headers: xhr.getAllResponseHeaders()
+                });
+                
+                // Reabilitar botão
+                submitButton.prop('disabled', false).text('Gerar PIX');
+                
                 var errorMsg = 'Erro ao processar pagamento. Tente novamente.';
                 
                 if (xhr.responseJSON && xhr.responseJSON.message) {
@@ -370,6 +375,9 @@ $(document).ready(function() {
                 } else if (xhr.responseJSON && xhr.responseJSON.errors) {
                     var errors = Object.values(xhr.responseJSON.errors).flat();
                     errorMsg = errors.join('\n');
+                } else if (xhr.status === 503) {
+                    // Erro específico de serviço indisponível (API do Asaas)
+                    errorMsg = 'A API de pagamentos está temporariamente indisponível. Tente novamente em alguns minutos.';
                 }
                 
                 Swal.fire({

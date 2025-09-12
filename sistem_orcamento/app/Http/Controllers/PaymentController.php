@@ -59,6 +59,16 @@ class PaymentController extends Controller
      */
     public function checkout(Request $request, Plan $plan)
     {
+        Log::info('=== CHECKOUT DEBUG ===', [
+            'user_authenticated' => Auth::check(),
+            'user_id' => Auth::id(),
+            'user_name' => Auth::user()->name ?? 'N/A',
+            'company_id' => Auth::user()->company_id ?? 'N/A',
+            'company_name' => Auth::user()->company->name ?? 'N/A',
+            'plan_id' => $plan->id,
+            'request_data' => $request->all()
+        ]);
+        
         $company = Auth::user()->company;
         $type = $request->get('type'); // Verificar se é compra de orçamentos extras
         
@@ -89,6 +99,17 @@ class PaymentController extends Controller
      */
     public function processPixPayment(Request $request, Plan $plan)
     {
+        Log::info('=== INÍCIO PROCESSAMENTO PIX ===', [
+            'timestamp' => now()->toDateTimeString(),
+            'request_data' => $request->all(),
+            'plan_id' => $plan->id,
+            'user_id' => Auth::id(),
+            'company_id' => Auth::user()->company_id ?? 'N/A',
+            'request_method' => $request->method(),
+            'request_url' => $request->fullUrl(),
+            'request_headers' => $request->headers->all()
+        ]);
+        
         $validator = Validator::make($request->all(), [
             'cpf_cnpj' => 'required|string',
             'name' => 'required|string|max:255',
@@ -97,6 +118,9 @@ class PaymentController extends Controller
         ]);
 
         if ($validator->fails()) {
+            Log::warning('Validação falhou no PIX', [
+                'errors' => $validator->errors()->toArray()
+            ]);
             return response()->json([
                 'success' => false,
                 'errors' => $validator->errors()
@@ -104,13 +128,40 @@ class PaymentController extends Controller
         }
 
         try {
+            // Aumentar o tempo limite de execução para operações de pagamento
+            set_time_limit(120); // 2 minutos
+            
             DB::beginTransaction();
             
-            $company = Auth::user()->company;
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuário não autenticado'
+                ], 401);
+            }
+            
+            $company = $user->company;
+            if (!$company) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa não encontrada'
+                ], 400);
+            }
             $type = $request->get('type'); // Verificar se é compra de orçamentos extras
+            
+            Log::info('Dados validados, iniciando busca de cliente', [
+                'cpf_cnpj' => $request->cpf_cnpj,
+                'company_id' => $company->id
+            ]);
             
             // Buscar ou criar cliente no Asaas
             $customers = $this->asaasService->findCustomerByCpfCnpj($request->cpf_cnpj);
+            
+            Log::info('Resultado da busca de cliente', [
+                'found_customers' => count($customers),
+                'cpf_cnpj' => $request->cpf_cnpj
+            ]);
             
             if (empty($customers)) {
                 $customerData = [
@@ -119,9 +170,12 @@ class PaymentController extends Controller
                     'phone' => $request->phone,
                     'cpfCnpj' => $request->cpf_cnpj
                 ];
+                Log::info('Criando novo cliente no Asaas', $customerData);
                 $customer = $this->asaasService->createCustomer($customerData);
+                Log::info('Cliente criado com sucesso', ['customer_id' => $customer['id'] ?? 'N/A']);
             } else {
                 $customer = $customers[0];
+                Log::info('Usando cliente existente', ['customer_id' => $customer['id'] ?? 'N/A']);
             }
 
             if ($type === 'extra_budgets') {
@@ -138,8 +192,9 @@ class PaymentController extends Controller
                 $description = "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano - {$company->name}";
                 $billingCycle = 'one_time';
             } else {
-                // Para assinatura de plano
-                $billingCycle = session('selected_billing_cycle', 'monthly');
+                // Para assinatura de plano - usar período da URL
+                $period = $request->get('period', 'yearly');
+                $billingCycle = $period === 'monthly' ? 'monthly' : 'annual';
                 $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
                 $cycleText = $billingCycle === 'annual' ? 'Anual' : 'Mensal';
                 $description = "Assinatura {$cycleText} do plano {$plan->name} - {$company->name}";
@@ -163,6 +218,7 @@ class PaymentController extends Controller
                 'asaas_customer_id' => $customer['id'],
                 'amount' => $price,
                 'billing_type' => 'PIX',
+                'type' => $type === 'extra_budgets' ? 'extra_budgets' : 'subscription',
                 'status' => 'PENDING',
                 'due_date' => $asaasPayment['dueDate'],
                 'description' => $description,
@@ -219,8 +275,16 @@ class PaymentController extends Controller
             Log::error('Erro ao processar pagamento PIX', [
                 'error' => $e->getMessage(),
                 'plan_id' => $plan->id,
-                'company_id' => Auth::user()->company->id
+                'company_id' => $user->company->id ?? 'N/A'
             ]);
+
+            // Se for erro específico da API do Asaas, retornar a mensagem específica
+            if (strpos($e->getMessage(), 'API do Asaas está temporariamente indisponível') !== false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 503); // Service Unavailable
+            }
 
             return response()->json([
                 'success' => false,
@@ -288,8 +352,9 @@ class PaymentController extends Controller
                 $description = "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano - {$company->name}";
                 $billingCycle = 'one_time';
             } else {
-                // Para assinatura de plano
-                $billingCycle = session('selected_billing_cycle', 'monthly');
+                // Para assinatura de plano - usar período da URL
+                $period = $request->get('period', 'yearly');
+                $billingCycle = $period === 'monthly' ? 'monthly' : 'annual';
                 $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
                 $cycleText = $billingCycle === 'annual' ? 'Anual' : 'Mensal';
                 $description = "Assinatura {$cycleText} do plano {$plan->name} - {$company->name}";
@@ -326,6 +391,7 @@ class PaymentController extends Controller
                 'asaas_customer_id' => $customer['id'],
                 'amount' => $price,
                 'billing_type' => 'CREDIT_CARD',
+                'type' => $type === 'extra_budgets' ? 'extra_budgets' : 'subscription',
                 'status' => $asaasPayment['status'] ?? 'PENDING',
                 'due_date' => $asaasPayment['dueDate'],
                 'description' => $description,
@@ -775,6 +841,7 @@ class PaymentController extends Controller
                 'amount' => $totalAmount,
                 'payment_method' => $request->payment_method,
                 'billing_cycle' => 'one_time',
+                'type' => 'extra_budgets',
                 'status' => 'pending',
                 'description' => "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras",
                 'extra_budgets_quantity' => $activeSubscription->plan->budget_limit // Quantidade baseada no plano atual

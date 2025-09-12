@@ -147,6 +147,15 @@ Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(f
 Route::get('payments/change-plan', [App\Http\Controllers\PaymentController::class, 'changePlan'])->name('payments.change-plan');
 Route::get('payments/checkout/{plan}', [App\Http\Controllers\PaymentController::class, 'checkout'])->name('payments.checkout');
     Route::post('payments/pix/{plan}', [App\Http\Controllers\PaymentController::class, 'processPixPayment'])->name('payments.process-pix');
+    // Rota de teste para debug
+    Route::any('payments/test-debug', function() {
+        \Log::info('TESTE DE ROTA - Requisição chegou', [
+            'method' => request()->method(),
+            'url' => request()->fullUrl(),
+            'data' => request()->all()
+        ]);
+        return response()->json(['success' => true, 'message' => 'Teste OK']);
+    })->name('payments.test-debug');
     Route::post('payments/credit-card/{plan}', [App\Http\Controllers\PaymentController::class, 'processCreditCardPayment'])->name('payments.process-credit-card');
     Route::get('payments/{payment}/check-status', [App\Http\Controllers\PaymentController::class, 'checkPaymentStatus'])->name('payments.check-status');
     Route::get('payments/check-status/{payment}', [App\Http\Controllers\PaymentController::class, 'checkPaymentStatus'])->name('payments.ajax-check-status');
@@ -163,3 +172,13 @@ Route::post('payments/extra-budgets/purchase', [App\Http\Controllers\PaymentCont
 
 // Webhook do Asaas (sem middleware de autenticação)
 Route::post('webhook/asaas', [App\Http\Controllers\WebhookController::class, 'handleAsaasWebhook'])->name('webhook.asaas');
+
+// Rota de teste para debug (sem middleware)
+Route::any('payments/test-debug-public', function() {
+    \Log::info('TESTE DE ROTA PÚBLICA - Requisição chegou', [
+        'method' => request()->method(),
+        'url' => request()->fullUrl(),
+        'data' => request()->all()
+    ]);
+    return response()->json(['success' => true, 'message' => 'Teste OK']);
+})->name('payments.test-debug-public');

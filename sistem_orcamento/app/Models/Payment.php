@@ -15,6 +15,7 @@ class Payment extends Model
         'asaas_customer_id',
         'amount',
         'billing_type',
+        'type',
         'status',
         'due_date',
         'description',

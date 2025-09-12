@@ -28,7 +28,9 @@ class AsaasService
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json'
             ],
-            'timeout' => 30
+            'timeout' => 30, // Reduzido para 30 segundos para evitar travamentos
+            'connect_timeout' => 10, // Timeout de conexão
+            'verify' => false // Desabilita verificação SSL para sandbox
         ]);
     }
 
@@ -54,7 +56,10 @@ class AsaasService
             
             Log::info('Cobrança PIX criada com sucesso', [
                 'payment_id' => $responseData['id'] ?? null,
-                'status_code' => $response->getStatusCode()
+                'status' => $responseData['status'] ?? null,
+                'billing_type' => $responseData['billingType'] ?? null,
+                'status_code' => $response->getStatusCode(),
+                'full_response' => $responseData
             ]);
 
             return $responseData;
@@ -196,28 +201,90 @@ class AsaasService
      */
     public function getPixQrCode($paymentId)
     {
+        Log::info('Gerando QR Code PIX dinâmico', ['payment_id' => $paymentId]);
+        
+        // Primeiro, verificar o status do pagamento
         try {
-            Log::info('Gerando QR Code PIX dinâmico', ['payment_id' => $paymentId]);
+            $paymentResponse = $this->client->get("payments/{$paymentId}");
+            $paymentData = json_decode($paymentResponse->getBody()->getContents(), true);
             
-            $response = $this->client->get("payments/{$paymentId}/pixQrCode");
-            
-            $result = json_decode($response->getBody()->getContents(), true);
-            
-            Log::info('QR Code PIX dinâmico gerado com sucesso', [
+            Log::info('Status do pagamento verificado', [
                 'payment_id' => $paymentId,
-                'has_encoded_image' => !empty($result['encodedImage']),
-                'has_payload' => !empty($result['payload']),
-                'expiration_date' => $result['expirationDate'] ?? null
+                'status' => $paymentData['status'] ?? 'unknown',
+                'billing_type' => $paymentData['billingType'] ?? 'unknown'
             ]);
             
-            return $result;
-        } catch (RequestException $e) {
-            Log::error('Erro ao gerar QR Code PIX dinâmico no Asaas', [
-                'error' => $e->getMessage(),
+            // Verificar se o pagamento está no status correto para gerar QR Code
+            if (!isset($paymentData['status']) || $paymentData['status'] !== 'PENDING') {
+                throw new \Exception("Pagamento não está no status PENDING. Status atual: " . ($paymentData['status'] ?? 'unknown'));
+            }
+            
+            if (!isset($paymentData['billingType']) || $paymentData['billingType'] !== 'PIX') {
+                throw new \Exception("Pagamento não é do tipo PIX. Tipo atual: " . ($paymentData['billingType'] ?? 'unknown'));
+            }
+            
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            Log::error('Erro ao verificar status do pagamento', [
                 'payment_id' => $paymentId,
-                'response_body' => $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null
+                'error' => $e->getMessage()
             ]);
-            throw $e;
+            throw new \Exception('Erro ao verificar status do pagamento: ' . $e->getMessage());
+        }
+        
+        $maxRetries = 2;
+        $retryDelay = 2; // segundos
+        
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                Log::info('Tentativa de geração do QR Code', [
+                    'payment_id' => $paymentId,
+                    'attempt' => $attempt,
+                    'max_retries' => $maxRetries
+                ]);
+                
+                $response = $this->client->get("payments/{$paymentId}/pixQrCode");
+                $result = json_decode($response->getBody()->getContents(), true);
+                
+                Log::info('QR Code PIX gerado com sucesso', [
+                    'payment_id' => $paymentId,
+                    'attempt' => $attempt,
+                    'has_encoded_image' => !empty($result['encodedImage']),
+                    'has_payload' => !empty($result['payload']),
+                    'expiration_date' => $result['expirationDate'] ?? null
+                ]);
+                
+                return $result;
+                
+            } catch (\GuzzleHttp\Exception\ConnectException $e) {
+                Log::warning('Timeout na tentativa de gerar QR Code PIX', [
+                    'error' => $e->getMessage(),
+                    'payment_id' => $paymentId,
+                    'attempt' => $attempt,
+                    'max_retries' => $maxRetries
+                ]);
+                
+                if ($attempt === $maxRetries) {
+                    // Última tentativa falhou - lançar exceção específica
+                    Log::error('Todas as tentativas de gerar QR Code falharam', [
+                        'payment_id' => $paymentId,
+                        'total_attempts' => $maxRetries
+                    ]);
+                    
+                    throw new \Exception('A API do Asaas está temporariamente indisponível. Tente novamente em alguns minutos.');
+                }
+                
+                // Aguardar antes da próxima tentativa
+                sleep($retryDelay);
+                continue;
+                
+            } catch (RequestException $e) {
+                Log::error('Erro ao gerar QR Code PIX dinâmico no Asaas', [
+                    'error' => $e->getMessage(),
+                    'payment_id' => $paymentId,
+                    'response_body' => $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null
+                ]);
+                throw $e;
+            }
         }
     }
 }
