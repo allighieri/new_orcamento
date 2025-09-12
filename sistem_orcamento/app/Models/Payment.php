@@ -20,7 +20,8 @@ class Payment extends Model
         'description',
         'payment_data',
         'webhook_data',
-        'paid_at'
+        'paid_at',
+        'extra_budgets_quantity'
     ];
 
     protected $casts = [

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Subscription;
+use App\Models\UsageControl;
 use App\Services\AsaasService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -97,6 +98,56 @@ class WebhookController extends Controller
         // Atualizar status do pagamento
         $payment->updateStatus($paymentData['status'], $paymentData);
         
+        // Verificar se é um pagamento de orçamentos extras
+        if ($payment->extra_budgets_quantity && $payment->extra_budgets_quantity > 0) {
+            $this->handleExtraBudgetsPayment($payment);
+        } else {
+            $this->handleSubscriptionPayment($payment);
+        }
+    }
+    
+    /**
+     * Processar pagamento de orçamentos extras
+     */
+    private function handleExtraBudgetsPayment(Payment $payment)
+    {
+        // Buscar assinatura ativa da empresa
+        $subscription = Subscription::where('company_id', $payment->company_id)
+            ->where('status', 'active')
+            ->first();
+            
+        if (!$subscription) {
+            Log::error('Assinatura ativa não encontrada para pagamento de orçamentos extras', [
+                'payment_id' => $payment->id,
+                'company_id' => $payment->company_id
+            ]);
+            return;
+        }
+        
+        // Buscar controle de uso atual
+        $usageControl = UsageControl::getOrCreateForCurrentMonth(
+            $payment->company_id,
+            $subscription->id,
+            $subscription->plan->budgets_limit
+        );
+        
+        // Adicionar orçamentos extras ao limite
+        $usageControl->increment('budgets_limit', $payment->extra_budgets_quantity);
+        
+        Log::info('Orçamentos extras adicionados via pagamento', [
+            'payment_id' => $payment->id,
+            'company_id' => $payment->company_id,
+            'subscription_id' => $subscription->id,
+            'extra_budgets' => $payment->extra_budgets_quantity,
+            'new_limit' => $usageControl->budgets_limit
+        ]);
+    }
+    
+    /**
+     * Processar pagamento de assinatura
+     */
+    private function handleSubscriptionPayment(Payment $payment)
+    {
         // Criar ou atualizar assinatura da empresa
         $subscription = Subscription::where('company_id', $payment->company_id)->first();
         
@@ -115,7 +166,7 @@ class WebhookController extends Controller
             : $startDate->copy()->addMonth();
             
         // Criar nova assinatura
-        Subscription::create([
+        $newSubscription = Subscription::create([
             'company_id' => $payment->company_id,
             'plan_id' => $payment->plan_id,
             'billing_cycle' => $payment->billing_cycle,
@@ -125,6 +176,22 @@ class WebhookController extends Controller
             'next_billing_date' => $endDate,
             'amount_paid' => $payment->amount
         ]);
+        
+        // Resetar controle de uso para o mês atual com o novo plano
+        $plan = \App\Models\Plan::find($payment->plan_id);
+        if ($plan) {
+            UsageControl::getOrCreateForCurrentMonth(
+                $payment->company_id,
+                $newSubscription->id,
+                $plan->budgets_limit
+            );
+            
+            Log::info('Controle de uso resetado para nova assinatura', [
+                'company_id' => $payment->company_id,
+                'subscription_id' => $newSubscription->id,
+                'budgets_limit' => $plan->budgets_limit
+            ]);
+        }
         
         // Sinalizar para a página de checkout que o pagamento foi aprovado
         $cacheData = [

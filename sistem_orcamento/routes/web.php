@@ -148,9 +148,12 @@ Route::get('payments/change-plan', [App\Http\Controllers\PaymentController::clas
 Route::get('payments/checkout/{plan}', [App\Http\Controllers\PaymentController::class, 'checkout'])->name('payments.checkout');
     Route::post('payments/pix/{plan}', [App\Http\Controllers\PaymentController::class, 'processPixPayment'])->name('payments.process-pix');
     Route::post('payments/credit-card/{plan}', [App\Http\Controllers\PaymentController::class, 'processCreditCardPayment'])->name('payments.process-credit-card');
-    Route::get('payments/{payment}/status', [App\Http\Controllers\PaymentController::class, 'checkPaymentStatus'])->name('payments.check-status');
+    Route::get('payments/{payment}/check-status', [App\Http\Controllers\PaymentController::class, 'checkPaymentStatus'])->name('payments.check-status');
     Route::get('payments/check-status/{payment}', [App\Http\Controllers\PaymentController::class, 'checkPaymentStatus'])->name('payments.ajax-check-status');
     Route::get('payments/{payment}/details', [App\Http\Controllers\PaymentController::class, 'details'])->name('payments.details');
+    Route::get('payments/{payment}/status', [App\Http\Controllers\PaymentController::class, 'status'])->name('payments.status');
+    Route::get('payments/extra-budgets', [App\Http\Controllers\PaymentController::class, 'extraBudgets'])->name('payments.extra-budgets');
+    Route::post('payments/extra-budgets/purchase', [App\Http\Controllers\PaymentController::class, 'purchaseExtraBudgets'])->name('payments.purchase-extra-budgets');
     Route::get('payments/{payment}/pix', [App\Http\Controllers\PaymentController::class, 'pixPayment'])->name('payments.pix-payment');
     Route::get('payments', [App\Http\Controllers\PaymentController::class, 'index'])->name('payments.index');
 });

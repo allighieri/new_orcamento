@@ -186,21 +186,9 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                @if($payment->status === 'pending' && $payment->billing_type === 'PIX')
-                                                    <a href="{{ route('payments.pix-payment', $payment) }}" 
-                                                       class="btn btn-sm btn-outline-primary" title="Ver PIX">
-                                                        <i class="bi bi-qr-code"></i>
-                                                    </a>
-                                                @endif
-                                                
-                                                <button type="button" class="btn btn-sm btn-outline-info" 
-                                                        onclick="checkPaymentStatus({{ $payment->id }})" title="Verificar Status">
-                                                    <i class="bi bi-arrow-clockwise"></i>
-                                                </button>
-                                                
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" 
-                                                        onclick="showPaymentDetails({{ $payment->id }})" title="Detalhes">
-                                                    <i class="bi bi-eye"></i>
+                                                <button type="button" class="btn btn-sm btn-outline-success" 
+                                                        onclick="showPaymentStatus({{ $payment->id }})" title="Ver Status">
+                                                    <i class="bi bi-info-circle"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -232,15 +220,15 @@
     </div>
 </div>
 
-<!-- Modal de Detalhes do Pagamento -->
-<div class="modal fade" id="paymentDetailsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+<!-- Modal de Status do Pagamento -->
+<div class="modal fade" id="paymentStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Detalhes do Pagamento</h5>
+                <h5 class="modal-title">Status do Pagamento</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="paymentDetailsContent">
+            <div class="modal-body" id="paymentStatusContent">
                 <!-- Conteúdo carregado via AJAX -->
             </div>
         </div>
@@ -251,83 +239,20 @@
 
 @push('scripts')
 <script>
-function checkPaymentStatus(paymentId) {
-    const button = event.target.closest('button');
-    const originalHtml = button.innerHTML;
-    
-    button.innerHTML = '<i class="bi bi-arrow-clockwise"></i>';
-    button.disabled = true;
+function showPaymentStatus(paymentId) {
+    $('#paymentStatusContent').html('<div class="text-center py-5"><div class="spinner-border" role="status"><span class="visually-hidden">Carregando...</span></div><p class="mt-2">Carregando status do pagamento...</p></div>');
+    $('#paymentStatusModal').modal('show');
     
     $.ajax({
-        url: `/payments/check-status/${paymentId}`,
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            if (response.status_changed) {
-                // Recarregar a página para mostrar o status atualizado
-                location.reload();
-            } else {
-                // Mostrar mensagem de que não houve mudança
-                showToast('Status verificado', 'Não houve alteração no status do pagamento.', 'info');
-            }
-        },
-        error: function() {
-            showToast('Erro', 'Não foi possível verificar o status do pagamento.', 'error');
-        },
-        complete: function() {
-            button.innerHTML = originalHtml;
-            button.disabled = false;
-        }
-    });
-}
-
-function showPaymentDetails(paymentId) {
-    $('#paymentDetailsContent').html(`
-        <div class="text-center py-4">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Carregando...</span>
-            </div>
-        </div>
-    `);
-    
-    $('#paymentDetailsModal').modal('show');
-    
-    $.ajax({
-        url: `/payments/details/${paymentId}`,
+        url: `/payments/${paymentId}/status`,
         method: 'GET',
         success: function(response) {
-            $('#paymentDetailsContent').html(response);
+            $('#paymentStatusContent').html(response);
         },
-        error: function() {
-            $('#paymentDetailsContent').html(`
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    Erro ao carregar detalhes do pagamento.
-                </div>
-            `);
+        error: function(xhr, status, error) {
+            $('#paymentStatusContent').html('<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>Erro ao carregar status do pagamento. Tente novamente.</div>');
         }
     });
-}
-
-function showToast(title, message, type) {
-    // Implementar sistema de toast/notificação
-    const alertClass = type === 'error' ? 'alert-danger' : type === 'success' ? 'alert-success' : 'alert-info';
-    
-    const toast = $(`
-        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
-             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-            <strong>${title}:</strong> ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `);
-    
-    $('body').append(toast);
-    
-    setTimeout(function() {
-        toast.alert('close');
-    }, 5000);
 }
 </script>
 @endpush

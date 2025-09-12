@@ -464,6 +464,43 @@ class PaymentController extends Controller
             return view('payments.details', compact('payment'))->with('error', 'Não foi possível carregar informações atualizadas do pagamento.');
         }
     }
+    
+    /**
+     * Exibir tela de status do pagamento
+     */
+    public function status(Payment $payment)
+    {
+        // Verificar se o pagamento pertence à empresa do usuário
+        if ($payment->company_id !== Auth::user()->company_id) {
+            abort(403, 'Acesso negado.');
+        }
+
+        try {
+            // Buscar informações atualizadas do Asaas se houver ID
+            $asaasPayment = null;
+            if ($payment->asaas_payment_id) {
+                $asaasPayment = $this->asaasService->getPaymentStatus($payment->asaas_payment_id);
+            }
+
+            // Se for requisição AJAX, retornar apenas o conteúdo da view
+            if (request()->ajax()) {
+                return view('payments.status-content', compact('payment', 'asaasPayment'))->render();
+            }
+
+            return view('payments.status', compact('payment', 'asaasPayment'));
+        } catch (\Exception $e) {
+            \Log::error('Erro ao carregar status do pagamento', [
+                'error' => $e->getMessage(),
+                'payment_id' => $payment->id
+            ]);
+            
+            if (request()->ajax()) {
+                return view('payments.status-content', compact('payment'))->with('error', 'Não foi possível carregar informações atualizadas do pagamento.')->render();
+            }
+            
+            return view('payments.status', compact('payment'))->with('error', 'Não foi possível carregar informações atualizadas do pagamento.');
+        }
+    }
 
     /**
      * Exibir página de pagamento PIX
@@ -497,6 +534,106 @@ class PaymentController extends Controller
             
             return view('payments.pix-payment', compact('payment'))
                 ->with('error', 'Não foi possível carregar o QR Code PIX.');
+        }
+    }
+
+    /**
+     * Exibir página de compra de orçamentos extras
+     */
+    public function extraBudgets()
+    {
+        $company = Auth::user()->company;
+        $activeSubscription = $company->activeSubscription();
+        
+        if (!$activeSubscription) {
+            return redirect()->route('payments.select-plan')
+                           ->with('error', 'Você precisa ter um plano ativo para comprar orçamentos extras.');
+        }
+        
+        // Buscar controle de uso atual
+        $usageControl = \App\Models\UsageControl::getOrCreateForCurrentMonth(
+            $company->id,
+            $activeSubscription->id,
+            $activeSubscription->plan->budget_limit
+        );
+        
+        // Preços por orçamento extra (pode ser configurável no futuro)
+        $pricePerBudget = 5.00; // R$ 5,00 por orçamento extra
+        
+        return view('payments.extra-budgets', compact('company', 'activeSubscription', 'usageControl', 'pricePerBudget'));
+    }
+
+    /**
+     * Processar compra de orçamentos extras
+     */
+    public function purchaseExtraBudgets(Request $request)
+    {
+        $request->validate([
+            'quantity' => 'required|integer|min:1|max:100',
+            'payment_method' => 'required|in:pix,credit_card'
+        ]);
+        
+        $company = Auth::user()->company;
+        $activeSubscription = $company->activeSubscription();
+        
+        if (!$activeSubscription) {
+            return back()->with('error', 'Você precisa ter um plano ativo para comprar orçamentos extras.');
+        }
+        
+        $quantity = $request->quantity;
+        $pricePerBudget = 5.00; // R$ 5,00 por orçamento extra
+        $totalAmount = $quantity * $pricePerBudget;
+        
+        try {
+            DB::beginTransaction();
+            
+            // Criar registro de pagamento
+            $payment = Payment::create([
+                'company_id' => $company->id,
+                'plan_id' => null, // Não é um plano, são orçamentos extras
+                'amount' => $totalAmount,
+                'payment_method' => $request->payment_method,
+                'billing_cycle' => 'one_time',
+                'status' => 'pending',
+                'description' => "Compra de {$quantity} orçamentos extras",
+                'extra_budgets_quantity' => $quantity
+            ]);
+            
+            // Processar pagamento via Asaas
+            if ($request->payment_method === 'pix') {
+                $asaasPayment = $this->asaasService->createPixPayment(
+                    $company,
+                    $totalAmount,
+                    "Compra de {$quantity} orçamentos extras"
+                );
+            } else {
+                // Para cartão de crédito, redirecionar para página de checkout
+                return redirect()->route('payments.checkout-extra-budgets', $payment)
+                               ->with('success', 'Pagamento criado. Complete os dados do cartão.');
+            }
+            
+            // Atualizar com ID do Asaas
+            $payment->update([
+                'asaas_payment_id' => $asaasPayment['id'],
+                'asaas_invoice_url' => $asaasPayment['invoiceUrl'] ?? null
+            ]);
+            
+            DB::commit();
+            
+            if ($request->payment_method === 'pix') {
+                return redirect()->route('payments.pix-extra-budgets', $payment)
+                               ->with('success', 'Pagamento PIX criado com sucesso!');
+            }
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erro ao processar compra de orçamentos extras', [
+                'error' => $e->getMessage(),
+                'company_id' => $company->id,
+                'quantity' => $quantity
+            ]);
+            
+            return back()->with('error', 'Erro ao processar pagamento: ' . $e->getMessage());
         }
     }
 }

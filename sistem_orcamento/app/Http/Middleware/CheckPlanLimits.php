@@ -74,8 +74,23 @@ class CheckPlanLimits
                                ->with('sweetalert', [
                                    'type' => 'warning',
                                    'title' => 'Limite Atingido!',
-                                   'text' => 'Você atingiu o limite de orçamentos do seu plano. Adquira orçamentos extras ou faça upgrade do plano.',
-                                   'confirmButtonText' => 'OK'
+                                   'text' => 'Você atingiu o limite de orçamentos do seu plano (' . $usageControl->budgets_limit . ' orçamentos). Escolha uma opção para continuar:',
+                                   'showCancelButton' => true,
+                                   'confirmButtonText' => 'Fazer Upgrade do Plano',
+                                   'cancelButtonText' => 'Comprar Orçamentos Extras',
+                                   'confirmButtonColor' => '#3085d6',
+                                   'cancelButtonColor' => '#28a745',
+                                   'allowOutsideClick' => false,
+                                   'allowEscapeKey' => false,
+                                   'reverseButtons' => true,
+                                   'customClass' => [
+                                       'confirmButton' => 'btn btn-primary mx-2',
+                                       'cancelButton' => 'btn btn-success mx-2'
+                                   ],
+                                   'actions' => [
+                                       'confirm' => route('payments.select-plan'),
+                                       'cancel' => route('payments.extra-budgets')
+                                   ]
                                ]);
             }
         }
