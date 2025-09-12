@@ -480,12 +480,46 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const sweetalertData = @json(session('sweetalert'));
-            Swal.fire({
+            
+            const swalConfig = {
                 icon: sweetalertData.type,
                 title: sweetalertData.title,
                 text: sweetalertData.text,
                 confirmButtonText: sweetalertData.confirmButtonText || 'OK',
-                confirmButtonColor: '#0d6efd'
+                confirmButtonColor: sweetalertData.confirmButtonColor || '#0d6efd'
+            };
+            
+            // Adicionar configurações extras se existirem
+            if (sweetalertData.showCancelButton) {
+                swalConfig.showCancelButton = sweetalertData.showCancelButton;
+                swalConfig.cancelButtonText = sweetalertData.cancelButtonText || 'Cancelar';
+                swalConfig.cancelButtonColor = sweetalertData.cancelButtonColor || '#6c757d';
+            }
+            
+            if (sweetalertData.allowOutsideClick !== undefined) {
+                swalConfig.allowOutsideClick = sweetalertData.allowOutsideClick;
+            }
+            
+            if (sweetalertData.allowEscapeKey !== undefined) {
+                swalConfig.allowEscapeKey = sweetalertData.allowEscapeKey;
+            }
+            
+            if (sweetalertData.reverseButtons) {
+                swalConfig.reverseButtons = sweetalertData.reverseButtons;
+            }
+            
+            if (sweetalertData.customClass) {
+                swalConfig.customClass = sweetalertData.customClass;
+            }
+            
+            Swal.fire(swalConfig).then((result) => {
+                if (sweetalertData.actions) {
+                    if (result.isConfirmed && sweetalertData.actions.confirm) {
+                        window.location.href = sweetalertData.actions.confirm;
+                    } else if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel && sweetalertData.actions.cancel) {
+                        window.location.href = sweetalertData.actions.cancel;
+                    }
+                }
             });
         });
     </script>

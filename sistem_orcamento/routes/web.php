@@ -155,7 +155,8 @@ Route::get('payments/checkout/{plan}', [App\Http\Controllers\PaymentController::
 Route::get('payments/{payment}/invoice', [App\Http\Controllers\PaymentController::class, 'invoice'])->name('payments.invoice');
 Route::get('payments/{payment}/receipt', [App\Http\Controllers\PaymentController::class, 'receipt'])->name('payments.receipt');
     Route::get('payments/extra-budgets', [App\Http\Controllers\PaymentController::class, 'extraBudgets'])->name('payments.extra-budgets');
-    Route::post('payments/extra-budgets/purchase', [App\Http\Controllers\PaymentController::class, 'purchaseExtraBudgets'])->name('payments.purchase-extra-budgets');
+Route::get('payments/extra-budgets/checkout', [App\Http\Controllers\PaymentController::class, 'extraBudgetsCheckout'])->name('payments.extra-budgets-checkout');
+Route::post('payments/extra-budgets/purchase', [App\Http\Controllers\PaymentController::class, 'purchaseExtraBudgets'])->name('payments.purchase-extra-budgets');
     Route::get('payments/{payment}/pix', [App\Http\Controllers\PaymentController::class, 'pixPayment'])->name('payments.pix-payment');
     Route::get('payments', [App\Http\Controllers\PaymentController::class, 'index'])->name('payments.index');
 });

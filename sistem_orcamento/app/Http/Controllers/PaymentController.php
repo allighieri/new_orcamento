@@ -60,6 +60,22 @@ class PaymentController extends Controller
     public function checkout(Request $request, Plan $plan)
     {
         $company = Auth::user()->company;
+        $type = $request->get('type'); // Verificar se é compra de orçamentos extras
+        
+        if ($type === 'extra_budgets') {
+            // Para orçamentos extras, usar o valor mensal do plano atual
+            $activeSubscription = $company->activeSubscription();
+            if (!$activeSubscription) {
+                return redirect()->route('payments.select-plan')
+                               ->with('error', 'Você precisa ter um plano ativo para comprar orçamentos extras.');
+            }
+            
+            $amount = $activeSubscription->plan->monthly_price;
+            $period = 'extra_budgets';
+            
+            return view('payments.checkout', compact('plan', 'company', 'period', 'amount', 'type'));
+        }
+        
         $period = $request->get('period', 'yearly'); // Default para anual
         
         // Determinar o valor baseado no período
@@ -91,6 +107,7 @@ class PaymentController extends Controller
             DB::beginTransaction();
             
             $company = Auth::user()->company;
+            $type = $request->get('type'); // Verificar se é compra de orçamentos extras
             
             // Buscar ou criar cliente no Asaas
             $customers = $this->asaasService->findCustomerByCpfCnpj($request->cpf_cnpj);
@@ -107,34 +124,56 @@ class PaymentController extends Controller
                 $customer = $customers[0];
             }
 
-            // Determinar preço baseado no ciclo de cobrança
-            $billingCycle = session('selected_billing_cycle', 'monthly');
-            $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
-            $cycleText = $billingCycle === 'annual' ? 'Anual' : 'Mensal';
+            if ($type === 'extra_budgets') {
+                // Para orçamentos extras
+                $activeSubscription = $company->activeSubscription();
+                if (!$activeSubscription) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Você precisa ter um plano ativo para comprar orçamentos extras.'
+                    ], 400);
+                }
+                
+                $price = $activeSubscription->plan->monthly_price;
+                $description = "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano - {$company->name}";
+                $billingCycle = 'one_time';
+            } else {
+                // Para assinatura de plano
+                $billingCycle = session('selected_billing_cycle', 'monthly');
+                $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
+                $cycleText = $billingCycle === 'annual' ? 'Anual' : 'Mensal';
+                $description = "Assinatura {$cycleText} do plano {$plan->name} - {$company->name}";
+            }
             
             // Criar cobrança PIX no Asaas
             $paymentData = [
                 'customer' => $customer['id'],
                 'value' => $price,
                 'dueDate' => now()->addDays(1)->format('Y-m-d'),
-                'description' => "Assinatura {$cycleText} do plano {$plan->name} - {$company->name}"
+                'description' => $description
             ];
 
             $asaasPayment = $this->asaasService->createPixCharge($paymentData);
 
             // Salvar pagamento no banco
-            $payment = Payment::create([
+            $paymentCreateData = [
                 'company_id' => $company->id,
-                'plan_id' => $plan->id,
+                'plan_id' => $type === 'extra_budgets' ? null : $plan->id,
                 'asaas_payment_id' => $asaasPayment['id'],
                 'asaas_customer_id' => $customer['id'],
                 'amount' => $price,
                 'billing_type' => 'PIX',
                 'status' => 'PENDING',
                 'due_date' => $asaasPayment['dueDate'],
-                'description' => $paymentData['description'],
+                'description' => $description,
                 'billing_cycle' => $billingCycle
-            ]);
+            ];
+            
+            if ($type === 'extra_budgets') {
+                $paymentCreateData['extra_budgets_quantity'] = 999; // Valor simbólico para orçamentos ilimitados
+            }
+            
+            $payment = Payment::create($paymentCreateData);
 
             // Gerar QR Code PIX dinâmico usando o ID da cobrança
             Log::info('Tentando gerar QR Code PIX dinâmico', ['payment_id' => $asaasPayment['id']]);
@@ -218,6 +257,7 @@ class PaymentController extends Controller
             DB::beginTransaction();
             
             $company = Auth::user()->company;
+            $type = $request->get('type'); // Verificar se é compra de orçamentos extras
             
             // Buscar ou criar cliente no Asaas
             $customers = $this->asaasService->findCustomerByCpfCnpj($request->cpf_cnpj);
@@ -234,17 +274,33 @@ class PaymentController extends Controller
                 $customer = $customers[0];
             }
 
-            // Determinar preço baseado no ciclo de cobrança
-            $billingCycle = session('selected_billing_cycle', 'monthly');
-            $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
-            $cycleText = $billingCycle === 'annual' ? 'Anual' : 'Mensal';
+            if ($type === 'extra_budgets') {
+                // Para orçamentos extras
+                $activeSubscription = $company->activeSubscription();
+                if (!$activeSubscription) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Você precisa ter um plano ativo para comprar orçamentos extras.'
+                    ], 400);
+                }
+                
+                $price = $activeSubscription->plan->monthly_price;
+                $description = "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano - {$company->name}";
+                $billingCycle = 'one_time';
+            } else {
+                // Para assinatura de plano
+                $billingCycle = session('selected_billing_cycle', 'monthly');
+                $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
+                $cycleText = $billingCycle === 'annual' ? 'Anual' : 'Mensal';
+                $description = "Assinatura {$cycleText} do plano {$plan->name} - {$company->name}";
+            }
             
             // Criar cobrança com cartão no Asaas
             $paymentData = [
                 'customer' => $customer['id'],
                 'value' => $price,
                 'dueDate' => now()->format('Y-m-d'),
-                'description' => "Assinatura {$cycleText} do plano {$plan->name} - {$company->name}",
+                'description' => $description,
                 'creditCard' => [
                     'holderName' => $request->card_holder_name,
                     'number' => $request->card_number,
@@ -263,18 +319,24 @@ class PaymentController extends Controller
             $asaasPayment = $this->asaasService->createCreditCardCharge($paymentData);
 
             // Salvar pagamento no banco
-            $payment = Payment::create([
+            $paymentCreateData = [
                 'company_id' => $company->id,
-                'plan_id' => $plan->id,
+                'plan_id' => $type === 'extra_budgets' ? null : $plan->id,
                 'asaas_payment_id' => $asaasPayment['id'],
                 'asaas_customer_id' => $customer['id'],
                 'amount' => $price,
                 'billing_type' => 'CREDIT_CARD',
                 'status' => $asaasPayment['status'] ?? 'PENDING',
                 'due_date' => $asaasPayment['dueDate'],
-                'description' => $paymentData['description'],
+                'description' => $description,
                 'billing_cycle' => $billingCycle
-            ]);
+            ];
+            
+            if ($type === 'extra_budgets') {
+                $paymentCreateData['extra_budgets_quantity'] = 999; // Valor simbólico para orçamentos ilimitados
+            }
+            
+            $payment = Payment::create($paymentCreateData);
 
             DB::commit();
 
@@ -682,8 +744,9 @@ class PaymentController extends Controller
     public function purchaseExtraBudgets(Request $request)
     {
         $request->validate([
-            'quantity' => 'required|integer|min:1|max:100',
-            'payment_method' => 'required|in:pix,credit_card'
+            'quantity' => 'required|integer|min:1',
+            'payment_method' => 'required|in:pix,credit_card',
+            'amount' => 'required|numeric|min:0.01'
         ]);
         
         $company = Auth::user()->company;
@@ -694,8 +757,13 @@ class PaymentController extends Controller
         }
         
         $quantity = $request->quantity;
-        $pricePerBudget = 5.00; // R$ 5,00 por orçamento extra
-        $totalAmount = $quantity * $pricePerBudget;
+        $totalAmount = floatval($request->amount);
+        
+        // Verificar se o valor corresponde ao plano atual
+        $currentPlanPrice = $activeSubscription->plan->price;
+        if (abs($totalAmount - $currentPlanPrice) > 0.01) {
+            return back()->with('error', 'Valor inválido para orçamentos extras.');
+        }
         
         try {
             DB::beginTransaction();
@@ -708,8 +776,8 @@ class PaymentController extends Controller
                 'payment_method' => $request->payment_method,
                 'billing_cycle' => 'one_time',
                 'status' => 'pending',
-                'description' => "Compra de {$quantity} orçamentos extras",
-                'extra_budgets_quantity' => $quantity
+                'description' => "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras",
+                'extra_budgets_quantity' => $activeSubscription->plan->budget_limit // Quantidade baseada no plano atual
             ]);
             
             // Processar pagamento via Asaas
@@ -717,7 +785,7 @@ class PaymentController extends Controller
                 $asaasPayment = $this->asaasService->createPixPayment(
                     $company,
                     $totalAmount,
-                    "Compra de {$quantity} orçamentos extras"
+                    "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano"
                 );
             } else {
                 // Para cartão de crédito, redirecionar para página de checkout
@@ -748,5 +816,32 @@ class PaymentController extends Controller
             
             return back()->with('error', 'Erro ao processar pagamento: ' . $e->getMessage());
         }
+    }
+    
+    /**
+     * Checkout para orçamentos extras
+     */
+    public function extraBudgetsCheckout()
+    {
+        $company = Auth::user()->company;
+        $activeSubscription = $company->activeSubscription();
+        
+        if (!$activeSubscription) {
+            return redirect()->route('payments.select-plan')
+                           ->with('error', 'Você precisa ter um plano ativo para comprar orçamentos extras.');
+        }
+        
+        $plan = $activeSubscription->plan;
+        $amount = $plan->monthly_price;
+        $type = 'extra_budgets';
+        $period = 'extra_budgets';
+        
+        // Definir que é uma compra de orçamentos extras
+        session(['checkout_type' => 'extra_budgets']);
+        
+        return view('payments.checkout', compact('plan', 'amount', 'type', 'period'))
+            ->with('isExtraBudgets', true)
+            ->with('pageTitle', 'Adicionar Orçamentos Extras')
+            ->with('planDescription', "{$plan->budget_limit} orçamentos extras");
     }
 }

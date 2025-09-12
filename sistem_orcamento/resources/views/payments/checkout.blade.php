@@ -1,16 +1,22 @@
 @extends('layouts.app')
 
-@section('title', 'Checkout - ' . $plan->name)
+@section('title', isset($isExtraBudgets) && $isExtraBudgets ? 'Checkout - Orçamentos Extras' : 'Checkout - ' . $plan->name)
 
 @section('content')
 <div class="container  mx-auto m-4">
     <div class="row">
         <div class="col-12">
             <div class="page-title-box">
-                <h4 class="page-title">Checkout - Plano {{ $plan->name }}</h4>
+                <h4 class="page-title">
+                    {{ $pageTitle ?? 'Checkout - Plano ' . $plan->name }}
+                </h4>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('payments.select-plan') }}">Escolher Plano</a></li>
+                    @if(isset($isExtraBudgets) && $isExtraBudgets)
+                        <li class="breadcrumb-item"><a href="{{ route('payments.extra-budgets') }}">Orçamentos Extras</a></li>
+                    @else
+                        <li class="breadcrumb-item"><a href="{{ route('payments.select-plan') }}">Escolher Plano</a></li>
+                    @endif
                     <li class="breadcrumb-item active">Checkout</li>
                 </ol>
             </div>
@@ -24,22 +30,36 @@
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-md-8">
-                            <h5 class="mb-1">Plano {{ $plan->name }}</h5>
-                            <p class="text-muted mb-0">{{ $plan->budget_limit }} orçamentos por mês</p>
-                            <p class="text-info mb-0">
-                                <i class="mdi mdi-calendar"></i> 
-                                Ciclo: {{ $period === 'yearly' ? 'Anual' : 'Mensal' }}
-                            </p>
+                            @if(isset($isExtraBudgets) && $isExtraBudgets)
+                                <h5 class="mb-1">Orçamentos Extras</h5>
+                                <p class="text-muted mb-0">{{ $planDescription ?? 'Orçamentos extras limitados ao período do seu plano' }}</p>
+                                <p class="text-info mb-0">
+                                    <i class="mdi mdi-calendar"></i> 
+                                    Válido pelo período restante do seu plano atual
+                                </p>
+                            @else
+                                <h5 class="mb-1">Plano {{ $plan->name }}</h5>
+                                <p class="text-muted mb-0">{{ $plan->budget_limit }} orçamentos por mês</p>
+                                <p class="text-info mb-0">
+                                    <i class="mdi mdi-calendar"></i> 
+                                    Ciclo: {{ $period === 'yearly' ? 'Anual' : 'Mensal' }}
+                                </p>
+                            @endif
                         </div>
                         <div class="col-md-4 text-end">
-                            @php
-                                $periodLabel = $period === 'yearly' ? 'ano' : 'mês';
-                            @endphp
-                            <h4 class="mb-0 text-primary">R$ {{ number_format($amount, 2, ',', '.') }}/{{ $periodLabel }}</h4>
-                            @if($period === 'yearly')
-                                <small class="text-success">
-                                    Economia de R$ {{ number_format((($plan->monthly_price * 12) - $plan->annual_price), 2, ',', '.') }}
-                                </small>
+                            @if(isset($type) && $type === 'extra_budgets')
+                                <h4 class="mb-0 text-primary">R$ {{ number_format($amount, 2, ',', '.') }}</h4>
+                                <small class="text-muted">Pagamento único</small>
+                            @else
+                                @php
+                                    $periodLabel = $period === 'yearly' ? 'ano' : 'mês';
+                                @endphp
+                                <h4 class="mb-0 text-primary">R$ {{ number_format($amount, 2, ',', '.') }}/{{ $periodLabel }}</h4>
+                                @if($period === 'yearly')
+                                    <small class="text-success">
+                                        Economia de R$ {{ number_format((($plan->monthly_price * 12) - $plan->annual_price), 2, ',', '.') }}
+                                    </small>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -71,6 +91,9 @@
                             <form id="pixForm" action="{{ route('payments.process-pix', $plan->id) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                @if(isset($isExtraBudgets) && $isExtraBudgets)
+                                    <input type="hidden" name="type" value="extra_budgets">
+                                @endif
                                 
                                 <div class="text-center mb-4">
                                     <i class="mdi mdi-qrcode display-4 text-success"></i>
@@ -123,6 +146,9 @@
                             <form id="creditCardForm" action="{{ route('payments.process-credit-card', $plan->id) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                @if(isset($isExtraBudgets) && $isExtraBudgets)
+                                    <input type="hidden" name="type" value="extra_budgets">
+                                @endif
                                 
                                 <div class="text-center mb-4">
                                     <i class="mdi mdi-credit-card display-4 text-primary"></i>

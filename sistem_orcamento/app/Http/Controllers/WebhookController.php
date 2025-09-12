@@ -128,18 +128,21 @@ class WebhookController extends Controller
         $usageControl = UsageControl::getOrCreateForCurrentMonth(
             $payment->company_id,
             $subscription->id,
-            $subscription->plan->budgets_limit
+            $subscription->plan->budget_limit
         );
         
-        // Adicionar orçamentos extras ao limite
-        $usageControl->increment('budgets_limit', $payment->extra_budgets_quantity);
+        // Adicionar orçamentos extras ao limite atual (mesmo valor do plano)
+        $extraBudgets = $subscription->plan->budget_limit;
+        $usageControl->addExtraBudgets($extraBudgets, $payment->amount);
         
         Log::info('Orçamentos extras adicionados via pagamento', [
             'payment_id' => $payment->id,
             'company_id' => $payment->company_id,
             'subscription_id' => $subscription->id,
-            'extra_budgets' => $payment->extra_budgets_quantity,
-            'new_limit' => $usageControl->budgets_limit
+            'extra_budgets_added' => $extraBudgets,
+            'total_extra_budgets' => $usageControl->extra_budgets_purchased,
+            'budgets_limit' => $usageControl->budgets_limit,
+            'amount_paid' => $payment->amount
         ]);
     }
     
@@ -183,13 +186,13 @@ class WebhookController extends Controller
             UsageControl::getOrCreateForCurrentMonth(
                 $payment->company_id,
                 $newSubscription->id,
-                $plan->budgets_limit
+                $plan->budget_limit
             );
             
             Log::info('Controle de uso resetado para nova assinatura', [
                 'company_id' => $payment->company_id,
                 'subscription_id' => $newSubscription->id,
-                'budgets_limit' => $plan->budgets_limit
+                'budgets_limit' => $plan->budget_limit
             ]);
         }
         
