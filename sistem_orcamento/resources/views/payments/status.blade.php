@@ -215,9 +215,7 @@
                                 </a>
                             @endif
                             
-                            <button type="button" class="btn btn-outline-info me-2" onclick="checkPaymentStatus({{ $payment->id }})">
-                                <i class="bi bi-arrow-clockwise me-1"></i>Atualizar Status
-                            </button>
+                            <!-- Botão removido - status atualizado automaticamente via webhook -->
                         </div>
                         
                         <div>
@@ -312,46 +310,6 @@
 
 @push('scripts')
 <script>
-function checkPaymentStatus(paymentId) {
-    const button = event.target.closest('button');
-    const originalHtml = button.innerHTML;
-    
-    button.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Verificando...';
-    button.disabled = true;
-    
-    $.ajax({
-        url: `/payments/check-status/${paymentId}`,
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            if (response.status_changed) {
-                // Recarregar a página para mostrar o novo status
-                location.reload();
-            } else {
-                // Mostrar mensagem de que não houve mudança
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Status Verificado',
-                    text: 'O status do pagamento não foi alterado.',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            }
-        },
-        error: function(xhr, status, error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Erro',
-                text: 'Erro ao verificar status do pagamento. Tente novamente.'
-            });
-        },
-        complete: function() {
-            button.innerHTML = originalHtml;
-            button.disabled = false;
-        }
-    });
-}
+// Função removida - o status é atualizado automaticamente via webhook
 </script>
 @endpush

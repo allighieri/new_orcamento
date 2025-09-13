@@ -171,6 +171,7 @@ Route::post('payments/extra-budgets/purchase', [App\Http\Controllers\PaymentCont
     
     // Rotas para cancelamento de planos anuais
     Route::get('payments/cancel-annual-plan', [App\Http\Controllers\PaymentController::class, 'cancelAnnualPlan'])->name('payments.cancel-annual-plan');
+    Route::get('payments/cancellation-fee/{plan}', [App\Http\Controllers\PaymentController::class, 'cancellationFeeCheckout'])->name('payments.cancellation-fee');
     Route::post('payments/process-cancellation-fee', [App\Http\Controllers\PaymentController::class, 'processCancellationFee'])->name('payments.process-cancellation-fee');
 });
 

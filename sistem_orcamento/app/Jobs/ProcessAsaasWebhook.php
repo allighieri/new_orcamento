@@ -288,6 +288,10 @@ class ProcessAsaasWebhook implements ShouldQueue
         // Verificar tipo de pagamento
         if ($payment->type === 'cancellation_fee') {
             $this->handleCancellationFeePayment($payment);
+        } elseif ($payment->type === 'plan_change') {
+            $this->handlePlanChangePayment($payment);
+        } elseif ($payment->type === 'plan_change_annual') {
+            $this->handleAnnualPlanChangePayment($payment, $paymentData);
         } elseif ($payment->extra_budgets_quantity && $payment->extra_budgets_quantity > 0) {
             $this->handleExtraBudgetsPayment($payment);
         } else {
@@ -357,27 +361,6 @@ class ProcessAsaasWebhook implements ShouldQueue
                 return; // Não precisa criar nova assinatura
             }
             
-            // Verificar se existe subscription ativa da empresa com billing_cycle diferente
-            $activeSubscription = Subscription::where('company_id', $payment->company_id)
-                ->where('status', 'active')
-                ->first();
-                
-            if ($activeSubscription && $activeSubscription->billing_cycle !== $payment->billing_cycle) {
-                Log::info('Mudança de plano detectada - cancelando subscription atual (fila)', [
-                    'payment_id' => $payment->id,
-                    'old_subscription_id' => $activeSubscription->id,
-                    'old_billing_cycle' => $activeSubscription->billing_cycle,
-                    'new_billing_cycle' => $payment->billing_cycle,
-                    'asaas_subscription_id' => $payment->asaas_subscription_id
-                ]);
-                
-                // Cancelar subscription atual
-                $activeSubscription->update([
-                    'status' => 'cancelled',
-                    'cancelled_at' => now()
-                ]);
-            }
-            
             // Primeiro pagamento da assinatura - criar assinatura
             Log::info('Primeiro pagamento de assinatura - criando assinatura (fila)', [
                 'payment_id' => $payment->id,
@@ -387,19 +370,51 @@ class ProcessAsaasWebhook implements ShouldQueue
             ]);
         }
         
-        // Buscar assinatura ativa da empresa (caso não tenha asaas_subscription_id)
-        if (!$payment->asaas_subscription_id) {
-            $subscription = Subscription::where('company_id', $payment->company_id)
-                ->where('status', 'active')
-                ->first();
+        // Buscar e cancelar TODAS as assinaturas ativas da empresa antes de criar nova
+        // Usar lockForUpdate para evitar condições de corrida
+        $activeSubscriptions = Subscription::where('company_id', $payment->company_id)
+            ->where('status', 'active')
+            ->lockForUpdate()
+            ->get();
+        
+        // Cancelar todas as assinaturas ativas encontradas
+        foreach ($activeSubscriptions as $activeSubscription) {
+            Log::info('Cancelando assinatura anterior (fila)', [
+                'payment_id' => $payment->id,
+                'old_subscription_id' => $activeSubscription->id,
+                'old_plan_id' => $activeSubscription->plan_id,
+                'new_plan_id' => $payment->plan_id,
+                'old_billing_cycle' => $activeSubscription->billing_cycle,
+                'new_billing_cycle' => $payment->billing_cycle
+            ]);
             
-            // Cancelar assinatura atual se existir
-            if ($subscription && $subscription->status === 'active') {
-                $subscription->update([
-                    'status' => 'cancelled',
-                    'cancelled_at' => now()
-                ]);
+            // Cancelar no Asaas se tiver subscription_id
+            if ($activeSubscription->asaas_subscription_id) {
+                try {
+                    $asaasService = app(\App\Services\AsaasService::class);
+                    $asaasService->cancelSubscription($activeSubscription->asaas_subscription_id);
+                } catch (\Exception $e) {
+                    Log::warning('Erro ao cancelar assinatura no Asaas via webhook', [
+                        'subscription_id' => $activeSubscription->asaas_subscription_id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
+            
+            $activeSubscription->update([
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
+                'end_date' => now()
+            ]);
+        }
+        
+        // Log do número de assinaturas canceladas
+        if ($activeSubscriptions->count() > 0) {
+            Log::info('Total de assinaturas canceladas', [
+                'payment_id' => $payment->id,
+                'company_id' => $payment->company_id,
+                'cancelled_count' => $activeSubscriptions->count()
+            ]);
         }
         
         // Calcular datas baseado no ciclo de cobrança
@@ -523,6 +538,188 @@ class ProcessAsaasWebhook implements ShouldQueue
         
         // Aqui você pode implementar a lógica específica para taxa de cancelamento
         // Por exemplo, reativar a empresa ou permitir nova assinatura
+    }
+    
+    /**
+     * Processar pagamento de mudança entre planos anuais
+     */
+    private function handleAnnualPlanChangePayment(Payment $payment, array $paymentData)
+    {
+        Log::info('Pagamento de mudança entre planos anuais confirmado via fila', [
+            'payment_id' => $payment->id,
+            'company_id' => $payment->company_id,
+            'new_plan_id' => $payment->plan_id,
+            'amount' => $payment->amount
+        ]);
+        
+        try {
+            $company = \App\Models\Company::find($payment->company_id);
+            $newPlan = \App\Models\Plan::find($payment->plan_id);
+            
+            if (!$company || !$newPlan) {
+                Log::error('Empresa ou plano não encontrado para mudança de plano anual', [
+                    'payment_id' => $payment->id,
+                    'company_id' => $payment->company_id,
+                    'plan_id' => $payment->plan_id
+                ]);
+                return;
+            }
+            
+            // Buscar e cancelar TODAS as assinaturas ativas da empresa
+            $activeSubscriptions = Subscription::where('company_id', $payment->company_id)
+                ->where('status', 'active')
+                ->lockForUpdate()
+                ->get();
+            
+            Log::info('Cancelando assinaturas ativas para mudança de plano anual', [
+                'payment_id' => $payment->id,
+                'company_id' => $payment->company_id,
+                'active_subscriptions_count' => $activeSubscriptions->count()
+            ]);
+            
+            // Cancelar todas as assinaturas ativas
+            foreach ($activeSubscriptions as $activeSubscription) {
+                // Cancelar no Asaas se tiver subscription_id
+                if ($activeSubscription->asaas_subscription_id) {
+                    try {
+                        $asaasService = app(\App\Services\AsaasService::class);
+                        $asaasService->cancelSubscription($activeSubscription->asaas_subscription_id);
+                    } catch (\Exception $e) {
+                        Log::warning('Erro ao cancelar assinatura no Asaas via webhook', [
+                            'subscription_id' => $activeSubscription->asaas_subscription_id,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+                
+                $activeSubscription->update([
+                    'status' => 'cancelled',
+                    'cancelled_at' => now(),
+                    'end_date' => now()
+                ]);
+            }
+            
+            // Criar nova assinatura anual
+            $newSubscription = \App\Models\Subscription::create([
+                'company_id' => $payment->company_id,
+                'plan_id' => $newPlan->id,
+                'status' => 'active',
+                'start_date' => now(),
+                'end_date' => now()->addYear(),
+                'next_billing_date' => now()->addYear(),
+                'billing_cycle' => 'annual',
+                'amount_paid' => $payment->amount,
+                'asaas_subscription_id' => $payment->asaas_subscription_id,
+                'payment_id' => $payment->id
+            ]);
+            
+            Log::info('Nova assinatura anual criada após mudança de plano', [
+                'payment_id' => $payment->id,
+                'company_id' => $payment->company_id,
+                'new_subscription_id' => $newSubscription->id,
+                'new_plan_id' => $newPlan->id
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao processar mudança de plano anual', [
+                'payment_id' => $payment->id,
+                'company_id' => $payment->company_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+    
+    /**
+     * Processar pagamento de mudança de plano
+     */
+    private function handlePlanChangePayment(Payment $payment)
+    {
+        Log::info('Pagamento de mudança de plano confirmado via fila', [
+            'payment_id' => $payment->id,
+            'company_id' => $payment->company_id,
+            'amount' => $payment->amount,
+            'metadata' => $payment->metadata
+        ]);
+        
+        try {
+            $company = \App\Models\Company::find($payment->company_id);
+            $newPlan = \App\Models\Plan::find($payment->plan_id);
+            
+            if (!$company || !$newPlan) {
+                Log::error('Empresa ou plano não encontrado para mudança de plano', [
+                    'payment_id' => $payment->id,
+                    'company_id' => $payment->company_id,
+                    'plan_id' => $payment->plan_id
+                ]);
+                return;
+            }
+            
+            // Buscar assinatura anual ativa
+            $activeSubscription = $company->activeSubscription();
+            
+            if (!$activeSubscription || !$activeSubscription->isAnnual()) {
+                Log::error('Assinatura anual ativa não encontrada para mudança de plano', [
+                    'payment_id' => $payment->id,
+                    'company_id' => $payment->company_id
+                ]);
+                return;
+            }
+            
+            // Cancelar assinatura anual atual
+            if ($activeSubscription->asaas_subscription_id) {
+                try {
+                    $asaasService = app(\App\Services\AsaasService::class);
+                    $asaasService->cancelSubscription($activeSubscription->asaas_subscription_id);
+                } catch (\Exception $e) {
+                    Log::warning('Erro ao cancelar assinatura no Asaas via webhook', [
+                        'subscription_id' => $activeSubscription->asaas_subscription_id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+            
+            // Marcar assinatura atual como cancelada
+            $activeSubscription->update([
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
+                'end_date' => now(),
+                'cancellation_fee_paid' => true
+            ]);
+            
+            // Criar nova assinatura mensal
+            $newSubscription = \App\Models\Subscription::create([
+                'company_id' => $payment->company_id,
+                'plan_id' => $newPlan->id,
+                'status' => 'active',
+                'start_date' => now(),
+                'end_date' => now()->addMonth(),
+                'billing_cycle' => 'monthly',
+                'amount' => $newPlan->monthly_price,
+                'payment_id' => $payment->id
+            ]);
+            
+            // Atualizar pagamento com a nova assinatura
+            $payment->update([
+                'subscription_id' => $newSubscription->id
+            ]);
+            
+            Log::info('Mudança de plano processada com sucesso via webhook', [
+                'payment_id' => $payment->id,
+                'company_id' => $payment->company_id,
+                'old_subscription_id' => $activeSubscription->id,
+                'new_subscription_id' => $newSubscription->id,
+                'new_plan_id' => $newPlan->id
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao processar mudança de plano via webhook', [
+                'payment_id' => $payment->id,
+                'company_id' => $payment->company_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
     /**

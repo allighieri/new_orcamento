@@ -215,8 +215,8 @@
                 @endif
                 
                 <button type="button" class="btn btn-outline-info me-2" onclick="updatePaymentStatusInModal({{ $payment->id }})">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Atualizar Status
-                </button>
+                     <i class="bi bi-arrow-clockwise me-1"></i>Atualizar Status
+                 </button>
             </div>
             
             <div>
@@ -348,14 +348,22 @@ function updatePaymentStatusInModal(paymentId) {
         },
         error: function(xhr, status, error) {
             console.error('Erro na requisição:', xhr.responseText);
+            
+            let errorMessage = 'Erro ao verificar status do pagamento.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            }
+            
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'error',
                     title: 'Erro',
-                    text: 'Erro ao verificar status do pagamento. Tente novamente.'
+                    text: errorMessage,
+                    timer: 3000,
+                    showConfirmButton: false
                 });
             } else {
-                alert('Erro ao verificar status do pagamento. Tente novamente.');
+                alert(errorMessage);
             }
         },
         complete: function() {

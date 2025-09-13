@@ -112,9 +112,7 @@
 
                     <!-- Ações -->
                     <div class="payment-actions mt-4">
-                        <button class="btn btn-primary me-2" onclick="checkPaymentStatus()">
-                            <i class="bi bi-arrow-clockwise me-1"></i>Verificar Status
-                        </button>
+                        <!-- Botão removido - status atualizado automaticamente via webhook -->
                         <a href="{{ route('payments.select-plan') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-1"></i>Voltar
                         </a>
@@ -179,17 +177,8 @@
 let checkInterval;
 
 $(document).ready(function() {
-    // Verificar status imediatamente ao carregar a página
-    checkPaymentStatus();
-    
-    // Verificar status automaticamente a cada 2 segundos para ser mais responsivo
-    checkInterval = setInterval(checkPaymentStatus, 2000);
-    
-    // Parar verificação após 30 minutos
-    setTimeout(function() {
-        clearInterval(checkInterval);
-        console.log('Verificação automática de pagamento interrompida após 30 minutos');
-    }, 30 * 60 * 1000);
+    // Não fazer polling - usar apenas webhook
+    console.log('Página de pagamento PIX carregada. Aguardando confirmação via webhook.');
 });
 
 function copyPixCode() {
@@ -213,73 +202,7 @@ function copyPixCode() {
     });
 }
 
-function checkPaymentStatus() {
-    $.ajax({
-        url: '{{ route('payments.check-status', $payment) }}',
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            console.log('Status do pagamento:', response);
-            
-            // Log adicional para debug
-            if (response.webhook_processed) {
-                console.log('✅ Pagamento processado via webhook');
-            } else if (response.webhook_approved) {
-                console.log('✅ Webhook sinalizou aprovação');
-            } else if (response.api_checked) {
-                console.log('🔄 Status verificado via API Asaas');
-            }
-            
-            if (response.success && (response.is_paid || response.status === 'RECEIVED' || response.status === 'CONFIRMED')) {
-                clearInterval(checkInterval);
-                console.log('🎉 Pagamento confirmado! Atualizando interface...');
-                
-                // Atualizar interface com animação
-                $('.payment-verification').fadeOut(300, function() {
-                    $(this).html(`
-                        <div class="alert alert-success">
-                            <i class="bi bi-check-circle me-2"></i>
-                            <strong>Pagamento confirmado!</strong>
-                            <div class="mt-2">Status: ${response.status_text || 'Pago'}</div>
-                            <div class="mt-2">Redirecionando para suas assinaturas...</div>
-                        </div>
-                    `).fadeIn(300);
-                });
-                
-                // Redirecionar após 2 segundos para dar tempo de ver a confirmação
-                setTimeout(function() {
-                    console.log('🔄 Redirecionando para assinaturas...');
-                    window.location.href = '{{ route('payments.select-plan') }}';
-                }, 2000);
-            } else if (response.status === 'OVERDUE' || response.status === 'overdue') {
-                clearInterval(checkInterval);
-                console.log('⚠️ Pagamento vencido');
-                
-                $('.payment-verification').fadeOut(300, function() {
-                    $(this).html(`
-                        <div class="alert alert-danger">
-                            <i class="bi bi-x-circle me-2"></i>
-                            <strong>Pagamento vencido</strong>
-                            <div class="mt-2">Este PIX expirou. Gere um novo pagamento.</div>
-                        </div>
-                    `).fadeIn(300);
-                });
-            } else {
-                // Status ainda pendente, continuar verificando
-                console.log(`⏳ Status atual: ${response.status} (${response.status_text})`);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('❌ Erro ao verificar status do pagamento:', {
-                status: status,
-                error: error,
-                response: xhr.responseText
-            });
-        }
-    });
-}
+// Função removida - usando apenas webhook para confirmação de pagamento
 </script>
 @endpush
 

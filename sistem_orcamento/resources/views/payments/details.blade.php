@@ -127,9 +127,7 @@
                     <i class="bi bi-qr-code me-1"></i>Ver QR Code PIX
                 </a>
             @endif
-            <button type="button" class="btn btn-outline-info" onclick="checkPaymentStatus({{ $payment->id }})">
-                <i class="bi bi-arrow-clockwise me-1"></i>Atualizar Status
-            </button>
+            <!-- Botão removido - status atualizado automaticamente via webhook -->
         </div>
     </div>
 </div>

@@ -372,6 +372,78 @@ $(document).ready(function() {
                 
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     errorMsg = xhr.responseJSON.message;
+                    
+                    // Verificar se é erro de downgrade para mensal
+                    if (errorMsg.includes('Não é possível fazer downgrade para plano mensal')) {
+                        // Extrair valor da taxa de cancelamento da mensagem
+                        var feeMatch = errorMsg.match(/R\$ ([\d,\.]+)/);
+                        var cancellationFee = feeMatch ? feeMatch[1] : '0,00';
+                        
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Mudança para Plano Mensal',
+                            html: `
+                                <p>Para mudar para o plano mensal, você precisa pagar a taxa de cancelamento antecipado.</p>
+                                <div class="alert alert-info mt-3">
+                                    <strong>Taxa de cancelamento:</strong> R$ ${cancellationFee}<br>
+                                    <strong>Valor do plano mensal:</strong> R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}<br>
+                                    <hr>
+                                    <strong>Total a pagar:</strong> R$ ${parseFloat(cancellationFee.replace(',', '.')) + {{ $plan->monthly_price }}}
+                                </div>
+                            `,
+                            showCancelButton: true,
+                            confirmButtonText: 'Pagar e Mudar para Mensal',
+                            cancelButtonText: 'Fechar',
+                            confirmButtonColor: '#28a745',
+                            cancelButtonColor: '#6c757d'
+                        }).then((result) => {
+                            // Garantir que o modal de loading seja fechado
+                            $('#loadingModal').modal('hide');
+                            
+                            if (result.isConfirmed) {
+                                // Redirecionar para página de pagamento da taxa de cancelamento
+                                window.location.href = '{{ route("payments.cancellation-fee", $plan->id) }}?period=monthly';
+                            }
+                        });
+                        return;
+                    }
+                    
+                    // Verificar se é erro de mudança entre planos anuais
+                    if (errorMsg.includes('Não é possível fazer mudança entre planos anuais diretamente')) {
+                        // Extrair valores da taxa de cancelamento e primeira parcela
+                        var feeMatches = errorMsg.match(/R\$ ([\d,\.]+)/g);
+                        var cancellationFee = feeMatches && feeMatches[0] ? feeMatches[0].replace('R$ ', '') : '0,00';
+                        var firstPayment = feeMatches && feeMatches[1] ? feeMatches[1].replace('R$ ', '') : '0,00';
+                        var totalAmount = parseFloat(cancellationFee.replace(',', '.')) + parseFloat(firstPayment.replace(',', '.'));
+                        
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Mudança entre Planos Anuais',
+                            html: `
+                                <p>Para mudar entre planos anuais, você precisa pagar a taxa de cancelamento antecipado mais a primeira parcela do novo plano.</p>
+                                <div class="alert alert-info mt-3">
+                                    <strong>Taxa de cancelamento:</strong> R$ ${cancellationFee}<br>
+                                    <strong>Primeira parcela do novo plano:</strong> R$ ${firstPayment}<br>
+                                    <hr>
+                                    <strong>Total a pagar:</strong> R$ ${totalAmount.toFixed(2).replace('.', ',')}
+                                </div>
+                            `,
+                            showCancelButton: true,
+                            confirmButtonText: 'Pagar e Mudar de Plano',
+                            cancelButtonText: 'Fechar',
+                            confirmButtonColor: '#28a745',
+                            cancelButtonColor: '#6c757d'
+                        }).then((result) => {
+                            // Garantir que o modal de loading seja fechado
+                            $('#loadingModal').modal('hide');
+                            
+                            if (result.isConfirmed) {
+                                // Redirecionar para página de pagamento da taxa de cancelamento para plano anual
+                                window.location.href = '{{ route("payments.cancellation-fee", $plan->id) }}?period=annual';
+                            }
+                        });
+                        return;
+                    }
                 } else if (xhr.responseJSON && xhr.responseJSON.errors) {
                     var errors = Object.values(xhr.responseJSON.errors).flat();
                     errorMsg = errors.join('\n');
@@ -433,53 +505,11 @@ $(document).ready(function() {
     let paymentCheckInterval = null;
     let paymentCheckTimeout = null;
     
-    // Função para iniciar verificação de status do pagamento
-    function startPaymentStatusCheck(paymentId) {
-        console.log('Iniciando verificação de status para pagamento:', paymentId);
-        
-        // Verificação inicial imediata
-        checkPaymentStatus(paymentId);
-        
-        // Verificar a cada 3 segundos
-        paymentCheckInterval = setInterval(function() {
-            checkPaymentStatus(paymentId);
-        }, 3000);
-        
-        // Timeout de 30 minutos
-        paymentCheckTimeout = setTimeout(function() {
-            clearInterval(paymentCheckInterval);
-            console.log('Timeout de verificação de pagamento atingido (30 minutos)');
-        }, 30 * 60 * 1000);
-    }
+    // Polling removido - status atualizado automaticamente via webhook
     
-    // Função para verificar status do pagamento
-    function checkPaymentStatus(paymentId) {
-        $.ajax({
-            url: '{{ route("payments.check-status", ":id") }}'.replace(':id', paymentId),
-            method: 'GET',
-            success: function(response) {
-                console.log('Status do pagamento:', response);
-                
-                if (response.status === 'RECEIVED' || response.status === 'CONFIRMED') {
-                    // Pagamento aprovado!
-                    clearInterval(paymentCheckInterval);
-                    clearTimeout(paymentCheckTimeout);
-                    
-                    showPaymentSuccess(response);
-                } else if (response.status === 'PENDING') {
-                    console.log('Pagamento ainda pendente, continuando verificação...');
-                } else {
-                    console.log('Status do pagamento:', response.status);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Erro ao verificar status do pagamento:', {
-                    status: status,
-                    error: error,
-                    response: xhr.responseText
-                });
-            }
-        });
+    // Função para iniciar verificação de status (removida)
+    function startPaymentStatusCheck(paymentId) {
+        console.log('Aguardando confirmação do pagamento via webhook para:', paymentId);
     }
     
     // Função para mostrar sucesso do pagamento

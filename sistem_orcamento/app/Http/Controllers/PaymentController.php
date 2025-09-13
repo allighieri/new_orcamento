@@ -214,6 +214,17 @@ class PaymentController extends Controller
                             ], 400);
                         }
                     }
+                    
+                    // Se tem assinatura anual ativa e quer trocar para outro plano anual
+                    if ($activeSubscription->isAnnual() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
+                        $cancellationFee = $activeSubscription->getCancellationFee();
+                        $firstPayment = $plan->annual_price; // Primeira parcela do novo plano
+                        
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Não é possível fazer mudança entre planos anuais diretamente. Você deve pagar a taxa de cancelamento antecipado de R$ ' . number_format($cancellationFee, 2, ',', '.') . ' mais a primeira parcela do novo plano de R$ ' . number_format($firstPayment, 2, ',', '.') . '.'
+                        ], 400);
+                    }
                 }
             }
             
@@ -248,6 +259,12 @@ class PaymentController extends Controller
                 $asaasSubscription = null;
             }
 
+            // Determinar tipo de pagamento
+            $paymentType = 'subscription';
+            if (isset($activeSubscription) && $activeSubscription && $activeSubscription->isAnnual() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
+                $paymentType = 'plan_change_annual';
+            }
+            
             // Salvar pagamento no banco
             if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
                 // Para planos anuais com assinatura recorrente
@@ -259,7 +276,7 @@ class PaymentController extends Controller
                     'asaas_customer_id' => $customer['id'],
                     'amount' => $plan->annual_price, // Valor mensal da assinatura anual
                     'billing_type' => 'PIX',
-                    'type' => 'subscription',
+                    'type' => $paymentType,
                     'status' => 'PENDING',
                     'due_date' => $asaasSubscription['nextDueDate'],
                     'description' => $description,
@@ -450,6 +467,31 @@ class PaymentController extends Controller
                 $cycleText = $billingCycle === 'annual' ? 'Anual' : 'Mensal';
                 $description = "Assinatura {$cycleText} do plano {$plan->name} - " .
                     ($company->fantasy_name ?? $company->corporate_name);
+                
+                // Verificar se já tem assinatura ativa e aplicar taxa de cancelamento se necessário
+                $activeSubscription = $company->activeSubscription();
+                if ($activeSubscription) {
+                    // Se tem assinatura anual ativa, não pode fazer downgrade para mensal
+                    if ($activeSubscription->isAnnual() && $billingCycle === 'monthly') {
+                        if (!$activeSubscription->canDowngradeToMonthly()) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Não é possível fazer downgrade para plano mensal. Você deve aguardar o término do período de 12 meses ou pagar a taxa de cancelamento de R$ ' . number_format($activeSubscription->getCancellationFee(), 2, ',', '.') . '.'
+                            ], 400);
+                        }
+                    }
+                    
+                    // Se tem assinatura anual ativa e quer trocar para outro plano anual
+                    if ($activeSubscription->isAnnual() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
+                        $cancellationFee = $activeSubscription->getCancellationFee();
+                        $firstPayment = $plan->annual_price; // Primeira parcela do novo plano
+                        
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Não é possível fazer mudança entre planos anuais diretamente. Você deve pagar a taxa de cancelamento antecipado de R$ ' . number_format($cancellationFee, 2, ',', '.') . ' mais a primeira parcela do novo plano de R$ ' . number_format($firstPayment, 2, ',', '.') . '.'
+                        ], 400);
+                    }
+                }
             }
             
             // Para planos anuais, criar assinatura recorrente com cartão
@@ -484,6 +526,12 @@ class PaymentController extends Controller
             } else {
                 // Criar cobrança com cartão no Asaas
                 $price = $billingCycle === 'annual' ? ($plan->annual_price * 12) : $plan->monthly_price;
+                
+                // Aplicar taxa de cancelamento se necessário
+                if (isset($activeSubscription) && $activeSubscription && $activeSubscription->isAnnual() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
+                    $cancellationFee = $activeSubscription->getCancellationFee();
+                    $price = $cancellationFee + ($plan->annual_price * 12);
+                }
                 $paymentData = [
                     'customer' => $customer['id'],
                     'value' => $price,
@@ -519,7 +567,7 @@ class PaymentController extends Controller
                     'asaas_customer_id' => $customer['id'],
                     'amount' => $plan->annual_price, // Valor mensal da assinatura anual
                     'billing_type' => 'CREDIT_CARD',
-                    'type' => 'subscription',
+                    'type' => $paymentType,
                     'status' => 'PENDING',
                     'due_date' => $asaasSubscription['nextDueDate'],
                     'description' => $description,
@@ -1113,6 +1161,46 @@ class PaymentController extends Controller
     }
     
     /**
+     * Exibir página de checkout para taxa de cancelamento + mudança de plano
+     */
+    public function cancellationFeeCheckout(Plan $plan, Request $request)
+    {
+        $company = Auth::user()->company;
+        $activeSubscription = $company->activeSubscription();
+        
+        if (!$activeSubscription || !$activeSubscription->isAnnual()) {
+            return redirect()->route('payments.select-plan')
+                           ->with('error', 'Você não possui um plano anual ativo.');
+        }
+        
+        $period = $request->get('period', 'monthly');
+        if (!in_array($period, ['monthly', 'annual'])) {
+            return redirect()->route('payments.select-plan')
+                           ->with('error', 'Período inválido.');
+        }
+        
+        $cancellationFee = $activeSubscription->getCancellationFee();
+        
+        if ($period === 'monthly') {
+            $planPrice = $plan->monthly_price;
+        } else {
+            $planPrice = $plan->annual_price; // Primeira parcela do plano anual
+        }
+        
+        $totalAmount = $cancellationFee + $planPrice;
+        
+        return view('payments.cancellation-checkout', compact(
+            'plan', 
+            'company', 
+            'activeSubscription', 
+            'cancellationFee', 
+            'planPrice',
+            'totalAmount',
+            'period'
+        ));
+    }
+    
+    /**
      * Calcular taxa de cancelamento para plano anual
      */
     public function calculateCancellationFee()
@@ -1145,6 +1233,9 @@ class PaymentController extends Controller
     public function processCancellationFee(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'plan_id' => 'required|exists:plans,id',
+            'payment_type' => 'required|in:pix,credit_card',
+            'period' => 'required|in:monthly,annual',
             'cpf_cnpj' => 'required|string',
             'name' => 'required|string|max:255',
             'email' => 'required|email',
@@ -1163,6 +1254,7 @@ class PaymentController extends Controller
             
             $company = Auth::user()->company;
             $activeSubscription = $company->activeSubscription();
+            $newPlan = Plan::findOrFail($request->plan_id);
             
             if (!$activeSubscription || !$activeSubscription->isAnnual()) {
                 return response()->json([
@@ -1179,6 +1271,8 @@ class PaymentController extends Controller
             }
             
             $cancellationFee = $activeSubscription->getCancellationFee();
+            $planPrice = $request->period === 'monthly' ? $newPlan->monthly_price : $newPlan->annual_price;
+            $totalAmount = $cancellationFee + $planPrice;
             
             if ($cancellationFee <= 0) {
                 return response()->json([
@@ -1202,58 +1296,99 @@ class PaymentController extends Controller
                 $customer = $customers[0];
             }
             
-            // Criar cobrança PIX para taxa de cancelamento
+            // Criar cobrança para taxa de cancelamento + primeiro mês do novo plano
             $paymentData = [
                 'customer' => $customer['id'],
-                'value' => $cancellationFee,
+                'value' => $totalAmount,
                 'dueDate' => now()->addDays(1)->format('Y-m-d'),
-                'description' => "Taxa de cancelamento antecipado - Plano {$activeSubscription->plan->name} - " .
+                'description' => "Mudança de plano: {$activeSubscription->plan->name} Anual → {$newPlan->name} " . 
+                               ($request->period === 'monthly' ? 'Mensal' : 'Anual') . " - " .
+                               "Taxa cancelamento + " . ($request->period === 'monthly' ? '1º mês' : '1ª parcela') . " - " .
                                ($company->fantasy_name ?? $company->corporate_name)
             ];
             
-            $asaasPayment = $this->asaasService->createPixCharge($paymentData);
+            if ($request->payment_type === 'pix') {
+                $asaasPayment = $this->asaasService->createPixCharge($paymentData);
+            } else {
+                // Adicionar dados do cartão para pagamento com cartão
+                $paymentData['creditCard'] = [
+                    'holderName' => $request->card_holder_name,
+                    'number' => str_replace(' ', '', $request->card_number),
+                    'expiryMonth' => $request->card_expiry_month,
+                    'expiryYear' => $request->card_expiry_year,
+                    'ccv' => $request->card_ccv
+                ];
+                $asaasPayment = $this->asaasService->createCreditCardCharge($paymentData);
+            }
             
-            // Salvar pagamento da taxa de cancelamento
+            // Salvar pagamento da mudança de plano
             $payment = Payment::create([
                 'company_id' => $company->id,
-                'plan_id' => $activeSubscription->plan_id,
+                'plan_id' => $newPlan->id,
                 'asaas_payment_id' => $asaasPayment['id'],
                 'asaas_customer_id' => $customer['id'],
-                'amount' => $cancellationFee,
-                'billing_type' => 'PIX',
-                'type' => 'cancellation_fee',
+                'amount' => $totalAmount,
+                'billing_type' => strtoupper($request->payment_type),
+                'type' => 'plan_change',
                 'status' => 'PENDING',
                 'due_date' => $asaasPayment['dueDate'],
                 'description' => $paymentData['description'],
-                'billing_cycle' => 'one_time'
-            ]);
-            
-            // Gerar QR Code PIX
-            $pixData = $this->asaasService->getPixQrCode($asaasPayment['id']);
-            $qrCodeImage = $pixData['encodedImage'] ?? null;
-            $payload = $pixData['payload'] ?? null;
-            
-            if (empty($payload) && !empty($qrCodeImage)) {
-                $payload = "PIX disponível via QR Code - Taxa de Cancelamento: R$ " . number_format($cancellationFee, 2, ',', '.') . " - Vencimento: " . date('d/m/Y', strtotime($asaasPayment['dueDate']));
-            }
-            
-            $payment->update([
-                'payment_data' => [
-                    'pix_qr_code' => $qrCodeImage,
-                    'pix_copy_paste' => $payload
+                'billing_cycle' => $request->period === 'monthly' ? 'monthly' : 'annual',
+                'metadata' => [
+                    'old_plan_id' => $activeSubscription->plan_id,
+                    'new_plan_id' => $newPlan->id,
+                    'cancellation_fee' => $cancellationFee,
+                    'plan_price' => $planPrice,
+                    'period' => $request->period
                 ]
             ]);
             
-            DB::commit();
-            
-            return response()->json([
-                'success' => true,
-                'payment_id' => $payment->id,
-                'pix_qr_code' => $qrCodeImage,
-                'pix_copy_paste' => $payload,
-                'due_date' => $asaasPayment['dueDate'],
-                'amount' => $cancellationFee
-            ]);
+            if ($request->payment_type === 'pix') {
+                // Gerar QR Code PIX
+                $pixData = $this->asaasService->getPixQrCode($asaasPayment['id']);
+                $qrCodeImage = $pixData['encodedImage'] ?? null;
+                $payload = $pixData['payload'] ?? null;
+                
+                if (empty($payload) && !empty($qrCodeImage)) {
+                    $planType = $request->period === 'monthly' ? 'Mensal' : 'Anual';
+                    $payload = "PIX - Mudança para Plano {$planType}: R$ " . number_format($totalAmount, 2, ',', '.') . " - Vencimento: " . date('d/m/Y', strtotime($asaasPayment['dueDate']));
+                }
+                
+                $payment->update([
+                    'payment_data' => [
+                        'pix_qr_code' => $qrCodeImage,
+                        'pix_copy_paste' => $payload
+                    ]
+                ]);
+                
+                DB::commit();
+                
+                return response()->json([
+                    'success' => true,
+                    'redirect_url' => route('payments.pix-payment', $payment->id)
+                ]);
+            } else {
+                // Pagamento com cartão - processar imediatamente
+                if ($asaasPayment['status'] === 'CONFIRMED') {
+                    // Pagamento aprovado - processar mudança de plano
+                    $this->processSuccessfulPlanChange($payment, $activeSubscription, $newPlan);
+                    
+                    DB::commit();
+                    
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Pagamento aprovado! Seu plano foi alterado para ' . ($request->period === 'monthly' ? 'mensal' : 'anual') . '.',
+                        'redirect_url' => route('dashboard')
+                    ]);
+                } else {
+                    DB::commit();
+                    
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Pagamento não foi aprovado. Verifique os dados do cartão e tente novamente.'
+                    ], 400);
+                }
+            }
             
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1266,6 +1401,73 @@ class PaymentController extends Controller
                 'success' => false,
                 'message' => 'Erro ao processar pagamento da taxa de cancelamento.'
             ], 500);
+        }
+    }
+    
+    /**
+     * Processar mudança de plano após pagamento bem-sucedido
+     */
+    private function processSuccessfulPlanChange($payment, $activeSubscription, $newPlan)
+    {
+        try {
+            // Cancelar assinatura anual atual
+            if ($activeSubscription->asaas_subscription_id) {
+                try {
+                    $this->asaasService->cancelSubscription($activeSubscription->asaas_subscription_id);
+                } catch (\Exception $e) {
+                    Log::warning('Erro ao cancelar assinatura no Asaas', [
+                        'subscription_id' => $activeSubscription->asaas_subscription_id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+            
+            // Marcar assinatura atual como cancelada
+            $activeSubscription->update([
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
+                'end_date' => now(),
+                'cancellation_fee_paid' => true
+            ]);
+            
+            // Criar nova assinatura baseada no período
+            $billingCycle = $payment->billing_cycle;
+            $endDate = $billingCycle === 'monthly' ? now()->addMonth() : now()->addYear();
+            $amount = $billingCycle === 'monthly' ? $newPlan->monthly_price : $newPlan->annual_price;
+            
+            $newSubscription = Subscription::create([
+                'company_id' => $payment->company_id,
+                'plan_id' => $newPlan->id,
+                'status' => 'active',
+                'start_date' => now(),
+                'end_date' => $endDate,
+                'billing_cycle' => $billingCycle,
+                'amount' => $amount,
+                'payment_id' => $payment->id
+            ]);
+            
+            // Atualizar status do pagamento
+            $payment->update([
+                'status' => 'CONFIRMED',
+                'subscription_id' => $newSubscription->id
+            ]);
+            
+            Log::info('Mudança de plano processada com sucesso', [
+                'company_id' => $payment->company_id,
+                'old_subscription_id' => $activeSubscription->id,
+                'new_subscription_id' => $newSubscription->id,
+                'payment_id' => $payment->id
+            ]);
+            
+            return $newSubscription;
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao processar mudança de plano', [
+                'error' => $e->getMessage(),
+                'payment_id' => $payment->id,
+                'company_id' => $payment->company_id
+            ]);
+            throw $e;
         }
     }
     
