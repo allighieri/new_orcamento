@@ -226,7 +226,7 @@ class PaymentController extends Controller
             ];
             
             if ($type === 'extra_budgets') {
-                $paymentCreateData['extra_budgets_quantity'] = 999; // Valor simbólico para orçamentos ilimitados
+                $paymentCreateData['extra_budgets_quantity'] = $activeSubscription->plan->budget_limit;
             }
             
             $payment = Payment::create($paymentCreateData);
@@ -399,7 +399,7 @@ class PaymentController extends Controller
             ];
             
             if ($type === 'extra_budgets') {
-                $paymentCreateData['extra_budgets_quantity'] = 999; // Valor simbólico para orçamentos ilimitados
+                $paymentCreateData['extra_budgets_quantity'] = $activeSubscription->plan->budget_limit;
             }
             
             $payment = Payment::create($paymentCreateData);
@@ -858,11 +858,30 @@ class PaymentController extends Controller
             
             // Processar pagamento via Asaas
             if ($request->payment_method === 'pix') {
-                $asaasPayment = $this->asaasService->createPixPayment(
-                    $company,
-                    $totalAmount,
-                    "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano"
-                );
+                // Buscar ou criar cliente no Asaas
+                $customers = $this->asaasService->findCustomerByCpfCnpj($company->document);
+                
+                if (empty($customers)) {
+                    $customerData = [
+                        'name' => $company->name,
+                        'email' => $company->email,
+                        'phone' => $company->phone ?? '',
+                        'cpfCnpj' => $company->document
+                    ];
+                    $customer = $this->asaasService->createCustomer($customerData);
+                } else {
+                    $customer = $customers[0];
+                }
+                
+                // Criar cobrança PIX no Asaas
+                $paymentData = [
+                    'customer' => $customer['id'],
+                    'value' => $totalAmount,
+                    'dueDate' => now()->addDays(1)->format('Y-m-d'),
+                    'description' => "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano - {$company->name}"
+                ];
+                
+                $asaasPayment = $this->asaasService->createPixCharge($paymentData);
             } else {
                 // Para cartão de crédito, redirecionar para página de checkout
                 return redirect()->route('payments.checkout-extra-budgets', $payment)
@@ -872,7 +891,9 @@ class PaymentController extends Controller
             // Atualizar com ID do Asaas
             $payment->update([
                 'asaas_payment_id' => $asaasPayment['id'],
-                'asaas_invoice_url' => $asaasPayment['invoiceUrl'] ?? null
+                'asaas_customer_id' => $customer['id'],
+                'asaas_invoice_url' => $asaasPayment['invoiceUrl'] ?? null,
+                'due_date' => $asaasPayment['dueDate']
             ]);
             
             DB::commit();

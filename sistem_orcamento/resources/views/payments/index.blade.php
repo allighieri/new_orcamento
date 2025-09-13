@@ -137,17 +137,26 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="plan-icon me-2">
-                                                    @if($payment->plan->name === 'Bronze')
-                                        <i class="bi bi-award text-warning"></i>
-                                    @elseif($payment->plan->name === 'Prata')
-                                        <i class="bi bi-award text-secondary"></i>
-                                    @else
-                                        <i class="bi bi-gem text-warning"></i>
-                                    @endif
+                                                    @if($payment->plan)
+                                                        @if($payment->plan->name === 'Bronze')
+                                                            <i class="bi bi-award text-warning"></i>
+                                                        @elseif($payment->plan->name === 'Prata')
+                                                            <i class="bi bi-award text-secondary"></i>
+                                                        @else
+                                                            <i class="bi bi-gem text-warning"></i>
+                                                        @endif
+                                                    @else
+                                                        <i class="bi bi-plus-circle text-primary"></i>
+                                                    @endif
                                                 </div>
                                                 <div>
-                                                    <div class="fw-bold">{{ $payment->plan->name }}</div>
-                                                    <small class="text-muted">{{ $payment->plan->budget_limit }} orçamentos</small>
+                                                    @if($payment->plan)
+                                                        <div class="fw-bold">{{ $payment->plan->name }}</div>
+                                                        <small class="text-muted">{{ $payment->plan->budget_limit }} orçamentos</small>
+                                                    @else
+                                                        <div class="fw-bold">Orçamentos Extras</div>
+                                                        <small class="text-muted">{{ $payment->extra_budgets_quantity ?? 0 }} orçamentos adicionais</small>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </td>
