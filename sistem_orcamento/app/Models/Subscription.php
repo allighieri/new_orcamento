@@ -19,7 +19,11 @@ class Subscription extends Model
         'next_billing_date',
         'amount_paid',
         'grace_period_days',
-        'in_grace_period'
+        'in_grace_period',
+        'asaas_subscription_id',
+        'can_downgrade_to_monthly',
+        'cancellation_fee_paid',
+        'cancelled_at'
     ];
 
     protected $casts = [
@@ -27,7 +31,10 @@ class Subscription extends Model
         'end_date' => 'date',
         'next_billing_date' => 'date',
         'amount_paid' => 'decimal:2',
-        'in_grace_period' => 'boolean'
+        'in_grace_period' => 'boolean',
+        'can_downgrade_to_monthly' => 'boolean',
+        'cancellation_fee_paid' => 'boolean',
+        'cancelled_at' => 'datetime'
     ];
 
     /**
@@ -90,10 +97,52 @@ class Subscription extends Model
             return 0; // Planos mensais não têm taxa de cancelamento
         }
 
-        $monthsRemaining = now()->diffInMonths($this->end_date);
-        $monthlyPrice = $this->plan->annual_price;
+        if ($this->cancellation_fee_paid) {
+            return 0; // Taxa já foi paga
+        }
+
+        $monthsRemaining = now()->diffInMonths($this->end_date, false);
+        if ($monthsRemaining <= 0) {
+            return 0; // Não há meses restantes
+        }
+        
+        $monthlyPrice = $this->plan->monthly_price; // Preço mensal do plano
         
         return ($monthsRemaining * $monthlyPrice) * 0.5;
+    }
+
+    /**
+     * Verifica se pode fazer downgrade para mensal
+     */
+    public function canDowngradeToMonthly(): bool
+    {
+        if ($this->billing_cycle !== 'annual') {
+            return true; // Planos mensais podem mudar livremente
+        }
+
+        // Só pode fazer downgrade se pagou a taxa de cancelamento ou se passou 12 meses
+        return $this->cancellation_fee_paid || 
+               $this->start_date->diffInMonths(now()) >= 12;
+    }
+
+    /**
+     * Verifica se é um plano anual
+     */
+    public function isAnnual(): bool
+    {
+        return $this->billing_cycle === 'annual';
+    }
+
+    /**
+     * Calcula quantos meses restam no plano anual
+     */
+    public function getMonthsRemaining(): int
+    {
+        if (!$this->isAnnual()) {
+            return 0;
+        }
+
+        return max(0, now()->diffInMonths($this->end_date, false));
     }
 
     /**

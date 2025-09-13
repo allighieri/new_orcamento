@@ -46,7 +46,7 @@ class Plan extends Model
      */
     public function getPriceForCycle(string $cycle): float
     {
-        return $cycle === 'annual' ? $this->annual_price : $this->monthly_price;
+        return $cycle === 'annual' ? ($this->monthly_price * 12) : $this->monthly_price;
     }
 
     /**
@@ -56,6 +56,7 @@ class Plan extends Model
     {
         if ($this->monthly_price == 0) return 0;
         
-        return round((($this->monthly_price - $this->annual_price) / $this->monthly_price) * 100, 2);
+        $annualPrice = $this->monthly_price * 12;
+        return round((($this->monthly_price - $annualPrice) / $this->monthly_price) * 100, 2);
     }
 }

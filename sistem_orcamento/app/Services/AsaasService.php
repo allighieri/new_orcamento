@@ -287,4 +287,140 @@ class AsaasService
             }
         }
     }
+
+    /**
+     * Criar assinatura recorrente no Asaas
+     */
+    public function createSubscription($data)
+    {
+        try {
+            Log::info('Criando assinatura no Asaas', ['data' => $data]);
+            
+            $response = $this->client->post('subscriptions', [
+                'json' => $data
+            ]);
+
+            $responseData = json_decode($response->getBody()->getContents(), true);
+            
+            Log::info('Assinatura criada com sucesso', [
+                'subscription_id' => $responseData['id'] ?? null,
+                'status' => $responseData['status'] ?? null,
+                'cycle' => $responseData['cycle'] ?? null
+            ]);
+
+            return $responseData;
+        } catch (RequestException $e) {
+            Log::error('Erro ao criar assinatura no Asaas', [
+                'error' => $e->getMessage(),
+                'data' => $data,
+                'response_body' => $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Cancelar assinatura no Asaas
+     */
+    public function cancelSubscription($subscriptionId)
+    {
+        try {
+            Log::info('Cancelando assinatura no Asaas', ['subscription_id' => $subscriptionId]);
+            
+            $response = $this->client->delete("subscriptions/{$subscriptionId}");
+            $responseData = json_decode($response->getBody()->getContents(), true);
+            
+            Log::info('Assinatura cancelada com sucesso', [
+                'subscription_id' => $subscriptionId,
+                'response' => $responseData
+            ]);
+
+            return $responseData;
+        } catch (RequestException $e) {
+            Log::error('Erro ao cancelar assinatura no Asaas', [
+                'error' => $e->getMessage(),
+                'subscription_id' => $subscriptionId,
+                'response_body' => $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Buscar informações da assinatura
+     */
+    public function getSubscription($subscriptionId)
+    {
+        try {
+            $response = $this->client->get("subscriptions/{$subscriptionId}");
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (RequestException $e) {
+            Log::error('Erro ao buscar assinatura no Asaas', [
+                'error' => $e->getMessage(),
+                'subscription_id' => $subscriptionId
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Atualizar assinatura no Asaas
+     */
+    public function updateSubscription($subscriptionId, $data)
+    {
+        try {
+            Log::info('Atualizando assinatura no Asaas', [
+                'subscription_id' => $subscriptionId,
+                'data' => $data
+            ]);
+            
+            $response = $this->client->post("subscriptions/{$subscriptionId}", [
+                'json' => $data
+            ]);
+
+            $responseData = json_decode($response->getBody()->getContents(), true);
+            
+            Log::info('Assinatura atualizada com sucesso', [
+                'subscription_id' => $subscriptionId,
+                'response' => $responseData
+            ]);
+
+            return $responseData;
+        } catch (RequestException $e) {
+            Log::error('Erro ao atualizar assinatura no Asaas', [
+                'error' => $e->getMessage(),
+                'subscription_id' => $subscriptionId,
+                'data' => $data,
+                'response_body' => $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Buscar cobranças de uma assinatura
+     */
+    public function getSubscriptionPayments($subscriptionId)
+    {
+        try {
+            Log::info('Buscando cobranças da assinatura no Asaas', ['subscription_id' => $subscriptionId]);
+            
+            $response = $this->client->get("subscriptions/{$subscriptionId}/payments");
+            $responseData = json_decode($response->getBody()->getContents(), true);
+            
+            Log::info('Cobranças da assinatura encontradas', [
+                'subscription_id' => $subscriptionId,
+                'total_count' => $responseData['totalCount'] ?? 0
+            ]);
+
+            return $responseData;
+        } catch (RequestException $e) {
+            Log::error('Erro ao buscar cobranças da assinatura no Asaas', [
+                'error' => $e->getMessage(),
+                'subscription_id' => $subscriptionId,
+                'response_body' => $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null
+            ]);
+            throw $e;
+        }
+    }
 }
