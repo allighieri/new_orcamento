@@ -217,15 +217,67 @@ class WebhookController extends Controller
             'updated_at' => now()
         ]);
         
-        // Resetar controle de uso para o mês atual com o novo plano
+        // Processar controle de uso para o novo plano
         $plan = \App\Models\Plan::find($payment->plan_id);
         
         if ($plan) {
-            UsageControl::getOrCreateForCurrentMonth(
+            // Buscar controle de uso atual para calcular orçamentos extras restantes
+            $currentUsageControl = null;
+            if ($subscription) {
+                $currentUsageControl = UsageControl::where('company_id', $payment->company_id)
+                    ->where('year', now()->year)
+                    ->where('month', now()->month)
+                    ->first();
+            }
+            
+            // Calcular orçamentos extras restantes do plano anterior
+            $remainingExtraBudgets = 0;
+            if ($currentUsageControl) {
+                $oldPlanLimit = $currentUsageControl->budgets_limit;
+                $extraBudgetsPurchased = $currentUsageControl->extra_budgets_purchased;
+                $usedBudgets = $currentUsageControl->budgets_used;
+                
+                // Calcular quantos orçamentos extras ainda restam
+                if ($usedBudgets > $oldPlanLimit) {
+                    // Usuário usou orçamentos extras
+                    $extrasUsed = $usedBudgets - $oldPlanLimit;
+                    $remainingExtraBudgets = max(0, $extraBudgetsPurchased - $extrasUsed);
+                } else {
+                    // Usuário não usou orçamentos extras, todos permanecem
+                    $remainingExtraBudgets = $extraBudgetsPurchased;
+                }
+                
+                Log::info('Calculando orçamentos extras restantes na mudança de plano', [
+                    'company_id' => $payment->company_id,
+                    'old_plan_limit' => $oldPlanLimit,
+                    'old_extra_purchased' => $extraBudgetsPurchased,
+                    'used_budgets' => $usedBudgets,
+                    'remaining_extra_budgets' => $remainingExtraBudgets,
+                    'new_plan_limit' => $plan->budget_limit
+                ]);
+            }
+            
+            // Criar ou atualizar controle de uso com o novo plano
+            $usageControl = UsageControl::getOrCreateForCurrentMonth(
                 $payment->company_id,
                 $newSubscription->id,
                 $plan->budget_limit
             );
+            
+            // Resetar budgets_used para 0 e definir extras restantes
+            $usageControl->budgets_used = 0;
+            $usageControl->extra_budgets_purchased = $remainingExtraBudgets;
+            $usageControl->save();
+            
+            if ($remainingExtraBudgets > 0) {
+                Log::info('Orçamentos extras migrados para novo plano', [
+                    'company_id' => $payment->company_id,
+                    'subscription_id' => $newSubscription->id,
+                    'migrated_extra_budgets' => $remainingExtraBudgets,
+                    'new_plan_limit' => $plan->budget_limit,
+                    'total_available' => $plan->budget_limit + $remainingExtraBudgets
+                ]);
+            }
         } else {
             Log::warning('Plano não encontrado, usando valor padrão', [
                 'payment_id' => $payment->id,
