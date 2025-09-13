@@ -221,7 +221,7 @@ class WebhookController extends Controller
         $plan = \App\Models\Plan::find($payment->plan_id);
         
         if ($plan) {
-            // Buscar controle de uso atual para calcular orçamentos extras restantes
+            // Buscar controle de uso atual para calcular orçamentos restantes
             $currentUsageControl = null;
             if ($subscription) {
                 $currentUsageControl = UsageControl::where('company_id', $payment->company_id)
@@ -230,29 +230,26 @@ class WebhookController extends Controller
                     ->first();
             }
             
-            // Calcular orçamentos extras restantes do plano anterior
-            $remainingExtraBudgets = 0;
+            // Calcular todos os orçamentos restantes do plano anterior
+            $remainingBudgetsToMigrate = 0;
             if ($currentUsageControl) {
                 $oldPlanLimit = $currentUsageControl->budgets_limit;
                 $extraBudgetsPurchased = $currentUsageControl->extra_budgets_purchased;
                 $usedBudgets = $currentUsageControl->budgets_used;
+                $totalOldBudgets = $oldPlanLimit + $extraBudgetsPurchased;
                 
-                // Calcular quantos orçamentos extras ainda restam
-                if ($usedBudgets > $oldPlanLimit) {
-                    // Usuário usou orçamentos extras
-                    $extrasUsed = $usedBudgets - $oldPlanLimit;
-                    $remainingExtraBudgets = max(0, $extraBudgetsPurchased - $extrasUsed);
-                } else {
-                    // Usuário não usou orçamentos extras, todos permanecem
-                    $remainingExtraBudgets = $extraBudgetsPurchased;
+                // Calcular todos os orçamentos restantes (base + extras não utilizados)
+                if ($usedBudgets < $totalOldBudgets) {
+                    $remainingBudgetsToMigrate = $totalOldBudgets - $usedBudgets;
                 }
                 
-                Log::info('Calculando orçamentos extras restantes na mudança de plano', [
+                Log::info('Calculando orçamentos restantes na mudança de plano', [
                     'company_id' => $payment->company_id,
                     'old_plan_limit' => $oldPlanLimit,
                     'old_extra_purchased' => $extraBudgetsPurchased,
                     'used_budgets' => $usedBudgets,
-                    'remaining_extra_budgets' => $remainingExtraBudgets,
+                    'total_old_budgets' => $totalOldBudgets,
+                    'remaining_budgets_to_migrate' => $remainingBudgetsToMigrate,
                     'new_plan_limit' => $plan->budget_limit
                 ]);
             }
@@ -264,18 +261,18 @@ class WebhookController extends Controller
                 $plan->budget_limit
             );
             
-            // Resetar budgets_used para 0 e definir extras restantes
+            // Resetar budgets_used para 0 e migrar orçamentos restantes como extras
             $usageControl->budgets_used = 0;
-            $usageControl->extra_budgets_purchased = $remainingExtraBudgets;
+            $usageControl->extra_budgets_purchased = $remainingBudgetsToMigrate;
             $usageControl->save();
             
-            if ($remainingExtraBudgets > 0) {
-                Log::info('Orçamentos extras migrados para novo plano', [
+            if ($remainingBudgetsToMigrate > 0) {
+                Log::info('Orçamentos restantes migrados para novo plano', [
                     'company_id' => $payment->company_id,
                     'subscription_id' => $newSubscription->id,
-                    'migrated_extra_budgets' => $remainingExtraBudgets,
+                    'migrated_budgets' => $remainingBudgetsToMigrate,
                     'new_plan_limit' => $plan->budget_limit,
-                    'total_available' => $plan->budget_limit + $remainingExtraBudgets
+                    'total_available' => $plan->budget_limit + $remainingBudgetsToMigrate
                 ]);
             }
         } else {

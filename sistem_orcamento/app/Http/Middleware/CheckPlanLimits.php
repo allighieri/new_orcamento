@@ -74,22 +74,27 @@ class CheckPlanLimits
                                ->with('sweetalert', [
                                    'type' => 'warning',
                                    'title' => 'Limite Atingido!',
-                                   'text' => 'Você atingiu o limite de orçamentos do seu plano (' . $usageControl->budgets_limit . ' orçamentos). Escolha uma opção para continuar:',
+                                   'text' => 'Você atingiu o limite de Orçamentos do seu plano. Escolha uma opção para continuar:',
                                    'showCancelButton' => true,
-                                   'confirmButtonText' => 'Fazer Upgrade do Plano',
-                                   'cancelButtonText' => 'Comprar Orçamentos Extras',
+                                   'showDenyButton' => true,
+                                   'confirmButtonText' => 'Upgrade do Plano',
+                                   'cancelButtonText' => 'Orçamentos Extras',
+                                   'denyButtonText' => 'Fechar',
                                    'confirmButtonColor' => '#3085d6',
                                    'cancelButtonColor' => '#28a745',
+                                   'denyButtonColor' => '#6c757d',
                                    'allowOutsideClick' => false,
                                    'allowEscapeKey' => false,
                                    'reverseButtons' => true,
                                    'customClass' => [
                                        'confirmButton' => 'btn btn-primary mx-2',
-                                       'cancelButton' => 'btn btn-success mx-2'
+                                       'cancelButton' => 'btn btn-success mx-2',
+                                       'denyButton' => 'btn btn-secondary mx-2'
                                    ],
                                    'actions' => [
                                        'confirm' => route('payments.select-plan'),
-                                       'cancel' => route('payments.extra-budgets')
+                                       'cancel' => route('payments.extra-budgets'),
+                                       'deny' => 'close'
                                    ]
                                ]);
             }

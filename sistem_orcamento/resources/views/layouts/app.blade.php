@@ -496,6 +496,12 @@
                 swalConfig.cancelButtonColor = sweetalertData.cancelButtonColor || '#6c757d';
             }
             
+            if (sweetalertData.showDenyButton) {
+                swalConfig.showDenyButton = sweetalertData.showDenyButton;
+                swalConfig.denyButtonText = sweetalertData.denyButtonText || 'Fechar';
+                swalConfig.denyButtonColor = sweetalertData.denyButtonColor || '#6c757d';
+            }
+            
             if (sweetalertData.allowOutsideClick !== undefined) {
                 swalConfig.allowOutsideClick = sweetalertData.allowOutsideClick;
             }
@@ -518,6 +524,13 @@
                         window.location.href = sweetalertData.actions.confirm;
                     } else if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel && sweetalertData.actions.cancel) {
                         window.location.href = sweetalertData.actions.cancel;
+                    } else if (result.isDenied && sweetalertData.actions.deny) {
+                        if (sweetalertData.actions.deny === 'close') {
+                            // Apenas fecha o modal, não redireciona
+                            return;
+                        } else {
+                            window.location.href = sweetalertData.actions.deny;
+                        }
                     }
                 }
             });

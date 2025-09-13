@@ -189,7 +189,8 @@ class PaymentController extends Controller
                 }
                 
                 $price = $activeSubscription->plan->monthly_price;
-                $description = "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano - {$company->name}";
+                $description = "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano - " .
+                              ($company->fantasy_name ?? $company->corporate_name);
                 $billingCycle = 'one_time';
             } else {
                 // Para assinatura de plano - usar período da URL
@@ -197,7 +198,8 @@ class PaymentController extends Controller
                 $billingCycle = $period === 'monthly' ? 'monthly' : 'annual';
                 $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
                 $cycleText = $billingCycle === 'annual' ? 'Anual' : 'Mensal';
-                $description = "Assinatura {$cycleText} do plano {$plan->name} - {$company->name}";
+                $description = "Assinatura {$cycleText} do plano {$plan->name} - " .
+                              ($company->fantasy_name ?? $company->corporate_name);
             }
             
             // Criar cobrança PIX no Asaas
@@ -349,7 +351,8 @@ class PaymentController extends Controller
                 }
                 
                 $price = $activeSubscription->plan->monthly_price;
-                $description = "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano - {$company->name}";
+                $description = "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano - " .
+                    ($company->fantasy_name ?? $company->corporate_name);
                 $billingCycle = 'one_time';
             } else {
                 // Para assinatura de plano - usar período da URL
@@ -357,7 +360,8 @@ class PaymentController extends Controller
                 $billingCycle = $period === 'monthly' ? 'monthly' : 'annual';
                 $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
                 $cycleText = $billingCycle === 'annual' ? 'Anual' : 'Mensal';
-                $description = "Assinatura {$cycleText} do plano {$plan->name} - {$company->name}";
+                $description = "Assinatura {$cycleText} do plano {$plan->name} - " .
+                    ($company->fantasy_name ?? $company->corporate_name);
             }
             
             // Criar cobrança com cartão no Asaas
@@ -863,7 +867,7 @@ class PaymentController extends Controller
                 
                 if (empty($customers)) {
                     $customerData = [
-                        'name' => $company->name,
+                        'name' => $company->fantasy_name ?? $company->corporate_name,
                         'email' => $company->email,
                         'phone' => $company->phone ?? '',
                         'cpfCnpj' => $company->document
@@ -878,7 +882,8 @@ class PaymentController extends Controller
                     'customer' => $customer['id'],
                     'value' => $totalAmount,
                     'dueDate' => now()->addDays(1)->format('Y-m-d'),
-                    'description' => "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano - {$company->name}"
+                    'description' => "Compra de {$activeSubscription->plan->budget_limit} orçamentos extras limitados ao período do seu plano - " .
+                        ($company->fantasy_name ?? $company->corporate_name)
                 ];
                 
                 $asaasPayment = $this->asaasService->createPixCharge($paymentData);
