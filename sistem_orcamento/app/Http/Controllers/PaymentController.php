@@ -555,7 +555,7 @@ class PaymentController extends Controller
     /**
      * Listar pagamentos da empresa
      */
-    public function index()
+    public function index(Request $request)
     {
         $company = Auth::user()->company;
         
@@ -567,15 +567,39 @@ class PaymentController extends Controller
                            ->with('info', 'Você precisa selecionar um plano para continuar.');
         }
         
-        $payments = Payment::where('company_id', $company->id)
+        $query = Payment::where('company_id', $company->id)
             ->with(['plan'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->orderBy('created_at', 'desc');
+        
+        // Filtro por data inicial
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        // Filtro por data final
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        
+        // Filtro por status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // Filtro por tipo de plano
+        if ($request->filled('plan_id')) {
+            $query->where('plan_id', $request->plan_id);
+        }
+        
+        $payments = $query->paginate(10)->appends($request->query());
             
         // Buscar assinatura atual da empresa
         $currentSubscription = $company->subscription;
+        
+        // Buscar planos para o filtro
+        $plans = Plan::all();
             
-        return view('payments.index', compact('payments', 'currentSubscription'));
+        return view('payments.index', compact('payments', 'currentSubscription', 'plans'));
     }
 
     /**

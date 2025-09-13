@@ -59,44 +59,58 @@
     </div>
     @endif
 
+    
+
     <!-- Filtros -->
-    <div class="row mb-3">
+    <div class="row mb-4">
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
                     <form method="GET" action="{{ route('payments.index') }}" class="row g-3">
                         <div class="col-md-3">
-                            <label for="status" class="form-label">Status</label>
-                            <select name="status" id="status" class="form-select">
-                                <option value="">Todos os status</option>
-                                <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pendente</option>
-                                <option value="paid" {{ request('status') === 'paid' ? 'selected' : '' }}>Pago</option>
-                                <option value="overdue" {{ request('status') === 'overdue' ? 'selected' : '' }}>Vencido</option>
-                                <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelado</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="billing_type" class="form-label">Tipo de Pagamento</label>
-                            <select name="billing_type" id="billing_type" class="form-select">
-                                <option value="">Todos os tipos</option>
-                                <option value="PIX" {{ request('billing_type') === 'PIX' ? 'selected' : '' }}>PIX</option>
-                                <option value="CREDIT_CARD" {{ request('billing_type') === 'CREDIT_CARD' ? 'selected' : '' }}>Cartão de Crédito</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
                             <label for="date_from" class="form-label">Data Inicial</label>
-                            <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request('date_from') }}">
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="date_from" 
+                                   name="date_from" 
+                                   value="{{ request('date_from', now()->format('Y-m-d')) }}">
                         </div>
                         <div class="col-md-3">
                             <label for="date_to" class="form-label">Data Final</label>
-                            <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request('date_to') }}">
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="date_to" 
+                                   name="date_to" 
+                                   value="{{ request('date_to', now()->addMonths(3)->format('Y-m-d')) }}">
                         </div>
-                        <div class="col-12">
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Todos</option>
+                                <option value="PENDING" {{ request('status') === 'PENDING' ? 'selected' : '' }}>Aguardando</option>
+                                <option value="RECEIVED" {{ request('status') === 'RECEIVED' ? 'selected' : '' }}>Pago</option>
+                                <!-- <option value="CONFIRMED" {{ request('status') === 'CONFIRMED' ? 'selected' : '' }}>Confirmado</option> -->
+                                <option value="OVERDUE" {{ request('status') === 'OVERDUE' ? 'selected' : '' }}>Vencido</option>
+                                <option value="CANCELLED" {{ request('status') === 'CANCELLED' ? 'selected' : '' }}>Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="plan_id" class="form-label">Plano</label>
+                            <select class="form-select" id="plan_id" name="plan_id">
+                                <option value="">Todos</option>
+                                @foreach($plans as $plan)
+                                    <option value="{{ $plan->id }}" {{ request('plan_id') == $plan->id ? 'selected' : '' }}>
+                                        {{ $plan->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary me-2">
-                                <i class="bi bi-funnel me-1"></i>Filtrar
+                                <i class="bi bi-search"></i> Filtrar
                             </button>
                             <a href="{{ route('payments.index') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-clockwise me-1"></i>Limpar
+                                <i class="bi bi-x-circle"></i>
                             </a>
                         </div>
                     </form>
