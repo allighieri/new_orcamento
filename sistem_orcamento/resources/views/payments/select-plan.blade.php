@@ -91,14 +91,26 @@
                         @if($isCurrentPlan)
                              <div class="text-center">
                                  <button class="btn btn-success px-3 py-2 w-100 mb-2" disabled>
-                                     <i class="bi bi-check-circle me-2"></i>
+                                     
                                      <div class="fw-bold">
-                                         @if($currentSubscription->ends_at)
-                                             Válido até {{ $currentSubscription->ends_at->format('d/m/Y') }}
-                                         @else
-                                             Plano Ativo
-                                         @endif
+                                         @if($currentSubscription->billing_cycle === 'annual')
+                                         <i class="bi bi-check-circle me-2"></i> Plano Anual Ativo
+                                     @else
+                                        <i class="bi bi-check-circle me-2"></i> Plano Mensal Ativo
+                                     @endif
                                      </div>
+                                     <div class="small text-white-50">
+                                         @if($currentSubscription->billing_cycle === 'annual')
+                                         R$ {{ number_format($plan->annual_price, 2, ',', '.') }}/mês
+                                     @else
+                                         R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}/mês
+                                     @endif
+                                     </div>
+                                     @if($currentSubscription->ends_at)
+                                         <div class="small text-white-50 mt-1">
+                                             Válido até {{ $currentSubscription->ends_at->format('d/m/Y') }}
+                                         </div>
+                                     @endif
                                  </button>
                              </div>
                         @else
@@ -154,22 +166,13 @@
 
 .pricing-card.current-plan {
     border-color: #28a745;
+    border-width: 2px;
     box-shadow: 0 5px 15px rgba(40, 167, 69, 0.2);
     background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%);
 }
 
 .pricing-card.current-plan .card-body {
     position: relative;
-}
-
-.pricing-card.current-plan::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #28a745, #20c997);
 }
 
 .pricing-header {

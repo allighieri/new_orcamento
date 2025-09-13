@@ -89,7 +89,7 @@ class PaymentController extends Controller
         $period = $request->get('period', 'yearly'); // Default para anual
         
         // Determinar o valor baseado no período
-        $amount = $period === 'monthly' ? $plan->monthly_price : ($plan->annual_price * 12);
+        $amount = $period === 'monthly' ? $plan->monthly_price : $plan->annual_price;
         
         return view('payments.checkout', compact('plan', 'company', 'period', 'amount'));
     }
@@ -196,8 +196,8 @@ class PaymentController extends Controller
                 // Para assinatura de plano - usar período da URL
                 $period = $request->get('period', 'yearly');
                 $billingCycle = $period === 'monthly' ? 'monthly' : 'annual';
-                // Para planos anuais, calcular como valor anual * 12
-                $price = $billingCycle === 'annual' ? ($plan->annual_price * 12) : $plan->monthly_price;
+                // Para planos anuais, usar o valor mensal (annual_price já é o valor mensal)
+                $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
                 $cycleText = $billingCycle === 'annual' ? 'Anual' : 'Mensal';
                 $description = "Assinatura {$cycleText} do plano {$plan->name} - " .
                               ($company->fantasy_name ?? $company->corporate_name);
@@ -525,12 +525,12 @@ class PaymentController extends Controller
                 $asaasPayment = null; // Não há cobrança única, apenas assinatura
             } else {
                 // Criar cobrança com cartão no Asaas
-                $price = $billingCycle === 'annual' ? ($plan->annual_price * 12) : $plan->monthly_price;
+                $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
                 
                 // Aplicar taxa de cancelamento se necessário
                 if (isset($activeSubscription) && $activeSubscription && $activeSubscription->isAnnual() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
                     $cancellationFee = $activeSubscription->getCancellationFee();
-                    $price = $cancellationFee + ($plan->annual_price * 12);
+                    $price = $cancellationFee + $plan->annual_price;
                 }
                 $paymentData = [
                     'customer' => $customer['id'],
@@ -575,7 +575,7 @@ class PaymentController extends Controller
                 ];
             } else {
                 // Para outros tipos de pagamento
-                $price = $billingCycle === 'annual' ? ($plan->annual_price * 12) : $plan->monthly_price;
+                $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
                 $paymentCreateData = [
                     'company_id' => $company->id,
                     'plan_id' => $type === 'extra_budgets' ? null : $plan->id,

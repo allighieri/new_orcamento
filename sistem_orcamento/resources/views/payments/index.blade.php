@@ -43,13 +43,22 @@
                         </div>
                         <div class="col-md-4 text-end">
                             <div class="subscription-status">
-                                @if($currentSubscription->status === 'active')
-                                    <span class="badge bg-success fs-6">Ativo</span>
-                                @elseif($currentSubscription->status === 'expired')
-                                    <span class="badge bg-danger fs-6">Expirado</span>
-                                @else
-                                    <span class="badge bg-warning fs-6">{{ ucfirst($currentSubscription->status) }}</span>
-                                @endif
+                                @php
+                    $subscriptionStatusTranslations = [
+                        'active' => 'Ativo',
+                        'expired' => 'Expirado',
+                        'cancelled' => 'Cancelado',
+                        'pending' => 'Pendente'
+                    ];
+                    $translatedSubscriptionStatus = $subscriptionStatusTranslations[$currentSubscription->status] ?? ucfirst($currentSubscription->status);
+                @endphp
+                @if($currentSubscription->status === 'active')
+                    <span class="badge bg-success fs-6">Ativo</span>
+                @elseif($currentSubscription->status === 'expired')
+                    <span class="badge bg-danger fs-6">Expirado</span>
+                @else
+                    <span class="badge bg-warning fs-6">{{ $translatedSubscriptionStatus }}</span>
+                @endif
                             </div>
                         </div>
                     </div>
@@ -187,17 +196,32 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if($payment->status === 'paid')
-                                                <span class="badge bg-success">Pago</span>
-                                            @elseif($payment->status === 'pending')
-                                                <span class="badge bg-warning">Pendente</span>
-                                            @elseif($payment->status === 'overdue')
-                                                <span class="badge bg-danger">Vencido</span>
-                                            @elseif($payment->status === 'cancelled')
-                                                <span class="badge bg-secondary">Cancelado</span>
-                                            @else
-                                                <span class="badge bg-light text-dark">{{ ucfirst($payment->status) }}</span>
-                                            @endif
+                                            @php
+                                $statusTranslations = [
+                                    'PENDING' => 'Pendente',
+                                    'RECEIVED' => 'Pago',
+                                    'CONFIRMED' => 'Confirmado',
+                                    'OVERDUE' => 'Vencido',
+                                    'CANCELLED' => 'Cancelado',
+                                    'paid' => 'Pago',
+                                    'pending' => 'Pendente',
+                                    'overdue' => 'Vencido',
+                                    'cancelled' => 'Cancelado',
+                                    'expired' => 'Expirado'
+                                ];
+                                $translatedStatus = $statusTranslations[$payment->status] ?? ucfirst($payment->status);
+                            @endphp
+                            @if($payment->status === 'paid' || $payment->status === 'RECEIVED' || $payment->status === 'CONFIRMED')
+                                <span class="badge bg-success">Pago</span>
+                            @elseif($payment->status === 'pending' || $payment->status === 'PENDING')
+                                <span class="badge bg-warning">Pendente</span>
+                            @elseif($payment->status === 'overdue' || $payment->status === 'OVERDUE')
+                                <span class="badge bg-danger">Vencido</span>
+                            @elseif($payment->status === 'cancelled' || $payment->status === 'CANCELLED')
+                                <span class="badge bg-secondary">Cancelado</span>
+                            @else
+                                <span class="badge bg-light text-dark">{{ $translatedStatus }}</span>
+                            @endif
                                         </td>
                                         <td>
                                             <div>{{ $payment->due_date->format('d/m/Y') }}</div>

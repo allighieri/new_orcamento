@@ -45,17 +45,32 @@
                 <tr>
                     <td class="fw-bold">Status:</td>
                     <td>
-                        @if($payment->status === 'RECEIVED' || $payment->status === 'CONFIRMED')
-                            <span class="badge bg-success">Pago</span>
-                        @elseif($payment->status === 'PENDING')
-                            <span class="badge bg-warning">Pendente</span>
-                        @elseif($payment->status === 'OVERDUE')
-                            <span class="badge bg-danger">Vencido</span>
-                        @elseif($payment->status === 'CANCELLED')
-                            <span class="badge bg-secondary">Cancelado</span>
-                        @else
-                            <span class="badge bg-light text-dark">{{ ucfirst($payment->status) }}</span>
-                        @endif
+                        @php
+                    $statusTranslations = [
+                        'PENDING' => 'Pendente',
+                        'RECEIVED' => 'Pago',
+                        'CONFIRMED' => 'Confirmado',
+                        'OVERDUE' => 'Vencido',
+                        'CANCELLED' => 'Cancelado',
+                        'paid' => 'Pago',
+                        'pending' => 'Pendente',
+                        'overdue' => 'Vencido',
+                        'cancelled' => 'Cancelado',
+                        'expired' => 'Expirado'
+                    ];
+                    $translatedStatus = $statusTranslations[$payment->status] ?? ucfirst($payment->status);
+                @endphp
+                @if($payment->status === 'RECEIVED' || $payment->status === 'CONFIRMED')
+                    <span class="badge bg-success">Pago</span>
+                @elseif($payment->status === 'PENDING')
+                    <span class="badge bg-warning">Pendente</span>
+                @elseif($payment->status === 'OVERDUE')
+                    <span class="badge bg-danger">Vencido</span>
+                @elseif($payment->status === 'CANCELLED')
+                    <span class="badge bg-secondary">Cancelado</span>
+                @else
+                    <span class="badge bg-light text-dark">{{ $translatedStatus }}</span>
+                @endif
                     </td>
                 </tr>
             </table>

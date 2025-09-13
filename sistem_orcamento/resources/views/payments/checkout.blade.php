@@ -42,7 +42,7 @@
                                 <p class="text-muted mb-0">{{ $plan->budget_limit }} orçamentos por mês</p>
                                 <p class="text-info mb-0">
                                     <i class="mdi mdi-calendar"></i> 
-                                    Ciclo: {{ $period === 'yearly' ? 'Anual' : 'Mensal' }}
+                                    Ciclo: {{ $period === 'yearly' ? '12 meses' : 'Mensal' }}
                                 </p>
                             @endif
                         </div>
@@ -54,10 +54,20 @@
                                 @php
                                     $periodLabel = $period === 'yearly' ? 'ano' : 'mês';
                                 @endphp
-                                <h4 class="mb-0 text-primary">R$ {{ number_format($amount, 2, ',', '.') }}/{{ $periodLabel }}</h4>
+
+                                @php
+                                    $amountTotal = $amount * 12; 
+
+                                    $amountDifference = $plan->monthly_price * 12 - $amountTotal;
+
+
+
+                                @endphp
+
+                                <h4 class="mb-0 text-primary">R$ {{ number_format($amountTotal, 2, ',', '.') }}/{{ $periodLabel }}</h4>
                                 @if($period === 'yearly')
                                     <small class="text-success">
-                                        Economia de R$ {{ number_format((($plan->monthly_price * 12) - $plan->annual_price), 2, ',', '.') }}
+                                        Economia de R$ {{ number_format(($amountDifference), 2, ',', '.') }}
                                     </small>
                                 @endif
                             @endif
@@ -137,7 +147,7 @@
                                 </div>
 
                                 <button type="submit" class="btn btn-success btn-lg w-100">
-                                    <i class="mdi mdi-qrcode me-2"></i>Gerar PIX - R$ {{ number_format($amount, 2, ',', '.') }}
+                                    <i class="mdi mdi-qrcode me-2"></i>Gerar PIX - R$ {{ number_format($amount, 2, ',', '.') }} / mês
                                 </button>
                             </form>
                         </div>

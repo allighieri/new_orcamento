@@ -84,7 +84,22 @@
                             <div class="col-md-6">
                                 <div class="info-item">
                                     <strong>Status:</strong>
-                                    <span class="badge bg-warning">{{ ucfirst($payment->status) }}</span>
+                @php
+                    $statusTranslations = [
+                        'PENDING' => 'Pendente',
+                        'RECEIVED' => 'Pago',
+                        'CONFIRMED' => 'Confirmado',
+                        'OVERDUE' => 'Vencido',
+                        'CANCELLED' => 'Cancelado',
+                        'paid' => 'Pago',
+                        'pending' => 'Pendente',
+                        'overdue' => 'Vencido',
+                        'cancelled' => 'Cancelado',
+                        'expired' => 'Expirado'
+                    ];
+                    $translatedStatus = $statusTranslations[$payment->status] ?? ucfirst($payment->status);
+                @endphp
+                <span class="badge bg-warning">{{ $translatedStatus }}</span>
                                 </div>
                             </div>
                             <div class="col-md-6">

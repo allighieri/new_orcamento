@@ -48,7 +48,22 @@
                                     <div class="status-icon mb-3">
                                         <i class="bi bi-info-circle-fill display-1 text-info"></i>
                                     </div>
-                                    <h3 class="text-info">{{ ucfirst($payment->status) }}</h3>
+                                    @php
+                                        $statusTranslations = [
+                                            'PENDING' => 'Pendente',
+                                            'RECEIVED' => 'Pago',
+                                            'CONFIRMED' => 'Confirmado',
+                                            'OVERDUE' => 'Vencido',
+                                            'CANCELLED' => 'Cancelado',
+                                            'paid' => 'Pago',
+                                            'pending' => 'Pendente',
+                                            'overdue' => 'Vencido',
+                                            'cancelled' => 'Cancelado',
+                                            'expired' => 'Expirado'
+                                        ];
+                                        $translatedStatus = $statusTranslations[$payment->status] ?? ucfirst($payment->status);
+                                    @endphp
+                                    <h3 class="text-info">{{ $translatedStatus }}</h3>
                                     <p class="text-muted">Status atual do pagamento</p>
                                 @endif
                             </div>
