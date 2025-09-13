@@ -53,7 +53,13 @@
                         
                         <div class="info-item mb-3">
                             <label class="text-muted small">Plano</label>
-                            <div class="fw-bold">{{ $payment->plan->name }}</div>
+                            <div class="fw-bold">
+                                @if($payment->plan)
+                                    {{ $payment->plan->name }}
+                                @else
+                                    Orçamentos Extras
+                                @endif
+                            </div>
                             @if($payment->extra_budgets_quantity)
                                 <small class="text-info">+ {{ $payment->extra_budgets_quantity }} orçamentos extras</small>
                             @endif

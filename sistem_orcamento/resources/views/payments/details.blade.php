@@ -15,7 +15,16 @@
                 @endif
                 <tr>
                     <td class="fw-bold">Plano:</td>
-                    <td>{{ $payment->plan->name }}</td>
+                    <td>
+                        @if($payment->plan)
+                            {{ $payment->plan->name }}
+                        @else
+                            Orçamentos Extras
+                        @endif
+                        @if($payment->extra_budgets_quantity)
+                            <small class="text-info d-block">{{ $payment->extra_budgets_quantity }} orçamentos adicionais</small>
+                        @endif
+                    </td>
                 </tr>
                 <tr>
                     <td class="fw-bold">Valor:</td>
