@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Excluir webhook do Asaas da verificação CSRF
         $middleware->validateCsrfTokens(except: [
             'webhook/asaas',
+            'webhook/test',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

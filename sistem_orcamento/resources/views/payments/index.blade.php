@@ -210,7 +210,7 @@
                             <h5 class="text-muted">Nenhum pagamento encontrado</h5>
                             <p class="text-muted">Você ainda não possui pagamentos registrados.</p>
                             <a href="{{ route('payments.select-plan') }}" class="btn btn-primary">
-                                <i class="bi bi-plus me-1"></i>Escolher Plano
+                                <i class="bi bi-plus me-1"></i>Novo Plano
                             </a>
                         </div>
                     @endif

@@ -554,6 +554,15 @@ class PaymentController extends Controller
     public function index()
     {
         $company = Auth::user()->company;
+        
+        // Verificar se já tem uma assinatura ativa
+        $activeSubscription = $company->activeSubscription();
+        
+        if (!$activeSubscription) {
+            return redirect()->route('payments.select-plan')
+                           ->with('info', 'Você precisa selecionar um plano para continuar.');
+        }
+        
         $payments = Payment::where('company_id', $company->id)
             ->with(['plan'])
             ->orderBy('created_at', 'desc')

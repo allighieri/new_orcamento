@@ -24,22 +24,47 @@ class WebhookController extends Controller
      */
     public function handleAsaasWebhook(Request $request)
     {
-        // Log básico para debug (evitando dados muito grandes)
-        Log::info('Webhook Asaas recebido', [
-            'method' => $request->method(),
-            'url' => $request->fullUrl(),
-            'content_length' => strlen($request->getContent()),
-            'has_payload' => !empty($request->all())
-        ]);
-        
         try {
-            $payload = $request->all();
+            // Capturar dados brutos da requisição
+            $rawInput = $request->getContent();
+            $headers = $request->headers->all();
+            $method = $request->method();
+            $url = $request->fullUrl();
             
-            Log::info('Webhook Asaas recebido', $payload);
+            Log::info('Webhook Asaas recebido', [
+                'method' => $method,
+                'url' => $url,
+                'content_length' => strlen($rawInput),
+                'has_payload' => !empty($rawInput),
+                'headers' => $headers,
+                'raw_input' => $rawInput
+            ]);
+            
+            // Tentar decodificar JSON
+            $payload = [];
+            if (!empty($rawInput)) {
+                $payload = json_decode($rawInput, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    Log::error('Erro ao decodificar JSON do webhook', [
+                        'raw_input' => $rawInput,
+                        'json_error' => json_last_error_msg()
+                    ]);
+                    return response()->json(['status' => 'error', 'message' => 'Invalid JSON'], 400);
+                }
+            } else {
+                // Fallback para request->all() se não houver raw input
+                $payload = $request->all();
+            }
+            
+            Log::info('Payload decodificado', $payload);
             
             // Validar se é um evento de pagamento
             if (!isset($payload['event']) || !isset($payload['payment'])) {
-                Log::warning('Webhook inválido - dados obrigatórios ausentes', $payload);
+                Log::warning('Webhook inválido - dados obrigatórios ausentes', [
+                    'payload' => $payload,
+                    'has_event' => isset($payload['event']),
+                    'has_payment' => isset($payload['payment'])
+                ]);
                 return response()->json(['status' => 'error', 'message' => 'Invalid webhook data'], 400);
             }
             

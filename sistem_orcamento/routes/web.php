@@ -173,6 +173,23 @@ Route::post('payments/extra-budgets/purchase', [App\Http\Controllers\PaymentCont
 // Webhook do Asaas (sem middleware de autenticação)
 Route::post('webhook/asaas', [App\Http\Controllers\WebhookController::class, 'handleAsaasWebhook'])->name('webhook.asaas');
 
+// Endpoint de teste para verificar conectividade do webhook
+Route::any('webhook/test', function() {
+    \Log::info('WEBHOOK TEST - Requisição recebida', [
+        'method' => request()->method(),
+        'url' => request()->fullUrl(),
+        'headers' => request()->headers->all(),
+        'data' => request()->all(),
+        'timestamp' => now()->toDateTimeString()
+    ]);
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Webhook test endpoint is working',
+        'timestamp' => now()->toDateTimeString(),
+        'method' => request()->method()
+    ]);
+})->name('webhook.test');
+
 // Rota de teste para debug (sem middleware)
 Route::any('payments/test-debug-public', function() {
     \Log::info('TESTE DE ROTA PÚBLICA - Requisição chegou', [
