@@ -89,29 +89,31 @@
                     
                     <div class="pricing-action mt-4">
                         @if($isCurrentPlan)
-                             <div class="text-center">
-                                 <button class="btn btn-success px-3 py-2 w-100 mb-2" disabled>
-                                     
-                                     <div class="fw-bold">
-                                         @if($currentSubscription->billing_cycle === 'annual')
-                                         <i class="bi bi-check-circle me-2"></i> Plano Anual Ativo
-                                     @else
-                                        <i class="bi bi-check-circle me-2"></i> Plano Mensal Ativo
-                                     @endif
-                                     </div>
-                                     <div class="small text-white-50">
-                                         @if($currentSubscription->billing_cycle === 'annual')
-                                         R$ {{ number_format($plan->annual_price * 12, 2, ',', '.') }}/ano
-                                     @else
-                                         R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}/mês
-                                     @endif
-                                     </div>
-                                     @if($currentSubscription->ends_at)
-                                         <div class="small text-white-50 mt-1">
-                                             Válido até {{ $currentSubscription->ends_at->format('d/m/Y') }}
-                                         </div>
-                                     @endif
-                                 </button>
+                             <div class="d-flex justify-content-center gap-2">
+                                 @if($currentSubscription->billing_cycle === 'annual')
+                                     <button class="btn btn-success px-3 py-2 w-100 mb-2" disabled>
+                                         <div class="small">Anual Ativo</div>
+                                         <div class="fw-bold">R$ {{ number_format($plan->annual_price * 12, 2, ',', '.') }}</div>
+                                         @if($currentSubscription->ends_at)
+                                             <div class="small text-white-50">Até {{ $currentSubscription->ends_at->format('d/m/Y') }}</div>
+                                         @endif
+                                     </button>
+                                     <a href="{{ route('payments.checkout', $plan->id) }}?period=monthly" class="btn btn-outline-primary px-3 py-2 w-100 mb-2">
+                                         <div class="fw-bold">R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}</div>
+                                     </a>
+                                 @else
+                                     <a href="{{ route('payments.checkout', $plan->id) }}?period=yearly" class="btn btn-outline-primary px-3 py-2 w-100 mb-2">
+                                         <div class="fw-bold">R$ {{ number_format($plan->annual_price * 12, 2, ',', '.') }}</div>
+                                         <div class="small text-muted">Economize R$ {{ number_format(($plan->monthly_price * 12) - ($plan->annual_price * 12), 2, ',', '.') }}</div>
+                                     </a>
+                                     <button class="btn btn-success px-3 py-2 w-100 mb-2" disabled>
+                                         <div class="small">Mensal Ativo</div>
+                                         <div class="fw-bold">R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}</div>
+                                         @if($currentSubscription->ends_at)
+                                            <div class="small text-white-50">Até {{ $currentSubscription->ends_at->format('d/m/Y') }}</div>
+                                         @endif
+                                     </button>
+                                 @endif
                              </div>
                         @else
                             <div class="d-flex justify-content-center gap-2">
