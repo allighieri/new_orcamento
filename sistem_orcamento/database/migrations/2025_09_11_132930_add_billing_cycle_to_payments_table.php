@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('payments', function (Blueprint $table) {
-            $table->enum('billing_cycle', ['monthly', 'annual'])->default('monthly')->after('billing_type');
+            $table->enum('billing_cycle', ['monthly', 'annual', 'one_time'])->default('monthly')->after('billing_type');
         });
     }
 

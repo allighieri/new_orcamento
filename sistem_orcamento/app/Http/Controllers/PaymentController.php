@@ -1090,6 +1090,7 @@ class PaymentController extends Controller
                 'plan_id' => null, // Não é um plano, são orçamentos extras
                 'amount' => $totalAmount,
                 'payment_method' => $request->payment_method,
+                'billing_type' => strtoupper($request->payment_method), // PIX ou CREDIT_CARD
                 'billing_cycle' => 'one_time',
                 'type' => 'extra_budgets',
                 'status' => 'pending',

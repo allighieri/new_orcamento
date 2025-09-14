@@ -292,7 +292,7 @@ class ProcessAsaasWebhook implements ShouldQueue
             $this->handlePlanChangePayment($payment);
         } elseif ($payment->type === 'plan_change_annual') {
             $this->handleAnnualPlanChangePayment($payment, $paymentData);
-        } elseif ($payment->extra_budgets_quantity && $payment->extra_budgets_quantity > 0) {
+        } elseif ($payment->type === 'extra_budgets') {
             $this->handleExtraBudgetsPayment($payment);
         } else {
             $this->handleSubscriptionPayment($payment, $paymentData);
