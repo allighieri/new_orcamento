@@ -52,22 +52,19 @@
                                 <small class="text-muted">Pagamento único</small>
                             @else
                                 @php
-                                    $periodLabel = $period === 'yearly' ? 'ano' : 'mês';
+                                    $periodLabel = ($period === 'yearly') ? 'ano' : 'mês';
+                                    $amountDisplay = ($period === 'monthly') ? $amount : ($amount * 12);
                                 @endphp
 
-                                @php
-                                    $amountTotal = $amount * 12; 
+                                <h4 class="mb-0 text-primary">R$ {{ number_format($amountDisplay, 2, ',', '.') }}/{{ $periodLabel }}</h4>
 
-                                    $amountDifference = $plan->monthly_price * 12 - $amountTotal;
-
-
-
-                                @endphp
-
-                                <h4 class="mb-0 text-primary">R$ {{ number_format($amountTotal, 2, ',', '.') }}/{{ $periodLabel }}</h4>
                                 @if($period === 'yearly')
+                                    @php
+                                        $monthlyPrice = $plan->monthly_price ?? 0; // Adicione um fallback para evitar erros
+                                        $amountDifference = ($monthlyPrice * 12) - ($amount * 12);
+                                    @endphp
                                     <small class="text-success">
-                                        Economia de R$ {{ number_format(($amountDifference), 2, ',', '.') }}
+                                        Economia de R$ {{ number_format($amountDifference, 2, ',', '.') }}
                                     </small>
                                 @endif
                             @endif
