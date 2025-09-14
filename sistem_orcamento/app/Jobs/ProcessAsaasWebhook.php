@@ -415,120 +415,6 @@ class ProcessAsaasWebhook implements ShouldQueue
                 'end_date' => now()
             ]);
         }
-        
-        // Log do número de assinaturas canceladas
-        if ($activeSubscriptions->count() > 0) {
-            Log::info('Total de assinaturas canceladas', [
-                'payment_id' => $payment->id,
-                'company_id' => $payment->company_id,
-                'cancelled_count' => $activeSubscriptions->count()
-            ]);
-        }
-        
-        // Calcular datas baseado no ciclo de cobrança
-        $startDate = now();
-        $endDate = $payment->billing_cycle === 'annual' 
-            ? $startDate->copy()->addYear()
-            : $startDate->copy()->addMonth();
-            
-        // Criar nova assinatura
-        $newSubscription = Subscription::create([
-            'company_id' => $payment->company_id,
-            'plan_id' => $payment->plan_id,
-            'billing_cycle' => $payment->billing_cycle,
-            'status' => 'active',
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'next_billing_date' => $endDate,
-            'amount_paid' => $payment->amount,
-            'asaas_subscription_id' => $payment->asaas_subscription_id,
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-        
-        // Processar controle de uso para o novo plano
-        $plan = \App\Models\Plan::find($payment->plan_id);
-        
-        if ($plan) {
-            // Para planos anuais, definir orçamentos ilimitados
-            if ($payment->billing_cycle === 'annual') {
-                // Criar controle de uso com orçamentos ilimitados (budget_limit = valor alto)
-                $usageControl = UsageControl::getOrCreateForCurrentMonth(
-                    $payment->company_id,
-                    $newSubscription->id,
-                    999999 // Orçamentos ilimitados para planos anuais
-                );
-                
-                // Resetar budgets_used para 0
-                $usageControl->budgets_used = 0;
-                $usageControl->extra_budgets_purchased = 0;
-                $usageControl->save();
-                
-                Log::info('Plano anual ativado com orçamentos ilimitados (fila)', [
-                    'company_id' => $payment->company_id,
-                    'subscription_id' => $newSubscription->id,
-                    'plan_id' => $plan->id,
-                    'billing_cycle' => 'annual',
-                    'budgets_limit' => 'unlimited'
-                ]);
-            } else {
-                // Para planos mensais, manter lógica atual
-                // Buscar controle de uso atual para calcular orçamentos restantes
-                $currentUsageControl = null;
-                if (isset($subscription)) {
-                    $currentUsageControl = UsageControl::where('company_id', $payment->company_id)
-                        ->where('year', now()->year)
-                        ->where('month', now()->month)
-                        ->first();
-                }
-                
-                // Calcular todos os orçamentos restantes do plano anterior
-                $remainingBudgetsToMigrate = 0;
-                if ($currentUsageControl) {
-                    $oldPlanLimit = $currentUsageControl->budgets_limit;
-                    $extraBudgetsPurchased = $currentUsageControl->extra_budgets_purchased;
-                    $usedBudgets = $currentUsageControl->budgets_used;
-                    $totalOldBudgets = $oldPlanLimit + $extraBudgetsPurchased;
-                    
-                    // Calcular todos os orçamentos restantes (base + extras não utilizados)
-                    if ($usedBudgets < $totalOldBudgets) {
-                        $remainingBudgetsToMigrate = $totalOldBudgets - $usedBudgets;
-                    }
-                    
-                    Log::info('Calculando orçamentos restantes na mudança de plano (fila)', [
-                        'company_id' => $payment->company_id,
-                        'old_plan_limit' => $oldPlanLimit,
-                        'old_extra_purchased' => $extraBudgetsPurchased,
-                        'used_budgets' => $usedBudgets,
-                        'total_old_budgets' => $totalOldBudgets,
-                        'remaining_budgets_to_migrate' => $remainingBudgetsToMigrate,
-                        'new_plan_limit' => $plan->budget_limit
-                    ]);
-                }
-                
-                // Criar ou atualizar controle de uso com o novo plano
-                $usageControl = UsageControl::getOrCreateForCurrentMonth(
-                    $payment->company_id,
-                    $newSubscription->id,
-                    $plan->budget_limit
-                );
-                
-                // Resetar budgets_used para 0 e migrar orçamentos restantes como extras
-                $usageControl->budgets_used = 0;
-                $usageControl->extra_budgets_purchased = $remainingBudgetsToMigrate;
-                $usageControl->save();
-                
-                if ($remainingBudgetsToMigrate > 0) {
-                    Log::info('Orçamentos restantes migrados para novo plano (fila)', [
-                        'company_id' => $payment->company_id,
-                        'subscription_id' => $newSubscription->id,
-                        'migrated_budgets' => $remainingBudgetsToMigrate,
-                        'new_plan_limit' => $plan->budget_limit,
-                        'total_available' => $plan->budget_limit + $remainingBudgetsToMigrate
-                    ]);
-                }
-            }
-        }
     }
 
     /**
@@ -597,38 +483,76 @@ class ProcessAsaasWebhook implements ShouldQueue
                 return;
             }
             
-            // Buscar e cancelar TODAS as assinaturas ativas da empresa
-            $activeSubscriptions = Subscription::where('company_id', $payment->company_id)
-                ->where('status', 'active')
-                ->lockForUpdate()
-                ->get();
+            // Verificar se há metadados de mudança de plano
+            $webhookData = $payment->webhook_data ? json_decode($payment->webhook_data, true) : null;
+            $isPlanChange = $webhookData && isset($webhookData['is_plan_change']) && $webhookData['is_plan_change'];
+            $oldSubscriptionId = $webhookData && isset($webhookData['old_subscription_id']) ? $webhookData['old_subscription_id'] : null;
             
-            Log::info('Cancelando assinaturas ativas para mudança de plano anual', [
-                'payment_id' => $payment->id,
-                'company_id' => $payment->company_id,
-                'active_subscriptions_count' => $activeSubscriptions->count()
-            ]);
-            
-            // Cancelar todas as assinaturas ativas
-            foreach ($activeSubscriptions as $activeSubscription) {
-                // Cancelar no Asaas se tiver subscription_id
-                if ($activeSubscription->asaas_subscription_id) {
-                    try {
-                        $asaasService = app(\App\Services\AsaasService::class);
-                        $asaasService->cancelSubscription($activeSubscription->asaas_subscription_id);
-                    } catch (\Exception $e) {
-                        Log::warning('Erro ao cancelar assinatura no Asaas via webhook', [
-                            'subscription_id' => $activeSubscription->asaas_subscription_id,
-                            'error' => $e->getMessage()
-                        ]);
-                    }
-                }
+            if ($isPlanChange && $oldSubscriptionId) {
+                // Cancelar apenas a assinatura específica
+                $oldSubscription = Subscription::find($oldSubscriptionId);
                 
-                $activeSubscription->update([
-                    'status' => 'cancelled',
-                    'cancelled_at' => now(),
-                    'end_date' => now()
+                if ($oldSubscription && $oldSubscription->status === 'active') {
+                    Log::info('Cancelando assinatura específica após confirmação do pagamento', [
+                        'payment_id' => $payment->id,
+                        'old_subscription_id' => $oldSubscriptionId,
+                        'company_id' => $payment->company_id
+                    ]);
+                    
+                    // Cancelar no Asaas se tiver subscription_id
+                    if ($oldSubscription->asaas_subscription_id) {
+                        try {
+                            $asaasService = app(\App\Services\AsaasService::class);
+                            $asaasService->cancelSubscription($oldSubscription->asaas_subscription_id);
+                        } catch (\Exception $e) {
+                            Log::warning('Erro ao cancelar assinatura no Asaas via webhook', [
+                                'subscription_id' => $oldSubscription->asaas_subscription_id,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+                    
+                    // Marcar como cancelada
+                    $oldSubscription->update([
+                        'status' => 'cancelled',
+                        'cancelled_at' => now(),
+                        'end_date' => now()
+                    ]);
+                }
+            } else {
+                // Lógica original: cancelar todas as assinaturas ativas
+                $activeSubscriptions = Subscription::where('company_id', $payment->company_id)
+                    ->where('status', 'active')
+                    ->lockForUpdate()
+                    ->get();
+                
+                Log::info('Cancelando todas as assinaturas ativas (lógica original)', [
+                    'payment_id' => $payment->id,
+                    'company_id' => $payment->company_id,
+                    'active_subscriptions_count' => $activeSubscriptions->count()
                 ]);
+                
+                // Cancelar todas as assinaturas ativas
+                foreach ($activeSubscriptions as $activeSubscription) {
+                    // Cancelar no Asaas se tiver subscription_id
+                    if ($activeSubscription->asaas_subscription_id) {
+                        try {
+                            $asaasService = app(\App\Services\AsaasService::class);
+                            $asaasService->cancelSubscription($activeSubscription->asaas_subscription_id);
+                        } catch (\Exception $e) {
+                            Log::warning('Erro ao cancelar assinatura no Asaas via webhook', [
+                                'subscription_id' => $activeSubscription->asaas_subscription_id,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+                    
+                    $activeSubscription->update([
+                        'status' => 'cancelled',
+                        'cancelled_at' => now(),
+                        'end_date' => now()
+                    ]);
+                }
             }
             
             // Criar nova assinatura anual

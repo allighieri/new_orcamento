@@ -427,23 +427,21 @@ $(document).ready(function() {
                     }
                     
                     // Verificar se é erro de mudança entre planos anuais
-                    if (errorMsg.includes('Não é possível fazer mudança entre planos anuais diretamente')) {
-                        // Extrair valores da taxa de cancelamento e primeira parcela
-                        var feeMatches = errorMsg.match(/R\$ ([\d,\.]+)/g);
-                        var cancellationFee = feeMatches && feeMatches[0] ? feeMatches[0].replace('R$ ', '') : '0,00';
-                        var firstPayment = feeMatches && feeMatches[1] ? feeMatches[1].replace('R$ ', '') : '0,00';
-                        var totalAmount = parseFloat(cancellationFee.replace(',', '.')) + parseFloat(firstPayment.replace(',', '.'));
+                    if (errorMsg.includes('Mudança entre Planos Anuais')) {
+                        // Nova lógica: processar mensagem formatada (título|descrição|valor|planId)
+                        var parts = errorMsg.split('|');
+                        var title = parts[0] || 'Mudança entre Planos Anuais';
+                        var description = parts[1] || 'Mudança de plano anual';
+                        var totalValue = parts[2] || 'R$ 0,00';
+                        var planId = parts[3] || '';
                         
                         Swal.fire({
-                            icon: 'warning',
-                            title: 'Mudança entre Planos Anuais',
+                            icon: 'info',
+                            title: title,
                             html: `
-                                <p>Para mudar entre planos anuais, você precisa pagar a taxa de cancelamento antecipado mais a primeira parcela do novo plano.</p>
+                                <p>${description}</p>
                                 <div class="alert alert-info mt-3">
-                                    <strong>Taxa de cancelamento:</strong> R$ ${cancellationFee}<br>
-                                    <strong>Primeira parcela do novo plano:</strong> R$ ${firstPayment}<br>
-                                    <hr>
-                                    <strong>Total a pagar:</strong> R$ ${totalAmount.toFixed(2).replace('.', ',')}
+                                    <strong>${totalValue}</strong>
                                 </div>
                             `,
                             showCancelButton: true,
@@ -456,8 +454,12 @@ $(document).ready(function() {
                             $('#loadingModal').modal('hide');
                             
                             if (result.isConfirmed) {
-                                // Redirecionar para página de pagamento da taxa de cancelamento para plano anual
-                                window.location.href = '{{ route("payments.cancellation-fee", $plan->id) }}?period=annual';
+                                // Redirecionar diretamente para o checkout do novo plano anual
+                                if (planId) {
+                                    window.location.href = '/payments/checkout/' + planId + '?billing_cycle=annual';
+                                } else {
+                                    window.location.href = '{{ route("payments.select-plan") }}';
+                                }
                             }
                         });
                         return;

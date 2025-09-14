@@ -227,13 +227,12 @@ class PaymentController extends Controller
                     
                     // Se tem assinatura anual ativa e quer trocar para outro plano anual
                     if ($activeSubscription->isAnnual() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
-                        $cancellationFee = $activeSubscription->getCancellationFee();
-                        $firstPayment = $plan->annual_price; // Primeira parcela do novo plano
+                        // Marcar que é uma mudança de plano (será processado após confirmação do pagamento)
+                        $isPlanChange = true;
+                        $oldSubscriptionId = $activeSubscription->id;
                         
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Não é possível fazer mudança entre planos anuais diretamente. Você deve pagar a taxa de cancelamento antecipado de R$ ' . number_format($cancellationFee, 2, ',', '.') . ' mais a primeira parcela do novo plano de R$ ' . number_format($firstPayment, 2, ',', '.') . '.'
-                        ], 400);
+                        // Não cancelar ainda - apenas continuar com o processo de pagamento
+                        // O cancelamento será feito após confirmação do pagamento
                     }
                 }
             }
@@ -291,6 +290,14 @@ class PaymentController extends Controller
                     'description' => $description . ' - Pagamento único de 12 meses',
                     'billing_cycle' => $billingCycle
                 ];
+                
+                // Adicionar metadados para mudança de plano
+                if (isset($isPlanChange) && $isPlanChange && isset($oldSubscriptionId)) {
+                    $paymentCreateData['webhook_data'] = json_encode([
+                        'is_plan_change' => true,
+                        'old_subscription_id' => $oldSubscriptionId
+                    ]);
+                }
             } else {
                 // Para outros tipos de pagamento
                 $actualAmount = $price;
@@ -486,13 +493,12 @@ class PaymentController extends Controller
                     
                     // Se tem assinatura anual ativa e quer trocar para outro plano anual
                     if ($activeSubscription->isAnnual() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
-                        $cancellationFee = $activeSubscription->getCancellationFee();
-                        $firstPayment = $plan->annual_price; // Primeira parcela do novo plano
+                        // Marcar que é uma mudança de plano (será processado após confirmação do pagamento)
+                        $isPlanChange = true;
+                        $oldSubscriptionId = $activeSubscription->id;
                         
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Não é possível fazer mudança entre planos anuais diretamente. Você deve pagar a taxa de cancelamento antecipado de R$ ' . number_format($cancellationFee, 2, ',', '.') . ' mais a primeira parcela do novo plano de R$ ' . number_format($firstPayment, 2, ',', '.') . '.'
-                        ], 400);
+                        // Não cancelar ainda - apenas continuar com o processo de pagamento
+                        // O cancelamento será feito após confirmação do pagamento
                     }
                 }
             }

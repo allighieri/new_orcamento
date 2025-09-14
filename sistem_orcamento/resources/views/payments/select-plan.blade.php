@@ -101,7 +101,7 @@
                                      </div>
                                      <div class="small text-white-50">
                                          @if($currentSubscription->billing_cycle === 'annual')
-                                         R$ {{ number_format($plan->annual_price, 2, ',', '.') }}/mês
+                                         R$ {{ number_format($plan->annual_price * 12, 2, ',', '.') }}/ano
                                      @else
                                          R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}/mês
                                      @endif
