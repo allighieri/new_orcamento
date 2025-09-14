@@ -63,7 +63,7 @@ class PlansSeeder extends Seeder
                 'name' => 'Ouro',
                 'slug' => 'ouro',
                 'description' => 'Plano premium com orçamentos ilimitados. Ideal para grandes empresas.',
-                'budget_limit' => 200, // Ilimitado
+                'budget_limit' => null, // Ilimitado
                 'monthly_price' => 50.00,
                 'annual_price' => 45.00, 
                 'features' => json_encode([
