@@ -50,8 +50,8 @@
                              </span>
                              <span class="yearly-price">
                                  <span class="price-currency">R$</span>
-                                 <span class="price-amount">{{ number_format($plan->annual_price, 2, ',', '.') }}</span>
-                                 <span class="price-period">/mês</span>
+                                 <span class="price-amount">{{ number_format($plan->annual_price * 12, 2, ',', '.') }}</span>
+                                 <span class="price-period">/ano</span>
                              </span>
                          </div>
                          <div class="yearly-info text-muted small">
@@ -121,7 +121,7 @@
                                 </a>
                                 <a href="{{ route('payments.checkout', $plan->id) }}?period=yearly" class="btn btn-primary px-3 py-2 w-100 mb-2">
                                     <div class="small">Anual</div>
-                                    <div class="fw-bold">R$ {{ number_format($plan->annual_price, 2, ',', '.') }}</div>
+                                    <div class="fw-bold">R$ {{ number_format($plan->annual_price * 12, 2, ',', '.') }}</div>
                                 </a>
                             </div>
                         @endif

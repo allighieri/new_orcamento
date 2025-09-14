@@ -344,7 +344,7 @@ class ProcessAsaasWebhook implements ShouldQueue
      */
     private function handleSubscriptionPayment(Payment $payment, array $paymentData = [])
     {
-        // Se o pagamento tem asaas_subscription_id, é uma cobrança recorrente
+        // Se o pagamento tem asaas_subscription_id, é uma cobrança recorrente (apenas para planos mensais)
         if ($payment->asaas_subscription_id) {
             // Buscar assinatura existente com o mesmo asaas_subscription_id
             $subscriptionByAsaasId = Subscription::where('asaas_subscription_id', $payment->asaas_subscription_id)
@@ -367,6 +367,14 @@ class ProcessAsaasWebhook implements ShouldQueue
                 'company_id' => $payment->company_id,
                 'billing_cycle' => $payment->billing_cycle,
                 'asaas_subscription_id' => $payment->asaas_subscription_id
+            ]);
+        } else if ($payment->billing_cycle === 'annual') {
+            // Para planos anuais, é um pagamento único - criar assinatura diretamente
+            Log::info('Pagamento único anual confirmado - criando assinatura (fila)', [
+                'payment_id' => $payment->id,
+                'company_id' => $payment->company_id,
+                'billing_cycle' => $payment->billing_cycle,
+                'amount' => $payment->amount
             ]);
         }
         
@@ -442,59 +450,83 @@ class ProcessAsaasWebhook implements ShouldQueue
         $plan = \App\Models\Plan::find($payment->plan_id);
         
         if ($plan) {
-            // Buscar controle de uso atual para calcular orçamentos restantes
-            $currentUsageControl = null;
-            if (isset($subscription)) {
-                $currentUsageControl = UsageControl::where('company_id', $payment->company_id)
-                    ->where('year', now()->year)
-                    ->where('month', now()->month)
-                    ->first();
-            }
-            
-            // Calcular todos os orçamentos restantes do plano anterior
-            $remainingBudgetsToMigrate = 0;
-            if ($currentUsageControl) {
-                $oldPlanLimit = $currentUsageControl->budgets_limit;
-                $extraBudgetsPurchased = $currentUsageControl->extra_budgets_purchased;
-                $usedBudgets = $currentUsageControl->budgets_used;
-                $totalOldBudgets = $oldPlanLimit + $extraBudgetsPurchased;
+            // Para planos anuais, definir orçamentos ilimitados
+            if ($payment->billing_cycle === 'annual') {
+                // Criar controle de uso com orçamentos ilimitados (budget_limit = valor alto)
+                $usageControl = UsageControl::getOrCreateForCurrentMonth(
+                    $payment->company_id,
+                    $newSubscription->id,
+                    999999 // Orçamentos ilimitados para planos anuais
+                );
                 
-                // Calcular todos os orçamentos restantes (base + extras não utilizados)
-                if ($usedBudgets < $totalOldBudgets) {
-                    $remainingBudgetsToMigrate = $totalOldBudgets - $usedBudgets;
-                }
+                // Resetar budgets_used para 0
+                $usageControl->budgets_used = 0;
+                $usageControl->extra_budgets_purchased = 0;
+                $usageControl->save();
                 
-                Log::info('Calculando orçamentos restantes na mudança de plano (fila)', [
-                    'company_id' => $payment->company_id,
-                    'old_plan_limit' => $oldPlanLimit,
-                    'old_extra_purchased' => $extraBudgetsPurchased,
-                    'used_budgets' => $usedBudgets,
-                    'total_old_budgets' => $totalOldBudgets,
-                    'remaining_budgets_to_migrate' => $remainingBudgetsToMigrate,
-                    'new_plan_limit' => $plan->budget_limit
-                ]);
-            }
-            
-            // Criar ou atualizar controle de uso com o novo plano
-            $usageControl = UsageControl::getOrCreateForCurrentMonth(
-                $payment->company_id,
-                $newSubscription->id,
-                $plan->budget_limit
-            );
-            
-            // Resetar budgets_used para 0 e migrar orçamentos restantes como extras
-            $usageControl->budgets_used = 0;
-            $usageControl->extra_budgets_purchased = $remainingBudgetsToMigrate;
-            $usageControl->save();
-            
-            if ($remainingBudgetsToMigrate > 0) {
-                Log::info('Orçamentos restantes migrados para novo plano (fila)', [
+                Log::info('Plano anual ativado com orçamentos ilimitados (fila)', [
                     'company_id' => $payment->company_id,
                     'subscription_id' => $newSubscription->id,
-                    'migrated_budgets' => $remainingBudgetsToMigrate,
-                    'new_plan_limit' => $plan->budget_limit,
-                    'total_available' => $plan->budget_limit + $remainingBudgetsToMigrate
+                    'plan_id' => $plan->id,
+                    'billing_cycle' => 'annual',
+                    'budgets_limit' => 'unlimited'
                 ]);
+            } else {
+                // Para planos mensais, manter lógica atual
+                // Buscar controle de uso atual para calcular orçamentos restantes
+                $currentUsageControl = null;
+                if (isset($subscription)) {
+                    $currentUsageControl = UsageControl::where('company_id', $payment->company_id)
+                        ->where('year', now()->year)
+                        ->where('month', now()->month)
+                        ->first();
+                }
+                
+                // Calcular todos os orçamentos restantes do plano anterior
+                $remainingBudgetsToMigrate = 0;
+                if ($currentUsageControl) {
+                    $oldPlanLimit = $currentUsageControl->budgets_limit;
+                    $extraBudgetsPurchased = $currentUsageControl->extra_budgets_purchased;
+                    $usedBudgets = $currentUsageControl->budgets_used;
+                    $totalOldBudgets = $oldPlanLimit + $extraBudgetsPurchased;
+                    
+                    // Calcular todos os orçamentos restantes (base + extras não utilizados)
+                    if ($usedBudgets < $totalOldBudgets) {
+                        $remainingBudgetsToMigrate = $totalOldBudgets - $usedBudgets;
+                    }
+                    
+                    Log::info('Calculando orçamentos restantes na mudança de plano (fila)', [
+                        'company_id' => $payment->company_id,
+                        'old_plan_limit' => $oldPlanLimit,
+                        'old_extra_purchased' => $extraBudgetsPurchased,
+                        'used_budgets' => $usedBudgets,
+                        'total_old_budgets' => $totalOldBudgets,
+                        'remaining_budgets_to_migrate' => $remainingBudgetsToMigrate,
+                        'new_plan_limit' => $plan->budget_limit
+                    ]);
+                }
+                
+                // Criar ou atualizar controle de uso com o novo plano
+                $usageControl = UsageControl::getOrCreateForCurrentMonth(
+                    $payment->company_id,
+                    $newSubscription->id,
+                    $plan->budget_limit
+                );
+                
+                // Resetar budgets_used para 0 e migrar orçamentos restantes como extras
+                $usageControl->budgets_used = 0;
+                $usageControl->extra_budgets_purchased = $remainingBudgetsToMigrate;
+                $usageControl->save();
+                
+                if ($remainingBudgetsToMigrate > 0) {
+                    Log::info('Orçamentos restantes migrados para novo plano (fila)', [
+                        'company_id' => $payment->company_id,
+                        'subscription_id' => $newSubscription->id,
+                        'migrated_budgets' => $remainingBudgetsToMigrate,
+                        'new_plan_limit' => $plan->budget_limit,
+                        'total_available' => $plan->budget_limit + $remainingBudgetsToMigrate
+                    ]);
+                }
             }
         }
     }

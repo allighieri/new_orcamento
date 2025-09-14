@@ -102,15 +102,15 @@ class Subscription extends Model
             return 0; // Taxa já foi paga
         }
 
-        // Para planos anuais, sempre considerar que apenas 1 mês foi pago (o primeiro)
-        // pois o pagamento é feito mensalmente durante 12 meses
-        $monthsPaid = 1; // Apenas o primeiro mês foi pago
+        // Para planos anuais com pagamento único, calcular baseado no tempo decorrido
+        $monthsElapsed = $this->start_date->diffInMonths(now());
+        $monthsElapsed = min($monthsElapsed, 12); // Máximo 12 meses
         
-        // Para planos anuais, usar o preço anual (que é o valor mensal cobrado)
+        // Para planos anuais, usar o preço anual total
         $monthlyPrice = $this->plan->annual_price; // Preço mensal do plano anual (R$ 45)
         $totalAnnualValue = $monthlyPrice * 12; // Valor total anual (12 meses)
-        $amountPaid = $monthlyPrice * $monthsPaid; // Valor já pago (1 mês)
-        $remainingValue = $totalAnnualValue - $amountPaid; // Valor restante (11 meses)
+        $valueUsed = $monthlyPrice * $monthsElapsed; // Valor proporcional usado
+        $remainingValue = $totalAnnualValue - $valueUsed; // Valor restante
         
         return $remainingValue / 2; // 50% do valor restante
     }

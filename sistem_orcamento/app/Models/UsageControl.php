@@ -43,6 +43,11 @@ class UsageControl extends Model
      */
     public function canCreateBudget(): bool
     {
+        // Se budgets_limit for null, orçamentos são ilimitados (planos anuais)
+        if (is_null($this->budgets_limit)) {
+            return true;
+        }
+        
         $totalLimit = $this->budgets_limit + $this->extra_budgets_purchased;
         return $this->budgets_used < $totalLimit;
     }
@@ -60,6 +65,11 @@ class UsageControl extends Model
      */
     public function getRemainingBudgets(): int
     {
+        // Se budgets_limit for null, orçamentos são ilimitados (planos anuais)
+        if (is_null($this->budgets_limit)) {
+            return PHP_INT_MAX; // Retorna um número muito grande para representar "ilimitado"
+        }
+        
         $totalLimit = $this->budgets_limit + $this->extra_budgets_purchased;
         return max(0, $totalLimit - $this->budgets_used);
     }
@@ -69,6 +79,11 @@ class UsageControl extends Model
      */
     public function needsMoreBudgets(): bool
     {
+        // Se budgets_limit for null, orçamentos são ilimitados (planos anuais)
+        if (is_null($this->budgets_limit)) {
+            return false;
+        }
+        
         return $this->getRemainingBudgets() === 0;
     }
 
@@ -85,7 +100,7 @@ class UsageControl extends Model
     /**
      * Cria ou obtém o controle de uso para o mês atual
      */
-    public static function getOrCreateForCurrentMonth(int $companyId, int $subscriptionId, int $budgetLimit): self
+    public static function getOrCreateForCurrentMonth(int $companyId, int $subscriptionId, ?int $budgetLimit): self
     {
         $year = now()->year;
         $month = now()->month;

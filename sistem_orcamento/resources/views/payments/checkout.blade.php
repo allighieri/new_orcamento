@@ -147,7 +147,11 @@
                                 </div>
 
                                 <button type="submit" class="btn btn-success btn-lg w-100">
-                                    <i class="mdi mdi-qrcode me-2"></i>Gerar PIX - R$ {{ number_format($amount, 2, ',', '.') }} / mês
+                                    @if($period === 'yearly')
+                                        <i class="mdi mdi-qrcode me-2"></i>Gerar PIX - R$ {{ number_format($amount * 12, 2, ',', '.') }} / ano
+                                    @else
+                                        <i class="mdi mdi-qrcode me-2"></i>Gerar PIX - R$ {{ number_format($amount, 2, ',', '.') }} / mês
+                                    @endif
                                 </button>
                             </form>
                         </div>
@@ -254,7 +258,11 @@
                                 </div>
 
                                 <button type="submit" class="btn btn-primary btn-lg w-100">
-                                    <i class="mdi mdi-credit-card me-2"></i>Pagar R$ {{ number_format($amount, 2, ',', '.') }}
+                                    @if($period === 'yearly')
+                                        <i class="mdi mdi-credit-card me-2"></i>Pagar R$ {{ number_format($amount * 12, 2, ',', '.') }}
+                                    @else
+                                        <i class="mdi mdi-credit-card me-2"></i>Pagar R$ {{ number_format($amount, 2, ',', '.') }}
+                                    @endif
                                 </button>
                             </form>
                         </div>

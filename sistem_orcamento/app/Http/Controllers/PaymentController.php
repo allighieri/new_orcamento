@@ -51,7 +51,17 @@ class PaymentController extends Controller
         $company = Auth::user()->company;
         $currentSubscription = $company->activeSubscription();
         
-        return view('payments.select-plan', compact('plans', 'company', 'currentSubscription'));
+        // Buscar controle de uso atual se houver assinatura ativa
+        $usageControl = null;
+        if ($currentSubscription) {
+            $usageControl = \App\Models\UsageControl::getOrCreateForCurrentMonth(
+                $company->id,
+                $currentSubscription->id,
+                $currentSubscription->plan->budget_limit ?? 0
+            );
+        }
+        
+        return view('payments.select-plan', compact('plans', 'company', 'currentSubscription', 'usageControl'));
     }
 
     /**
@@ -228,24 +238,22 @@ class PaymentController extends Controller
                 }
             }
             
-            // Para planos anuais, criar assinatura recorrente no Asaas
+            // Para planos anuais, criar pagamento único de 12 meses
             if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
-                // Para planos anuais, criar assinatura recorrente mensal no Asaas
-                // Cobrança mensal do valor anual (R$ 45,00/mês por 12 meses)
+                // Para planos anuais, criar cobrança única do valor total de 12 meses
+                // Valor total: R$ 45,00 * 12 = R$ 540,00
                 
-                $subscriptionData = [
+                $annualTotalPrice = $plan->annual_price * 12; // Valor total de 12 meses
+                
+                $paymentData = [
                     'customer' => $customer['id'],
-                    'billingType' => 'PIX',
-                    'value' => $plan->annual_price, // Valor mensal do plano anual (R$ 45,00)
-                    'nextDueDate' => now()->addDays(1)->format('Y-m-d'),
-                    'cycle' => 'MONTHLY',
-                    'description' => $description,
-                    'endDate' => now()->addYear()->format('Y-m-d'), // Termina em 12 meses
-                    'maxPayments' => 12 // Máximo 12 cobranças
+                    'value' => $annualTotalPrice,
+                    'dueDate' => now()->addDays(1)->format('Y-m-d'),
+                    'description' => $description . ' - Pagamento único de 12 meses'
                 ];
                 
-                $asaasSubscription = $this->asaasService->createSubscription($subscriptionData);
-                $asaasPayment = null; // Não há cobrança única, apenas assinatura
+                $asaasPayment = $this->asaasService->createPixCharge($paymentData);
+                $asaasSubscription = null; // Não há assinatura recorrente
             } else {
                 // Criar cobrança PIX normal
                 $paymentData = [
@@ -267,19 +275,20 @@ class PaymentController extends Controller
             
             // Salvar pagamento no banco
             if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
-                // Para planos anuais com assinatura recorrente
+                // Para planos anuais com pagamento único
+                $annualTotalPrice = $plan->annual_price * 12; // Valor total de 12 meses
                 $paymentCreateData = [
                     'company_id' => $company->id,
                     'plan_id' => $plan->id,
-                    'asaas_payment_id' => null, // Não há cobrança única
-                    'asaas_subscription_id' => $asaasSubscription['id'], // ID da assinatura
+                    'asaas_payment_id' => $asaasPayment['id'], // ID da cobrança única
+                    'asaas_subscription_id' => null, // Não há assinatura recorrente
                     'asaas_customer_id' => $customer['id'],
-                    'amount' => $plan->annual_price, // Valor mensal da assinatura anual
+                    'amount' => $annualTotalPrice, // Valor total de 12 meses
                     'billing_type' => 'PIX',
                     'type' => $paymentType,
                     'status' => 'PENDING',
-                    'due_date' => $asaasSubscription['nextDueDate'],
-                    'description' => $description,
+                    'due_date' => $asaasPayment['dueDate'],
+                    'description' => $description . ' - Pagamento único de 12 meses',
                     'billing_cycle' => $billingCycle
                 ];
             } else {
@@ -308,19 +317,13 @@ class PaymentController extends Controller
 
             // Gerar QR Code PIX dinâmico
             if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
-                // Para assinaturas anuais, buscar a primeira cobrança da assinatura
-                Log::info('Assinatura recorrente criada', ['subscription_id' => $asaasSubscription['id']]);
+                // Para planos anuais, usar diretamente a cobrança única criada
+                Log::info('Cobrança única anual criada', ['payment_id' => $asaasPayment['id']]);
                 
-                // Buscar a primeira cobrança da assinatura para gerar QR Code
-                $subscriptionPayments = $this->asaasService->getSubscriptionPayments($asaasSubscription['id']);
-                if (!empty($subscriptionPayments['data'])) {
-                    $firstPayment = $subscriptionPayments['data'][0];
-                    Log::info('Tentando gerar QR Code PIX da primeira cobrança', ['payment_id' => $firstPayment['id']]);
-                    $pixData = $this->asaasService->getPixQrCode($firstPayment['id']);
-                    Log::info('Resposta do QR Code PIX dinâmico', ['pixData' => $pixData]);
-                } else {
-                    throw new \Exception('Não foi possível encontrar cobranças da assinatura');
-                }
+                // Gerar QR Code PIX da cobrança única
+                Log::info('Tentando gerar QR Code PIX da cobrança única anual', ['payment_id' => $asaasPayment['id']]);
+                $pixData = $this->asaasService->getPixQrCode($asaasPayment['id']);
+                Log::info('Resposta do QR Code PIX dinâmico', ['pixData' => $pixData]);
             } else {
                 // Para cobranças únicas
                 Log::info('Tentando gerar QR Code PIX dinâmico', ['payment_id' => $asaasPayment['id']]);
@@ -336,8 +339,8 @@ class PaymentController extends Controller
             if (empty($payload) && !empty($qrCodeImage)) {
                 // Definir valor correto baseado no tipo de pagamento
                 if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
-                    $displayAmount = $plan->annual_price; // Valor mensal da assinatura anual
-                    $dueDate = $asaasSubscription['nextDueDate'];
+                    $displayAmount = $plan->annual_price * 12; // Valor total anual
+                    $dueDate = $asaasPayment['dueDate'];
                 } else {
                     $displayAmount = $price;
                     $dueDate = $asaasPayment['dueDate'];
@@ -365,7 +368,7 @@ class PaymentController extends Controller
 
             // Definir data de vencimento correta baseada no tipo de pagamento
             if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
-                $responseDueDate = $asaasSubscription['nextDueDate'];
+                $responseDueDate = $asaasPayment['dueDate'];
             } else {
                 $responseDueDate = $asaasPayment['dueDate'];
             }
@@ -494,18 +497,16 @@ class PaymentController extends Controller
                 }
             }
             
-            // Para planos anuais, criar assinatura recorrente com cartão
+            // Para planos anuais, criar cobrança única com cartão
             if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
-                // Criar assinatura recorrente mensal com cartão
-                $subscriptionData = [
+                // Para planos anuais, criar cobrança única do valor total de 12 meses
+                $annualTotalPrice = $plan->annual_price * 12; // Valor total de 12 meses
+                
+                $paymentData = [
                     'customer' => $customer['id'],
-                    'billingType' => 'CREDIT_CARD',
-                    'value' => $plan->annual_price, // Valor mensal do plano anual (R$ 45,00)
-                    'nextDueDate' => now()->addDays(1)->format('Y-m-d'),
-                    'cycle' => 'MONTHLY',
-                    'description' => $description,
-                    'endDate' => now()->addYear()->format('Y-m-d'), // Termina em 12 meses
-                    'maxPayments' => 12, // Máximo 12 cobranças
+                    'value' => $annualTotalPrice,
+                    'dueDate' => now()->format('Y-m-d'),
+                    'description' => $description . ' - Pagamento único de 12 meses',
                     'creditCard' => [
                         'holderName' => $request->card_holder_name,
                         'number' => $request->card_number,
@@ -521,8 +522,8 @@ class PaymentController extends Controller
                     ]
                 ];
                 
-                $asaasSubscription = $this->asaasService->createSubscription($subscriptionData);
-                $asaasPayment = null; // Não há cobrança única, apenas assinatura
+                $asaasPayment = $this->asaasService->createCreditCardCharge($paymentData);
+                $asaasSubscription = null; // Não há assinatura recorrente
             } else {
                 // Criar cobrança com cartão no Asaas
                 $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
@@ -558,14 +559,31 @@ class PaymentController extends Controller
 
             // Salvar pagamento no banco
             if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
-                // Para planos anuais com assinatura recorrente
+                // Para planos anuais, criar cobrança única
+                $annualTotalPrice = $plan->annual_price * 12;
+                $paymentCreateData = [
+                    'company_id' => $company->id,
+                    'plan_id' => $plan->id,
+                    'asaas_payment_id' => $asaasPayment['id'], // ID da cobrança única
+                    'asaas_subscription_id' => null, // Não há assinatura recorrente
+                    'asaas_customer_id' => $customer['id'],
+                    'amount' => $annualTotalPrice, // Valor total anual
+                    'billing_type' => 'CREDIT_CARD',
+                    'type' => $paymentType,
+                    'status' => 'PENDING',
+                    'due_date' => $asaasPayment['dueDate'],
+                    'description' => $description . ' - Pagamento único de 12 meses',
+                    'billing_cycle' => $billingCycle
+                ];
+            } elseif ($type !== 'extra_budgets' && $billingCycle === 'monthly') {
+                // Para planos mensais com assinatura recorrente
                 $paymentCreateData = [
                     'company_id' => $company->id,
                     'plan_id' => $plan->id,
                     'asaas_payment_id' => null, // Não há cobrança única
                     'asaas_subscription_id' => $asaasSubscription['id'], // ID da assinatura
                     'asaas_customer_id' => $customer['id'],
-                    'amount' => $plan->annual_price, // Valor mensal da assinatura anual
+                    'amount' => $plan->monthly_price, // Valor mensal
                     'billing_type' => 'CREDIT_CARD',
                     'type' => $paymentType,
                     'status' => 'PENDING',

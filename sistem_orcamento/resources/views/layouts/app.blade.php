@@ -36,6 +36,34 @@
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('budgets.*') ? 'active' : '' }}" href="{{ route('budgets.index') }}">
                             <i class="bi bi-file-earmark-text"></i> Orçamentos
+                            @php
+                                $user = auth()->user();
+                                $company = $user ? $user->company : null;
+                                $activeSubscription = $company ? $company->activeSubscription() : null;
+                                $currentPlan = $activeSubscription ? $activeSubscription->plan : null;
+                                $usageControl = null;
+                                
+                                if ($activeSubscription && $currentPlan && !$currentPlan->isUnlimited()) {
+                                    $usageControl = \App\Models\UsageControl::getOrCreateForCurrentMonth(
+                                        $company->id,
+                                        $activeSubscription->id,
+                                        $currentPlan->budget_limit ?? 0
+                                    );
+                                }
+                            @endphp
+                            @if($usageControl && !$currentPlan->isUnlimited())
+                                @php
+                                    $remainingBudgets = $usageControl->getRemainingBudgets();
+                                    $badgeClass = 'bg-success';
+                                    if ($remainingBudgets <= 5) {
+                                        $badgeClass = 'bg-warning';
+                                    }
+                                    if ($remainingBudgets <= 2) {
+                                        $badgeClass = 'bg-danger';
+                                    }
+                                @endphp
+                                <span class="badge {{ $badgeClass }} ms-1" style="font-size: 0.7em;">{{ $remainingBudgets }}</span>
+                            @endif
                         </a>
                     </li>
                     @if(Auth::check() && Auth::user()->role === 'super_admin')
