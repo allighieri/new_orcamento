@@ -102,6 +102,11 @@ class Subscription extends Model
             return 0; // Taxa já foi paga
         }
 
+        // Se não tem assinatura no Asaas (pagamento único), não há taxa de cancelamento
+        if (is_null($this->asaas_subscription_id)) {
+            return 0;
+        }
+
         // Para planos anuais com pagamento único, calcular baseado no tempo decorrido
         $monthsElapsed = $this->start_date->diffInMonths(now());
         $monthsElapsed = min($monthsElapsed, 12); // Máximo 12 meses
@@ -122,6 +127,11 @@ class Subscription extends Model
     {
         if ($this->billing_cycle !== 'annual') {
             return true; // Planos mensais podem mudar livremente
+        }
+
+        // Se não tem assinatura no Asaas (pagamento único), pode trocar livremente
+        if (is_null($this->asaas_subscription_id)) {
+            return true;
         }
 
         // Só pode fazer downgrade se pagou a taxa de cancelamento ou se passou 12 meses
