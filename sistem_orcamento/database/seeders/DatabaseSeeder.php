@@ -39,8 +39,8 @@ class DatabaseSeeder extends Seeder
             //ProductSeeder::class,
             
             // Seeders de clientes e contatos
-            //ClientSeeder::class,
-            //ContactSeeder::class,
+            ClientSeeder::class,
+            ContactSeeder::class,
             
             // Seeders de métodos de pagamento
             PaymentOptionMethodSeeder::class,

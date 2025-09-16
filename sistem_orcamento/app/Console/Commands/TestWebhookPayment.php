@@ -71,13 +71,21 @@ class TestWebhookPayment extends Command
             }
             
             // Criar nova assinatura
+            $startDate = now();
+            $endDate = $startDate->copy()->addMonth();
+            $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
+            
             $newSubscription = Subscription::create([
                 'company_id' => $payment->company_id,
                 'plan_id' => $plan->id,
                 'status' => 'active',
-                'start_date' => now(),
-                'end_date' => now()->addMonth(),
-                'next_billing_date' => now()->addMonth(),
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'starts_at' => $startDate,
+                'ends_at' => $endDate,
+                'grace_period_ends_at' => $gracePeriodEndDate,
+                'remaining_budgets' => $plan->budget_limit ?? 5,
+                'next_billing_date' => $endDate,
                 'amount_paid' => $plan->price ?? 29.90,
                 'billing_cycle' => 'monthly',
                 'created_at' => now(),

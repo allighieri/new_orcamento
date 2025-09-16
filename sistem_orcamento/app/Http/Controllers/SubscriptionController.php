@@ -71,11 +71,21 @@ class SubscriptionController extends Controller
             }
 
             // Criar assinatura
+            $startDate = now();
+            $endDate = $request->billing_cycle === 'yearly' ? $startDate->copy()->addYear() : $startDate->copy()->addMonth();
+            $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
+            
             $subscription = Subscription::create([
                 'company_id' => $company->id,
                 'plan_id' => $plan->id,
                 'billing_cycle' => $request->billing_cycle,
                 'status' => 'pending',
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'starts_at' => $startDate,
+                'ends_at' => $endDate,
+                'grace_period_ends_at' => $gracePeriodEndDate,
+                'remaining_budgets' => $plan->budget_limit,
                 'auto_renew' => true
             ]);
 
@@ -97,6 +107,8 @@ class SubscriptionController extends Controller
             $payment = Payment::create([
                 'subscription_id' => $subscription->id,
                 'asaas_payment_id' => $paymentData['payment_id'],
+                'asaas_subscription_id' => null, // Será preenchido se for assinatura recorrente
+                'payment_id' => null, // Será preenchido pelo webhook
                 'amount' => $amount,
                 'payment_method' => $request->payment_method,
                 'status' => 'pending',
@@ -249,6 +261,8 @@ class SubscriptionController extends Controller
             $payment = Payment::create([
                 'subscription_id' => $subscription->id,
                 'asaas_payment_id' => $paymentData['payment_id'],
+                'asaas_subscription_id' => null, // Será preenchido se for assinatura recorrente
+                'payment_id' => null, // Será preenchido pelo webhook
                 'amount' => $amount,
                 'payment_method' => $request->payment_method,
                 'status' => 'pending',

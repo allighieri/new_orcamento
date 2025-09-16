@@ -30,8 +30,8 @@ class ContactSeeder extends Seeder
                 Contact::create([
                     'name' => $faker->name,
                     'cpf' => $faker->cpf(false), // CPF sem formatação
-                    'phone' => $faker->cellphone(false), // Celular sem formatação
-                    'email' => $faker->unique()->safeEmail,
+                    'phone' =>  '(61) 99253-0902',//$faker->cellphone(false), // Celular sem formatação
+                    'email' =>  'agenciaolhardigital@gmail.com',//$faker->unique()->safeEmail,
                     'company_id' => $client->company_id,
                     'client_id' => $client->id
                 ]);

@@ -218,7 +218,7 @@ class PaymentController extends Controller
                 $activeSubscription = $company->activeSubscription();
                 if ($activeSubscription) {
                     // Se tem assinatura anual ativa, não pode fazer downgrade para mensal
-                    if ($activeSubscription->isAnnual() && $billingCycle === 'monthly') {
+                    if ($activeSubscription->isYearly() && $billingCycle === 'monthly') {
                         if (!$activeSubscription->canDowngradeToMonthly()) {
                             return response()->json([
                                 'success' => false,
@@ -228,7 +228,7 @@ class PaymentController extends Controller
                     }
                     
                     // Se tem assinatura anual ativa e quer trocar para outro plano anual
-                    if ($activeSubscription->isAnnual() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
+                    if ($activeSubscription->isYearly() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
                         // Marcar que é uma mudança de plano (será processado após confirmação do pagamento)
                         $isPlanChange = true;
                         $oldSubscriptionId = $activeSubscription->id;
@@ -270,7 +270,7 @@ class PaymentController extends Controller
 
             // Determinar tipo de pagamento
             $paymentType = 'subscription';
-            if (isset($activeSubscription) && $activeSubscription && $activeSubscription->isAnnual() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
+            if (isset($activeSubscription) && $activeSubscription && $activeSubscription->isYearly() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
                 $paymentType = 'plan_change_annual';
             }
             
@@ -283,13 +283,20 @@ class PaymentController extends Controller
                 // Para planos anuais com pagamento único
                 $annualTotalPrice = $plan->annual_price * 12; // Valor total de 12 meses
                 $paymentCreateData = [
+                    'company_id' => $company->id,
                     'plan_id' => $plan->id,
                     'subscription_id' => isset($activeSubscription) ? $activeSubscription->id : null,
                     'asaas_payment_id' => $asaasPayment['id'], // ID da cobrança única
+                    'asaas_customer_id' => $customer['id'],
+                    'asaas_subscription_id' => $asaasSubscription['id'] ?? null,
+                    'payment_id' => null, // Será preenchido após criar a subscription
                     'amount' => $annualTotalPrice, // Valor total de 12 meses
-                    'payment_method' => 'PIX',
+                    'billing_type' => 'PIX',
+                    'billing_cycle' => $billingCycle,
+                    'type' => $paymentType,
                     'status' => 'PENDING',
-                    'due_date' => $asaasPayment['dueDate']
+                    'due_date' => $asaasPayment['dueDate'],
+                    'description' => $description . ' - Pagamento único de 12 meses'
                 ];
                 
                 // Metadados para mudança de plano serão gerenciados externamente
@@ -297,17 +304,27 @@ class PaymentController extends Controller
                 // Para outros tipos de pagamento
                 $actualAmount = $price;
                 $paymentCreateData = [
+                    'company_id' => $company->id,
                     'plan_id' => $type === 'extra_budgets' ? null : $plan->id,
                     'subscription_id' => isset($activeSubscription) ? $activeSubscription->id : null,
                     'asaas_payment_id' => $asaasPayment['id'],
+                    'asaas_customer_id' => $customer['id'],
+                    'asaas_subscription_id' => $asaasSubscription['id'] ?? null,
+                    'payment_id' => null, // Será preenchido após criar a subscription
                     'amount' => $actualAmount,
-                    'payment_method' => 'PIX',
+                    'billing_type' => 'PIX',
+                    'billing_cycle' => $billingCycle,
+                    'type' => $type === 'extra_budgets' ? 'extra_budgets' : 'subscription',
                     'status' => 'PENDING',
-                    'due_date' => $asaasPayment['dueDate']
+                    'due_date' => $asaasPayment['dueDate'],
+                    'description' => $description
                 ];
             }
             
-            // Campos específicos para orçamentos extras podem ser adicionados aqui se necessário
+            // Campos específicos para orçamentos extras
+            if ($type === 'extra_budgets') {
+                $paymentCreateData['extra_budgets_quantity'] = $activeSubscription->plan->budget_limit;
+            }
             
             $payment = Payment::create($paymentCreateData);
 
@@ -466,7 +483,7 @@ class PaymentController extends Controller
                 $activeSubscription = $company->activeSubscription();
                 if ($activeSubscription) {
                     // Se tem assinatura anual ativa, não pode fazer downgrade para mensal
-                    if ($activeSubscription->isAnnual() && $billingCycle === 'monthly') {
+                    if ($activeSubscription->isYearly() && $billingCycle === 'monthly') {
                         if (!$activeSubscription->canDowngradeToMonthly()) {
                             return response()->json([
                                 'success' => false,
@@ -476,7 +493,7 @@ class PaymentController extends Controller
                     }
                     
                     // Se tem assinatura anual ativa e quer trocar para outro plano anual
-                    if ($activeSubscription->isAnnual() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
+                    if ($activeSubscription->isYearly() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
                         // Marcar que é uma mudança de plano (será processado após confirmação do pagamento)
                         $isPlanChange = true;
                         $oldSubscriptionId = $activeSubscription->id;
@@ -519,7 +536,7 @@ class PaymentController extends Controller
                 $price = $billingCycle === 'annual' ? $plan->annual_price : $plan->monthly_price;
                 
                 // Aplicar taxa de cancelamento se necessário
-                if (isset($activeSubscription) && $activeSubscription && $activeSubscription->isAnnual() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
+                if (isset($activeSubscription) && $activeSubscription && $activeSubscription->isYearly() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
                     $cancellationFee = $activeSubscription->getCancellationFee();
                     $price = $cancellationFee + $plan->annual_price;
                 }
@@ -590,6 +607,8 @@ class PaymentController extends Controller
                     'subscription_id' => isset($activeSubscription) ? $activeSubscription->id : null,
                     'asaas_payment_id' => $asaasPayment['id'],
                     'asaas_customer_id' => $customer['id'],
+                    'asaas_subscription_id' => $asaasSubscription['id'] ?? null,
+                    'payment_id' => null, // Será preenchido após criar a subscription
                     'amount' => $price,
                     'billing_type' => 'CREDIT_CARD',
                     'type' => $type === 'extra_budgets' ? 'extra_budgets' : 'subscription',
@@ -1074,6 +1093,8 @@ class PaymentController extends Controller
                 'company_id' => $company->id,
                 'plan_id' => null, // Não é um plano, são orçamentos extras
                 'subscription_id' => $activeSubscription->id,
+                'asaas_subscription_id' => null, // Não é uma assinatura
+                'payment_id' => null, // Será preenchido após processar o pagamento
                 'amount' => $totalAmount,
                 'payment_method' => $request->payment_method,
                 'billing_type' => strtoupper($request->payment_method), // PIX ou CREDIT_CARD
@@ -1179,7 +1200,7 @@ class PaymentController extends Controller
         $company = Auth::user()->company;
         $activeSubscription = $company->activeSubscription();
         
-        if (!$activeSubscription || !$activeSubscription->isAnnual()) {
+        if (!$activeSubscription || !$activeSubscription->isYearly()) {
             return redirect()->route('payments.select-plan')
                            ->with('error', 'Você não possui um plano anual ativo.');
         }
@@ -1219,7 +1240,7 @@ class PaymentController extends Controller
         $company = Auth::user()->company;
         $activeSubscription = $company->activeSubscription();
         
-        if (!$activeSubscription || !$activeSubscription->isAnnual()) {
+        if (!$activeSubscription || !$activeSubscription->isYearly()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Você não possui um plano anual ativo.'
@@ -1267,7 +1288,7 @@ class PaymentController extends Controller
             $activeSubscription = $company->activeSubscription();
             $newPlan = Plan::findOrFail($request->plan_id);
             
-            if (!$activeSubscription || !$activeSubscription->isAnnual()) {
+            if (!$activeSubscription || !$activeSubscription->isYearly()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Você não possui um plano anual ativo.'
@@ -1339,6 +1360,8 @@ class PaymentController extends Controller
                 'subscription_id' => $activeSubscription->id,
                 'asaas_payment_id' => $asaasPayment['id'],
                 'asaas_customer_id' => $customer['id'],
+                'asaas_subscription_id' => null, // Não é uma assinatura recorrente
+                'payment_id' => null, // Será preenchido pelo webhook
                 'amount' => $totalAmount,
                 'billing_type' => strtoupper($request->payment_type),
                 'type' => 'plan_change',
@@ -1442,15 +1465,21 @@ class PaymentController extends Controller
             
             // Criar nova assinatura baseada no período
             $billingCycle = $payment->billing_cycle;
-            $endDate = $billingCycle === 'monthly' ? now()->addMonth() : now()->addYear();
+            $startDate = now();
+            $endDate = $billingCycle === 'monthly' ? $startDate->copy()->addMonth() : $startDate->copy()->addYear();
+            $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
             $amount = $billingCycle === 'monthly' ? $newPlan->monthly_price : $newPlan->annual_price;
             
             $newSubscription = Subscription::create([
                 'company_id' => $payment->company_id,
                 'plan_id' => $newPlan->id,
                 'status' => 'active',
-                'start_date' => now(),
+                'start_date' => $startDate,
                 'end_date' => $endDate,
+                'starts_at' => $startDate,
+                'ends_at' => $endDate,
+                'grace_period_ends_at' => $gracePeriodEndDate,
+                'remaining_budgets' => $newPlan->budget_limit,
                 'billing_cycle' => $billingCycle,
                 'amount' => $amount,
                 'payment_id' => $payment->id
@@ -1492,7 +1521,7 @@ class PaymentController extends Controller
             $company = Auth::user()->company;
             $activeSubscription = $company->activeSubscription();
             
-            if (!$activeSubscription || !$activeSubscription->isAnnual()) {
+            if (!$activeSubscription || !$activeSubscription->isYearly()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Você não possui um plano anual ativo.'

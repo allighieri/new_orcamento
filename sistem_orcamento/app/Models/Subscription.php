@@ -12,10 +12,16 @@ class Subscription extends Model
     protected $fillable = [
         'company_id',
         'plan_id',
+        'asaas_subscription_id',
         'billing_cycle',
         'status',
         'starts_at',
         'ends_at',
+        'start_date',
+        'end_date',
+        'next_billing_date',
+        'amount_paid',
+        'payment_id',
         'grace_period_ends_at',
         'remaining_budgets',
         'auto_renew'
@@ -24,6 +30,10 @@ class Subscription extends Model
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+        'next_billing_date' => 'datetime',
+        'amount_paid' => 'decimal:2',
         'grace_period_ends_at' => 'datetime',
         'auto_renew' => 'boolean'
     ];
@@ -50,6 +60,14 @@ class Subscription extends Model
     public function usageControls(): HasMany
     {
         return $this->hasMany(UsageControl::class);
+    }
+
+    /**
+     * Relacionamento com pagamento
+     */
+    public function payment(): BelongsTo
+    {
+        return $this->belongsTo(Payment::class);
     }
 
     /**
@@ -84,6 +102,31 @@ class Subscription extends Model
     public function isYearly(): bool
     {
         return $this->billing_cycle === 'yearly';
+    }
+
+    /**
+     * Verifica se pode fazer downgrade para mensal
+     */
+    public function canDowngradeToMonthly(): bool
+    {
+        // Permite downgrade se a assinatura ainda não expirou
+        return $this->isActive() || $this->isInGracePeriod();
+    }
+
+    /**
+     * Calcula a taxa de cancelamento para assinaturas anuais
+     */
+    public function getCancellationFee(): float
+    {
+        if (!$this->isYearly() || !$this->plan) {
+            return 0.0;
+        }
+
+        // Taxa de cancelamento é 30% do valor anual restante
+        $monthsRemaining = max(1, $this->getDaysRemaining() / 30);
+        $remainingValue = ($this->plan->annual_price / 12) * $monthsRemaining;
+        
+        return $remainingValue * 0.30;
     }
 
     /**

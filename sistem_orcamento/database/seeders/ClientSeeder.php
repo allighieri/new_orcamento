@@ -26,59 +26,18 @@ class ClientSeeder extends Seeder
                 // Clientes para Construtora Alvorada
                 $constructionClients = [
                     [
-                        'fantasy_name' => 'Residencial Jardim das Flores',
-                        'corporate_name' => 'Incorporadora Jardim das Flores Ltda',
-                        'document_number' => '15.234.567/0001-89',
+                        'fantasy_name' => 'RENAULT SIA',
+                        'corporate_name' => 'RENAULT SIA LTDA',
+                        'document_number' => '975.026.851-20',
                         'state_registration' => '152345678',
-                        'phone' => '(11) 3789-4567',
-                        'email' => 'contato@jardimdasflores.com.br',
-                        'address' => 'Av. das Palmeiras, 2500',
+                        'phone' => '(61) 99253-0902',
+                        'email' => 'agenciaolhardigital@gmail.com',
+                        'address_line_2' => 'CONJ A LOJA 23',
+                        'address' => 'QMSW 2',
+                        'district' => 'Sudoeste',
                         'city' => 'São Paulo',
-                        'state' => 'SP'
-                    ],
-                    [
-                        'fantasy_name' => 'Condomínio Vila Bela',
-                        'corporate_name' => 'Administradora Vila Bela S.A.',
-                        'document_number' => '28.456.789/0001-12',
-                        'state_registration' => '284567891',
-                        'phone' => '(11) 2654-3210',
-                        'email' => 'administracao@vilabela.com.br',
-                        'address' => 'Rua dos Ipês, 1800',
-                        'city' => 'Guarulhos',
-                        'state' => 'SP'
-                    ],
-                    [
-                        'fantasy_name' => 'Shopping Center Norte',
-                        'corporate_name' => 'Empreendimentos Norte Ltda',
-                        'document_number' => '34.567.890/0001-23',
-                        'state_registration' => '345678902',
-                        'phone' => '(11) 4321-5678',
-                        'email' => 'obras@shoppingnorte.com.br',
-                        'address' => 'Av. Marginal Tietê, 5000',
-                        'city' => 'São Paulo',
-                        'state' => 'SP'
-                    ],
-                    [
-                        'fantasy_name' => 'Edifício Comercial Paulista',
-                        'corporate_name' => 'Construtora Paulista ME',
-                        'document_number' => '45.678.901/0001-34',
-                        'state_registration' => '456789013',
-                        'phone' => '(11) 5432-6789',
-                        'email' => 'projetos@edificiopaulista.com.br',
-                        'address' => 'Av. Paulista, 3200',
-                        'city' => 'São Paulo',
-                        'state' => 'SP'
-                    ],
-                    [
-                        'fantasy_name' => 'Residencial Alphaville',
-                        'corporate_name' => 'Incorporadora Alphaville Ltda',
-                        'document_number' => '56.789.012/0001-45',
-                        'state_registration' => '567890124',
-                        'phone' => '(11) 6543-7890',
-                        'email' => 'vendas@residencialalphaville.com.br',
-                        'address' => 'Alameda dos Anjos, 750',
-                        'city' => 'Barueri',
-                        'state' => 'SP'
+                        'state' => 'SP',
+                        'cep' => '70.680-200'
                     ]
                 ];
                 

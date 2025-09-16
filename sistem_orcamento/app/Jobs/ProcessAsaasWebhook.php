@@ -113,6 +113,26 @@ class ProcessAsaasWebhook implements ShouldQueue
             ]);
         }
 
+        // Atualizar campos se o pagamento foi encontrado
+        if ($payment) {
+            // Atualizar asaas_subscription_id se veio no webhook e não está preenchido
+            if (isset($paymentData['subscription']) && !$payment->asaas_subscription_id) {
+                $payment->update(['asaas_subscription_id' => $paymentData['subscription']]);
+                Log::info('Campo asaas_subscription_id atualizado via webhook', [
+                    'payment_id' => $payment->id,
+                    'asaas_subscription_id' => $paymentData['subscription']
+                ]);
+            }
+            
+            // Atualizar payment_id se não está preenchido (usar o próprio ID do payment)
+            if (!$payment->payment_id) {
+                $payment->update(['payment_id' => $payment->id]);
+                Log::info('Campo payment_id atualizado via webhook', [
+                    'payment_id' => $payment->id
+                ]);
+            }
+        }
+
         if (!$payment) {
             Log::warning('Pagamento não encontrado no banco', [
                 'asaas_payment_id' => $asaasPaymentId,
@@ -410,6 +430,54 @@ class ProcessAsaasWebhook implements ShouldQueue
                 'end_date' => now()
             ]);
         }
+        
+        // Criar nova assinatura
+        $plan = \App\Models\Plan::find($payment->plan_id);
+        if (!$plan) {
+            Log::error('Plano não encontrado para criar assinatura', [
+                'payment_id' => $payment->id,
+                'plan_id' => $payment->plan_id
+            ]);
+            return;
+        }
+        
+        // Determinar datas baseadas no ciclo de cobrança
+        $startDate = now();
+        $endDate = $payment->billing_cycle === 'annual' ? $startDate->copy()->addYear() : $startDate->copy()->addMonth();
+        $nextBillingDate = $payment->billing_cycle === 'annual' ? $endDate : $startDate->copy()->addMonth();
+        $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
+        
+        // Criar nova assinatura
+        $newSubscription = \App\Models\Subscription::create([
+            'company_id' => $payment->company_id,
+            'plan_id' => $plan->id,
+            'status' => 'active',
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'starts_at' => $startDate,
+            'ends_at' => $endDate,
+            'grace_period_ends_at' => $gracePeriodEndDate,
+            'remaining_budgets' => $plan->budget_limit,
+            'next_billing_date' => $nextBillingDate,
+            'billing_cycle' => $payment->billing_cycle,
+            'amount_paid' => $payment->amount,
+            'asaas_subscription_id' => $payment->asaas_subscription_id,
+            'payment_id' => $payment->id
+        ]);
+        
+        // Atualizar o payment com o subscription_id
+        $payment->update([
+            'subscription_id' => $newSubscription->id
+        ]);
+        
+        Log::info('Nova assinatura criada e payment atualizado (fila)', [
+            'payment_id' => $payment->id,
+            'company_id' => $payment->company_id,
+            'new_subscription_id' => $newSubscription->id,
+            'plan_id' => $plan->id,
+            'billing_cycle' => $payment->billing_cycle,
+            'amount' => $payment->amount
+        ]);
     }
 
     /**
@@ -550,25 +618,41 @@ class ProcessAsaasWebhook implements ShouldQueue
                 }
             }
             
-            // Criar nova assinatura anual
+            // Criar nova assinatura
+            $startDate = now();
+            $endDate = $payment->billing_cycle === 'annual' ? $startDate->copy()->addYear() : $startDate->copy()->addMonth();
+            $nextBillingDate = $payment->billing_cycle === 'annual' ? $endDate : $startDate->copy()->addMonth();
+            $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
+            
             $newSubscription = \App\Models\Subscription::create([
                 'company_id' => $payment->company_id,
                 'plan_id' => $newPlan->id,
                 'status' => 'active',
-                'start_date' => now(),
-                'end_date' => now()->addYear(),
-                'next_billing_date' => now()->addYear(),
-                'billing_cycle' => 'annual',
+                'billing_cycle' => $payment->billing_cycle,
+                'starts_at' => $startDate,
+                'ends_at' => $endDate,
+                'grace_period_ends_at' => $gracePeriodEndDate,
+                'remaining_budgets' => $newPlan->budget_limit,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'next_billing_date' => $nextBillingDate,
                 'amount_paid' => $payment->amount,
                 'asaas_subscription_id' => $payment->asaas_subscription_id,
-                'payment_id' => $payment->id
+                'payment_id' => $payment->id,
+                'auto_renew' => $payment->billing_cycle === 'monthly'
             ]);
             
-            Log::info('Nova assinatura anual criada após mudança de plano', [
+            // Atualizar o payment com o subscription_id
+            $payment->update([
+                'subscription_id' => $newSubscription->id
+            ]);
+            
+            Log::info('Nova assinatura criada e payment atualizado', [
                 'payment_id' => $payment->id,
                 'company_id' => $payment->company_id,
                 'new_subscription_id' => $newSubscription->id,
-                'new_plan_id' => $newPlan->id
+                'new_plan_id' => $newPlan->id,
+                'billing_cycle' => $payment->billing_cycle
             ]);
             
         } catch (\Exception $e) {

@@ -9,14 +9,27 @@ use Carbon\Carbon;
 class Payment extends Model
 {
     protected $fillable = [
+        'company_id',
         'subscription_id',
         'plan_id',
         'asaas_payment_id',
+        'asaas_customer_id',
+        'asaas_subscription_id',
+        'payment_id',
         'amount',
         'payment_method',
+        'billing_type',
+        'billing_cycle',
+        'type',
         'status',
         'due_date',
         'confirmed_at',
+        'description',
+        'extra_budgets_quantity',
+        'pix_qr_code',
+        'pix_copy_paste',
+        'bank_slip_url',
+        'credit_card_info',
         'asaas_response'
     ];
 
@@ -41,6 +54,14 @@ class Payment extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    /**
+     * Relacionamento com Company
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**

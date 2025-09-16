@@ -37,13 +37,21 @@ class PlanUpgradeService
             ]);
 
             // Criar nova assinatura
+            $startDate = now();
+            $endDate = $this->calculateEndDate($payment->billing_cycle ?? 'monthly');
+            $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
+            
             $newSubscription = Subscription::create([
                 'company_id' => $oldSubscription->company_id,
                 'plan_id' => $newPlan->id,
                 'billing_cycle' => $payment->billing_cycle ?? 'monthly',
                 'status' => 'active',
-                'start_date' => now(),
-                'end_date' => $this->calculateEndDate($payment->billing_cycle ?? 'monthly'),
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'starts_at' => $startDate,
+                'ends_at' => $endDate,
+                'grace_period_ends_at' => $gracePeriodEndDate,
+                'remaining_budgets' => $newPlan->budget_limit,
                 'next_billing_date' => $this->calculateNextBillingDate($payment->billing_cycle ?? 'monthly'),
                 'auto_renew' => true
             ]);
