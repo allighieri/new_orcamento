@@ -197,3 +197,20 @@
 
 
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Event listeners para os botões de plano
+    document.querySelectorAll('.monthly-btn, .annual-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const planSlug = this.getAttribute('data-plan');
+            const cycle = this.getAttribute('data-cycle');
+            
+            // Redirecionar para a página de checkout com os parâmetros
+            window.location.href = `/payments/checkout/${planSlug}?period=${cycle}`;
+        });
+    });
+});
+</script>
+@endpush

@@ -62,4 +62,12 @@ class Plan extends Model
     {
         return $this->budget_limit ?? 0;
     }
+
+    /**
+     * Define que a rota deve usar o slug em vez do ID
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 }

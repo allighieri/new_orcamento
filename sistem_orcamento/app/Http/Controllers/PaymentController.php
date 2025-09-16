@@ -101,7 +101,7 @@ class PaymentController extends Controller
         $period = $request->get('period', 'yearly'); // Default para anual
         
         // Determinar o valor baseado no período
-        $amount = $period === 'monthly' ? $plan->monthly_price : $plan->annual_price;
+        $amount = $period === 'monthly' ? $plan->monthly_price : $plan->yearly_price;
         
         return view('payments.checkout', compact('plan', 'company', 'period', 'amount'));
     }

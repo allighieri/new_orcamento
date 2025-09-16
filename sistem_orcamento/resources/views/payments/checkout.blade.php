@@ -53,15 +53,16 @@
                             @else
                                 @php
                                     $periodLabel = ($period === 'yearly') ? 'ano' : 'mês';
-                                    $amountDisplay = ($period === 'monthly') ? $amount : ($amount * 12);
+                                    $amountDisplay = $amount;
                                 @endphp
 
                                 <h4 class="mb-0 text-primary">R$ {{ number_format($amountDisplay, 2, ',', '.') }}/{{ $periodLabel }}</h4>
 
                                 @if($period === 'yearly')
                                     @php
-                                        $monthlyPrice = $plan->monthly_price ?? 0; // Adicione um fallback para evitar erros
-                                        $amountDifference = ($monthlyPrice * 12) - ($amount * 12);
+                                        $monthlyPrice = $plan->monthly_price ?? 0;
+                                        $yearlyPrice = $plan->yearly_price ?? 0;
+                                        $amountDifference = ($monthlyPrice * 12) - $yearlyPrice;
                                     @endphp
                                     <small class="text-success">
                                         Economia de R$ {{ number_format($amountDifference, 2, ',', '.') }}
@@ -145,7 +146,7 @@
 
                                 <button type="submit" class="btn btn-success btn-lg w-100">
                                     @if($period === 'yearly')
-                                        <i class="mdi mdi-qrcode me-2"></i>Gerar PIX - R$ {{ number_format($amount * 12, 2, ',', '.') }} / ano
+                                        <i class="mdi mdi-qrcode me-2"></i>Gerar PIX - R$ {{ number_format($amount, 2, ',', '.') }} / ano
                                     @else
                                         <i class="mdi mdi-qrcode me-2"></i>Gerar PIX - R$ {{ number_format($amount, 2, ',', '.') }} / mês
                                     @endif
