@@ -306,6 +306,15 @@ class ProcessAsaasWebhook implements ShouldQueue
         // Atualizar status do pagamento
         $payment->updateStatus($paymentData['status'], $paymentData);
         
+        Log::info('DEBUG: Iniciando processamento de pagamento aprovado', [
+            'payment_id' => $payment->id,
+            'company_id' => $payment->company_id,
+            'plan_id' => $payment->plan_id,
+            'billing_cycle' => $payment->billing_cycle,
+            'amount' => $payment->amount,
+            'current_type' => $payment->type
+        ]);
+        
         // Detectar automaticamente mudanças de plano se o tipo não estiver definido
         if (!$payment->type || $payment->type === 'subscription') {
             $detectedType = $this->detectPaymentType($payment);
@@ -318,6 +327,11 @@ class ProcessAsaasWebhook implements ShouldQueue
                 ]);
             }
         }
+        
+        Log::info('DEBUG: Tipo de pagamento final', [
+            'payment_id' => $payment->id,
+            'payment_type' => $payment->type
+        ]);
         
         // Verificar tipo de pagamento
         if ($payment->type === 'cancellation_fee') {
@@ -339,25 +353,67 @@ class ProcessAsaasWebhook implements ShouldQueue
     private function detectPaymentType(Payment $payment): ?string
     {
         try {
+            Log::info('DEBUG: ===== INICIANDO DETECÇÃO DE TIPO DE PAGAMENTO =====', [
+                'payment_id' => $payment->id,
+                'plan_id' => $payment->plan_id,
+                'company_id' => $payment->company_id,
+                'billing_cycle' => $payment->billing_cycle
+            ]);
+            
             // Se não tem plan_id, não é mudança de plano
             if (!$payment->plan_id) {
+                Log::info('DEBUG: Sem plan_id, retornando null', [
+                    'payment_id' => $payment->id
+                ]);
                 return null;
             }
             
             // Buscar empresa e assinatura ativa
             $company = \App\Models\Company::find($payment->company_id);
             if (!$company) {
+                Log::error('DEBUG: Empresa não encontrada', [
+                    'payment_id' => $payment->id,
+                    'company_id' => $payment->company_id
+                ]);
                 return null;
             }
             
             $activeSubscription = $company->activeSubscription();
+            
+            Log::info('DEBUG: Verificando assinatura ativa', [
+                'payment_id' => $payment->id,
+                'company_id' => $payment->company_id,
+                'has_active_subscription' => $activeSubscription ? true : false,
+                'active_subscription_id' => $activeSubscription ? $activeSubscription->id : null,
+                'active_plan_id' => $activeSubscription ? $activeSubscription->plan_id : null
+            ]);
+            
             if (!$activeSubscription) {
                 // Se não há assinatura ativa, é uma nova assinatura
+                Log::info('DEBUG: Sem assinatura ativa, detectado como subscription', [
+                    'payment_id' => $payment->id
+                ]);
                 return 'subscription';
             }
             
+            Log::info('DEBUG: ATENÇÃO - Assinatura ativa encontrada quando não deveria ter', [
+                'payment_id' => $payment->id,
+                'active_subscription_id' => $activeSubscription->id,
+                'active_subscription_status' => $activeSubscription->status,
+                'active_subscription_ends_at' => $activeSubscription->ends_at,
+                'now' => now(),
+                'comparison' => $activeSubscription->ends_at >= now() ? 'ends_at >= now (true)' : 'ends_at < now (false)'
+            ]);
+            
             // Se o plano do pagamento é diferente do plano da assinatura ativa, é mudança de plano
             if ($payment->plan_id != $activeSubscription->plan_id) {
+                Log::info('DEBUG: Detectada mudança de plano', [
+                    'payment_id' => $payment->id,
+                    'old_plan_id' => $activeSubscription->plan_id,
+                    'new_plan_id' => $payment->plan_id,
+                    'billing_cycle' => $payment->billing_cycle
+                ]);
+                
                 // Verificar se é anual ou mensal baseado no billing_cycle
                 if ($payment->billing_cycle === 'annual') {
                     return 'plan_change_annual';
@@ -370,8 +426,17 @@ class ProcessAsaasWebhook implements ShouldQueue
             // Verificar se tem metadata de orçamentos extras
             $metadata = is_string($payment->metadata) ? json_decode($payment->metadata, true) : $payment->metadata;
             if ($metadata && isset($metadata['extra_budgets_quantity'])) {
+                Log::info('DEBUG: Detectado como extra_budgets', [
+                    'payment_id' => $payment->id,
+                    'metadata' => $metadata
+                ]);
                 return 'extra_budgets';
             }
+            
+            Log::info('DEBUG: Detectado como assinatura normal', [
+                'payment_id' => $payment->id,
+                'same_plan' => true
+            ]);
             
             // Por padrão, é uma assinatura normal
             return 'subscription';
@@ -512,6 +577,9 @@ class ProcessAsaasWebhook implements ShouldQueue
         $nextBillingDate = $payment->billing_cycle === 'annual' ? $endDate : $startDate->copy()->addMonth();
         $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
         
+        // Converter billing_cycle para o formato correto da tabela subscriptions
+        $billingCycleForSubscription = $payment->billing_cycle === 'annual' ? 'yearly' : $payment->billing_cycle;
+        
         // Criar nova assinatura
         $newSubscription = \App\Models\Subscription::create([
             'company_id' => $payment->company_id,
@@ -524,7 +592,7 @@ class ProcessAsaasWebhook implements ShouldQueue
             'grace_period_ends_at' => $gracePeriodEndDate,
             
             'next_billing_date' => $nextBillingDate,
-            'billing_cycle' => $payment->billing_cycle,
+            'billing_cycle' => $billingCycleForSubscription,
             'amount_paid' => $payment->amount,
             'asaas_subscription_id' => $payment->asaas_subscription_id,
             'payment_id' => $payment->id
@@ -689,11 +757,14 @@ class ProcessAsaasWebhook implements ShouldQueue
             $nextBillingDate = $payment->billing_cycle === 'annual' ? $endDate : $startDate->copy()->addMonth();
             $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
             
+            // Converter billing_cycle para o formato correto da tabela subscriptions
+            $billingCycleForSubscription = $payment->billing_cycle === 'annual' ? 'yearly' : $payment->billing_cycle;
+            
             $newSubscription = \App\Models\Subscription::create([
                 'company_id' => $payment->company_id,
                 'plan_id' => $newPlan->id,
                 'status' => 'active',
-                'billing_cycle' => $payment->billing_cycle,
+                'billing_cycle' => $billingCycleForSubscription,
                 'starts_at' => $startDate,
                 'ends_at' => $endDate,
                 'grace_period_ends_at' => $gracePeriodEndDate,

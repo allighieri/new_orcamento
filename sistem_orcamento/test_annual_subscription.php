@@ -24,7 +24,7 @@ try {
     }
     
     echo "Empresa: {$company->fantasy_name}\n";
-    echo "Plano: {$plan->name} - R$ {$plan->annual_price}\n\n";
+    echo "Plano: {$plan->name} - R$ {$plan->yearly_price}\n\n";
     
     // Cancelar assinatura atual se existir
     $currentSubscription = Subscription::where('company_id', $company->id)
@@ -43,7 +43,7 @@ try {
     $payment = Payment::create([
         'company_id' => $company->id,
         'plan_id' => $plan->id,
-        'amount' => $plan->annual_price,
+        'amount' => $plan->yearly_price,
         'billing_cycle' => 'annual',
         'billing_type' => 'PIX',
         'due_date' => now()->addDay(),

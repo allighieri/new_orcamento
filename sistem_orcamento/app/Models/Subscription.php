@@ -123,7 +123,7 @@ class Subscription extends Model
 
         // Taxa de cancelamento é 30% do valor anual restante
         $monthsRemaining = max(1, $this->getDaysRemaining() / 30);
-        $remainingValue = ($this->plan->annual_price / 12) * $monthsRemaining;
+        $remainingValue = ($this->plan->yearly_price / 12) * $monthsRemaining;
         
         return $remainingValue * 0.30;
     }
