@@ -41,10 +41,13 @@ class PlanUpgradeService
             $endDate = $this->calculateEndDate($payment->billing_cycle ?? 'monthly');
             $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
             
+            // Converter billing_cycle para o formato correto da tabela subscriptions
+            $billingCycleForSubscription = $payment->billing_cycle === 'annual' ? 'yearly' : ($payment->billing_cycle ?? 'monthly');
+            
             $newSubscription = Subscription::create([
                 'company_id' => $oldSubscription->company_id,
                 'plan_id' => $newPlan->id,
-                'billing_cycle' => $payment->billing_cycle ?? 'monthly',
+                'billing_cycle' => $billingCycleForSubscription,
                 'status' => 'active',
                 'start_date' => $startDate,
                 'end_date' => $endDate,
@@ -110,10 +113,8 @@ class PlanUpgradeService
             return 0;
         }
 
-        // Se está mudando de Prata ou Bronze para Ouro, zerar inherited_budgets
-        if (in_array($oldPlan->name, ['Prata', 'Bronze']) && $newPlan->name === 'Ouro') {
-            return 0;
-        }
+        // Removido: regra que zerava orçamentos herdados ao mudar para Ouro
+        // Agora todos os orçamentos não utilizados são herdados independente do plano
 
         // Calcular orçamentos restantes do plano anterior
         $remainingFromPlan = max(0, $oldPlan->budget_limit - $currentUsageControl->budgets_used);
@@ -192,7 +193,7 @@ class PlanUpgradeService
     private function calculateEndDate(string $billingCycle): Carbon
     {
         return match($billingCycle) {
-            'yearly' => now()->addYear(),
+            'yearly', 'annual' => now()->addYear(),
             'monthly' => now()->addMonth(),
             default => now()->addMonth()
         };
@@ -204,7 +205,7 @@ class PlanUpgradeService
     private function calculateNextBillingDate(string $billingCycle): Carbon
     {
         return match($billingCycle) {
-            'yearly' => now()->addYear(),
+            'yearly', 'annual' => now()->addYear(),
             'monthly' => now()->addMonth(),
             default => now()->addMonth()
         };
