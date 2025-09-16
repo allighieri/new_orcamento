@@ -897,6 +897,64 @@ class PaymentController extends Controller
     }
 
     /**
+     * Cancelar pagamento
+     */
+    public function cancel(Payment $payment)
+    {
+        // Verificar se o pagamento pertence à empresa do usuário
+        if ($payment->company_id !== Auth::user()->company_id) {
+            return response()->json(['success' => false, 'message' => 'Acesso negado.'], 403);
+        }
+
+        // Verificar se o pagamento pode ser cancelado (apenas pendentes)
+        if (!in_array($payment->status, ['pending', 'PENDING'])) {
+            return response()->json(['success' => false, 'message' => 'Apenas pagamentos pendentes podem ser cancelados.'], 400);
+        }
+
+        try {
+            // Verificar se há asaas_payment_id
+            if (!$payment->asaas_payment_id) {
+                return response()->json(['success' => false, 'message' => 'Pagamento não possui ID do Asaas para cancelamento.'], 400);
+            }
+
+            // Verificar status no Asaas antes de cancelar
+            $asaasPayment = $this->asaasService->getPaymentStatus($payment->asaas_payment_id);
+            
+            if (!$asaasPayment || !isset($asaasPayment['status'])) {
+                return response()->json(['success' => false, 'message' => 'Não foi possível verificar o status do pagamento no Asaas.'], 500);
+            }
+
+            // Verificar se o pagamento está pendente no Asaas
+            if (!in_array($asaasPayment['status'], ['PENDING', 'AWAITING_PAYMENT'])) {
+                return response()->json(['success' => false, 'message' => 'Pagamento não pode ser cancelado. Status atual no Asaas: ' . $asaasPayment['status']], 400);
+            }
+
+            // Cancelar no Asaas
+            $this->asaasService->cancelPayment($payment->asaas_payment_id);
+
+            \Log::info('Pagamento cancelado no Asaas com sucesso', [
+                'payment_id' => $payment->id,
+                'asaas_payment_id' => $payment->asaas_payment_id,
+                'user_id' => Auth::id()
+            ]);
+
+            // Não atualizar o status local aqui - aguardar webhook do Asaas
+            // O webhook irá atualizar o status e asaas_response automaticamente
+
+            return response()->json(['success' => true, 'message' => 'Pagamento cancelado com sucesso. O status será atualizado em breve.']);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao cancelar pagamento', [
+                'error' => $e->getMessage(),
+                'payment_id' => $payment->id,
+                'asaas_payment_id' => $payment->asaas_payment_id ?? null,
+                'user_id' => Auth::id()
+            ]);
+            
+            return response()->json(['success' => false, 'message' => 'Erro ao cancelar pagamento: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Exibir fatura personalizada do pagamento
      */
     public function invoice(Payment $payment)

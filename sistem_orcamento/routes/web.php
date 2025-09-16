@@ -178,6 +178,7 @@ Route::get('payments/extra-budgets/checkout', [App\Http\Controllers\PaymentContr
 Route::post('payments/extra-budgets/purchase', [App\Http\Controllers\PaymentController::class, 'purchaseExtraBudgets'])->name('payments.purchase-extra-budgets');
     Route::get('payments/{payment}/pix', [App\Http\Controllers\PaymentController::class, 'pixPayment'])->name('payments.pix-payment');
     Route::get('payments', [App\Http\Controllers\PaymentController::class, 'index'])->name('payments.index');
+    Route::post('payments/{payment}/cancel', [App\Http\Controllers\PaymentController::class, 'cancel'])->name('payments.cancel');
     
     // Rotas para cancelamento de planos anuais
     Route::get('payments/cancel-annual-plan', [App\Http\Controllers\PaymentController::class, 'cancelAnnualPlan'])->name('payments.cancel-annual-plan');

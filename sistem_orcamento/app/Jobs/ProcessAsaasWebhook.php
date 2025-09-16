@@ -156,6 +156,7 @@ class ProcessAsaasWebhook implements ShouldQueue
                 
             case 'PAYMENT_DELETED':
             case 'PAYMENT_REFUNDED':
+            case 'PAYMENT_CANCELLED':
                 $this->handlePaymentCancelled($payment, $paymentData);
                 break;
                 
@@ -631,11 +632,21 @@ class ProcessAsaasWebhook implements ShouldQueue
      */
     private function handlePaymentCancelled(Payment $payment, array $paymentData)
     {
-        $payment->updateStatus($paymentData['status'], $paymentData);
+        // Para eventos de cancelamento/exclusão, sempre definir status como 'cancelled'
+        // independente do status que vem do Asaas
+        $newStatus = 'cancelled';
         
-        Log::info('Pagamento cancelado/estornado processado via fila', [
+        // Atualizar status e asaas_response com todo o payload do webhook
+        $payment->updateStatus($newStatus, $this->payload);
+        
+        Log::info('Pagamento cancelado/estornado processado via webhook', [
             'payment_id' => $payment->id,
-            'status' => $paymentData['status']
+            'asaas_payment_id' => $payment->asaas_payment_id,
+            'old_status' => $payment->getOriginal('status'),
+            'new_status' => $newStatus,
+            'asaas_status' => $paymentData['status'],
+            'event' => $this->payload['event'] ?? 'unknown',
+            'webhook_payload' => $this->payload
         ]);
     }
 

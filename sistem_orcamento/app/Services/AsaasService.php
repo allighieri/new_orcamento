@@ -423,4 +423,31 @@ class AsaasService
             throw $e;
         }
     }
+
+    /**
+     * Cancelar pagamento no Asaas
+     */
+    public function cancelPayment($paymentId)
+    {
+        try {
+            Log::info('Cancelando pagamento no Asaas', ['payment_id' => $paymentId]);
+            
+            $response = $this->client->delete("payments/{$paymentId}");
+            $responseData = json_decode($response->getBody()->getContents(), true);
+            
+            Log::info('Pagamento cancelado com sucesso', [
+                'payment_id' => $paymentId,
+                'response' => $responseData
+            ]);
+
+            return $responseData;
+        } catch (RequestException $e) {
+            Log::error('Erro ao cancelar pagamento no Asaas', [
+                'error' => $e->getMessage(),
+                'payment_id' => $paymentId,
+                'response_body' => $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null
+            ]);
+            throw $e;
+        }
+    }
 }

@@ -142,7 +142,7 @@
                                         <th>Plano</th>
                                         <th>Valor</th>
                                         <th>Tipo</th>
-                                        <th>Status</th>
+                                        <th>Pagamento</th>
                                         <th>Vencimento</th>
                                         <th>Criado em</th>
                                         <th>Ações</th>
@@ -159,7 +159,7 @@
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <div class="plan-icon me-2">
+                                                <div class="plan-icon">
                                                     @if($payment->plan)
                                                         @if($payment->plan->name === 'Bronze')
                                                             <i class="bi bi-award text-warning"></i>
@@ -199,11 +199,12 @@
                                             @php
                                 $statusTranslations = [
                                     'PENDING' => 'Pendente',
-                                    'RECEIVED' => 'Pago',
+                                    'RECEIVED' => 'Efetuado',
+                                    'received' => 'Efetuado',
                                     'CONFIRMED' => 'Confirmado',
                                     'OVERDUE' => 'Vencido',
                                     'CANCELLED' => 'Cancelado',
-                                    'paid' => 'Pago',
+                                    'paid' => 'Efetuado',
                                     'pending' => 'Pendente',
                                     'overdue' => 'Vencido',
                                     'cancelled' => 'Cancelado',
@@ -211,8 +212,8 @@
                                 ];
                                 $translatedStatus = $statusTranslations[$payment->status] ?? ucfirst($payment->status);
                             @endphp
-                            @if($payment->status === 'paid' || $payment->status === 'RECEIVED' || $payment->status === 'CONFIRMED')
-                                <span class="badge bg-success">Pago</span>
+                            @if($payment->status === 'paid' || $payment->status === 'RECEIVED' || $payment->status === 'received' || $payment->status === 'CONFIRMED')
+                                <span class="badge bg-success">Efetuado</span>
                             @elseif($payment->status === 'pending' || $payment->status === 'PENDING')
                                 <span class="badge bg-warning">Pendente</span>
                             @elseif($payment->status === 'overdue' || $payment->status === 'OVERDUE')
@@ -237,6 +238,12 @@
                                                         onclick="showPaymentStatus({{ $payment->id }})" title="Ver Status">
                                                     <i class="bi bi-info-circle"></i>
                                                 </button>
+                                                @if($payment->status === 'pending' || $payment->status === 'PENDING')
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                            onclick="cancelPayment({{ $payment->id }})" title="Cancelar Pagamento">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </button>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -298,6 +305,72 @@ function showPaymentStatus(paymentId) {
         },
         error: function(xhr, status, error) {
             $('#paymentStatusContent').html('<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>Erro ao carregar status do pagamento. Tente novamente.</div>');
+        }
+    });
+}
+
+function cancelPayment(paymentId) {
+    Swal.fire({
+        title: 'Cancelar Pagamento',
+        text: 'Tem certeza que deseja cancelar este pagamento?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, cancelar!',
+        cancelButtonText: 'Não'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostrar loading
+            Swal.fire({
+                title: 'Processando...',
+                text: 'Verificando status no Asaas e cancelando pagamento',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            $.ajax({
+                url: `/payments/${paymentId}/cancel`,
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sucesso!',
+                            text: response.message || 'Pagamento cancelado com sucesso!',
+                            timer: 3000,
+                            timerProgressBar: true,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'bottom-start'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro!',
+                            text: response.message || 'Erro desconhecido',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro!',
+                        text: 'Erro ao cancelar pagamento. Tente novamente.',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
         }
     });
 }
