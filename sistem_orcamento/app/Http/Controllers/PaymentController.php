@@ -1479,7 +1479,7 @@ class PaymentController extends Controller
                 'starts_at' => $startDate,
                 'ends_at' => $endDate,
                 'grace_period_ends_at' => $gracePeriodEndDate,
-                'remaining_budgets' => $newPlan->budget_limit,
+
                 'billing_cycle' => $billingCycle,
                 'amount' => $amount,
                 'payment_id' => $payment->id

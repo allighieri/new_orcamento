@@ -23,7 +23,6 @@ class Subscription extends Model
         'amount_paid',
         'payment_id',
         'grace_period_ends_at',
-        'remaining_budgets',
         'auto_renew'
     ];
 

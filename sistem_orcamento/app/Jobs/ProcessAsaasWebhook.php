@@ -457,7 +457,7 @@ class ProcessAsaasWebhook implements ShouldQueue
             'starts_at' => $startDate,
             'ends_at' => $endDate,
             'grace_period_ends_at' => $gracePeriodEndDate,
-            'remaining_budgets' => $plan->budget_limit,
+            
             'next_billing_date' => $nextBillingDate,
             'billing_cycle' => $payment->billing_cycle,
             'amount_paid' => $payment->amount,
@@ -632,7 +632,7 @@ class ProcessAsaasWebhook implements ShouldQueue
                 'starts_at' => $startDate,
                 'ends_at' => $endDate,
                 'grace_period_ends_at' => $gracePeriodEndDate,
-                'remaining_budgets' => $newPlan->budget_limit,
+                
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'next_billing_date' => $nextBillingDate,

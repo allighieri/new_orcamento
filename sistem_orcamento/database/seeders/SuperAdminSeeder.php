@@ -16,7 +16,7 @@ class SuperAdminSeeder extends Seeder
     {
         // Verifica se já existe um super_admin
         if (!User::where('role', 'super_admin')->exists()) {
-            User::create([
+            $user =User::create([
                 'name' => 'Super Administrador',
                 'email' => 'agenciaolhardigital@gmail.com',
                 'email_verified_at' => now(),
@@ -24,6 +24,7 @@ class SuperAdminSeeder extends Seeder
                 'role' => 'super_admin',
                 'active' => 1, // Super admin deve estar ativo
             ]);
+
 
             $this->command->info('Super Admin criado com sucesso!');
             $this->command->info('Email: agenciaolhardigital@gmail.com');

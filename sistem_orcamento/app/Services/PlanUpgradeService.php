@@ -51,7 +51,7 @@ class PlanUpgradeService
                 'starts_at' => $startDate,
                 'ends_at' => $endDate,
                 'grace_period_ends_at' => $gracePeriodEndDate,
-                'remaining_budgets' => $newPlan->budget_limit,
+
                 'next_billing_date' => $this->calculateNextBillingDate($payment->billing_cycle ?? 'monthly'),
                 'auto_renew' => true
             ]);
@@ -70,7 +70,7 @@ class PlanUpgradeService
                 'budgets_used' => 0,
                 'extra_budgets_purchased' => 0,
                 'extra_budgets_used' => 0,
-                'inherited_budgets' => $inheritedBudgets,
+                'inherited_budgets' => $inheritedBudgets, // Orçamentos não utilizados viram herdados
                 'inherited_budgets_used' => 0
             ]);
 
@@ -122,17 +122,9 @@ class PlanUpgradeService
 
         $totalRemaining = $remainingFromPlan + $remainingFromExtras + $remainingFromInherited;
 
-        // Aplicar regra de herança baseada no tipo de upgrade
-        if ($this->isUpgrade($oldPlan, $newPlan)) {
-            // Upgrade: herda 100% dos orçamentos restantes
-            return $totalRemaining;
-        } elseif ($this->isDowngrade($oldPlan, $newPlan)) {
-            // Downgrade: herda apenas 50% dos orçamentos restantes
-            return intval($totalRemaining * 0.5);
-        } else {
-            // Mudança lateral: herda 75% dos orçamentos restantes
-            return intval($totalRemaining * 0.75);
-        }
+        // Herdar 100% dos orçamentos não utilizados, independente do tipo de mudança
+        // O cliente já pagou por esses orçamentos e deve poder utilizá-los
+        return $totalRemaining;
     }
 
     /**
@@ -238,7 +230,7 @@ class PlanUpgradeService
                 'extra_budgets_used' => 0,
                 'inherited_budgets' => 0,
                 'inherited_budgets_used' => 0,
-                'remaining_budgets' => 0,
+
                 'can_create_budget' => false
             ];
         }
@@ -257,7 +249,7 @@ class PlanUpgradeService
             'extra_budgets_used' => $usageControl->extra_budgets_used,
             'inherited_budgets' => $usageControl->inherited_budgets,
             'inherited_budgets_used' => $usageControl->inherited_budgets_used,
-            'remaining_budgets' => $usageControl->getRemainingBudgets(),
+
             'can_create_budget' => $usageControl->canCreateBudget()
         ];
     }

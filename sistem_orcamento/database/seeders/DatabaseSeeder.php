@@ -6,6 +6,8 @@ use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -26,7 +28,8 @@ class DatabaseSeeder extends Seeder
         
         // Criar usuários de teste vinculados às empresas
         $this->createTestUsers();
-        
+
+                
         // Chamar outros seeders na ordem correta
         $this->call([
             // Seeders básicos do sistema
@@ -69,12 +72,11 @@ class DatabaseSeeder extends Seeder
             \App\Models\User::factory()->create([
                 'name' => 'WEDER MONTEIRO',
                 'email' => 'videokelive2019@gmail.com',
+                'password' => Hash::make('12345678'),
                 'role' => 'admin',
                 'company_id' => $companies->first()->id,
             ]);
-            
-           
-            
+
             // Se houver segunda empresa, criar usuários para ela também
             if ($companies->count() > 1) {
                 \App\Models\User::factory()->create([

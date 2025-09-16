@@ -36,7 +36,7 @@ class Plan extends Model
      */
     public function isUnlimited(): bool
     {
-        return is_null($this->budget_limit);
+        return is_null($this->budget_limit) || $this->budget_limit === 0;
     }
 
     /**

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Client;
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
+use Illuminate\Support\Facades\Hash;
 
 class ClientSeeder extends Seeder
 {

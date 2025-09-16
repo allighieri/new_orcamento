@@ -84,7 +84,7 @@ class TestWebhookPayment extends Command
                 'starts_at' => $startDate,
                 'ends_at' => $endDate,
                 'grace_period_ends_at' => $gracePeriodEndDate,
-                'remaining_budgets' => $plan->budget_limit ?? 5,
+
                 'next_billing_date' => $endDate,
                 'amount_paid' => $plan->price ?? 29.90,
                 'billing_cycle' => 'monthly',

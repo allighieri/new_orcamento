@@ -85,7 +85,6 @@ class SubscriptionController extends Controller
                 'starts_at' => $startDate,
                 'ends_at' => $endDate,
                 'grace_period_ends_at' => $gracePeriodEndDate,
-                'remaining_budgets' => $plan->budget_limit,
                 'auto_renew' => true
             ]);
 
