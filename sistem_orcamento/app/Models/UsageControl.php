@@ -13,13 +13,10 @@ class UsageControl extends Model
         'year',
         'month',
         'budgets_used',
-        'budgets_limit',
         'extra_budgets_purchased',
-        'extra_amount_paid'
-    ];
-
-    protected $casts = [
-        'extra_amount_paid' => 'decimal:2'
+        'extra_budgets_used',
+        'inherited_budgets',
+        'inherited_budgets_used'
     ];
 
     /**
@@ -43,21 +40,38 @@ class UsageControl extends Model
      */
     public function canCreateBudget(): bool
     {
-        // Se budgets_limit for null, orçamentos são ilimitados (planos anuais)
-        if (is_null($this->budgets_limit)) {
+        $planLimit = $this->subscription->plan->budget_limit;
+        
+        // Se o plano tem limite ilimitado (0), sempre pode criar
+        if ($planLimit === 0) {
             return true;
         }
         
-        $totalLimit = $this->budgets_limit + $this->extra_budgets_purchased;
-        return $this->budgets_used < $totalLimit;
+        $totalAvailable = $planLimit + $this->extra_budgets_purchased + $this->inherited_budgets;
+        $totalUsed = $this->budgets_used + $this->extra_budgets_used + $this->inherited_budgets_used;
+        
+        return $totalUsed < $totalAvailable;
     }
 
     /**
-     * Incrementa o uso de orçamentos
+     * Incrementa o uso de orçamentos (prioriza plano base, depois extras, depois herdados)
      */
     public function incrementUsage(): void
     {
-        $this->increment('budgets_used');
+        $planLimit = $this->subscription->plan->budget_limit;
+        
+        // Se ainda tem orçamentos do plano base
+        if ($this->budgets_used < $planLimit) {
+            $this->increment('budgets_used');
+        }
+        // Se tem orçamentos extras disponíveis
+        elseif ($this->extra_budgets_used < $this->extra_budgets_purchased) {
+            $this->increment('extra_budgets_used');
+        }
+        // Se tem orçamentos herdados disponíveis
+        elseif ($this->inherited_budgets_used < $this->inherited_budgets) {
+            $this->increment('inherited_budgets_used');
+        }
     }
 
     /**
@@ -65,13 +79,17 @@ class UsageControl extends Model
      */
     public function getRemainingBudgets(): int
     {
-        // Se budgets_limit for null, orçamentos são ilimitados (planos anuais)
-        if (is_null($this->budgets_limit)) {
-            return PHP_INT_MAX; // Retorna um número muito grande para representar "ilimitado"
+        $planLimit = $this->subscription->plan->budget_limit;
+        
+        // Se o plano tem limite ilimitado (0)
+        if ($planLimit === 0) {
+            return PHP_INT_MAX;
         }
         
-        $totalLimit = $this->budgets_limit + $this->extra_budgets_purchased;
-        return max(0, $totalLimit - $this->budgets_used);
+        $totalAvailable = $planLimit + $this->extra_budgets_purchased + $this->inherited_budgets;
+        $totalUsed = $this->budgets_used + $this->extra_budgets_used + $this->inherited_budgets_used;
+        
+        return max(0, $totalAvailable - $totalUsed);
     }
 
     /**
@@ -79,8 +97,10 @@ class UsageControl extends Model
      */
     public function needsMoreBudgets(): bool
     {
-        // Se budgets_limit for null, orçamentos são ilimitados (planos anuais)
-        if (is_null($this->budgets_limit)) {
+        $planLimit = $this->subscription->plan->budget_limit;
+        
+        // Se o plano tem limite ilimitado (0)
+        if ($planLimit === 0) {
             return false;
         }
         
@@ -90,17 +110,25 @@ class UsageControl extends Model
     /**
      * Adiciona orçamentos extras
      */
-    public function addExtraBudgets(int $quantity, float $amount): void
+    public function addExtraBudgets(int $quantity): void
     {
         $this->extra_budgets_purchased += $quantity;
-        $this->extra_amount_paid += $amount;
+        $this->save();
+    }
+
+    /**
+     * Adiciona orçamentos herdados de upgrade
+     */
+    public function addInheritedBudgets(int $quantity): void
+    {
+        $this->inherited_budgets += $quantity;
         $this->save();
     }
 
     /**
      * Cria ou obtém o controle de uso para o mês atual
      */
-    public static function getOrCreateForCurrentMonth(int $companyId, int $subscriptionId, ?int $budgetLimit): self
+    public static function getOrCreateForCurrentMonth(int $companyId, int $subscriptionId): self
     {
         $year = now()->year;
         $month = now()->month;
@@ -112,24 +140,22 @@ class UsageControl extends Model
             ->first();
 
         if ($usageControl) {
-            // Se existe, apenas atualiza os campos que podem ter mudado
-            $usageControl->update([
-                'subscription_id' => $subscriptionId,
-                'budgets_limit' => $budgetLimit
-            ]);
+            // Se existe, apenas atualiza a subscription_id
+            $usageControl->update(['subscription_id' => $subscriptionId]);
             return $usageControl;
         }
 
         // Se não existe, cria um novo com valores padrão
         return self::create([
             'company_id' => $companyId,
+            'subscription_id' => $subscriptionId,
             'year' => $year,
             'month' => $month,
-            'subscription_id' => $subscriptionId,
             'budgets_used' => 0,
-            'budgets_limit' => $budgetLimit,
             'extra_budgets_purchased' => 0,
-            'extra_amount_paid' => 0
+            'extra_budgets_used' => 0,
+            'inherited_budgets' => 0,
+            'inherited_budgets_used' => 0
         ]);
     }
 }

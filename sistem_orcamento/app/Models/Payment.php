@@ -9,46 +9,34 @@ use Carbon\Carbon;
 class Payment extends Model
 {
     protected $fillable = [
-        'company_id',
-        'plan_id',
+        'subscription_id',
         'asaas_payment_id',
-        'asaas_customer_id',
-        'asaas_subscription_id',
         'amount',
-        'billing_type',
-        'billing_cycle',
-        'type',
+        'payment_method',
         'status',
+        'pix_qr_code',
+        'pix_copy_paste',
+        'bank_slip_url',
+        'credit_card_info',
         'due_date',
-        'description',
-        'payment_data',
-        'webhook_data',
-        'paid_at',
-        'extra_budgets_quantity'
+        'confirmed_at',
+        'asaas_response'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'due_date' => 'date',
-        'paid_at' => 'datetime',
-        'payment_data' => 'array',
-        'webhook_data' => 'array'
+        'due_date' => 'datetime',
+        'confirmed_at' => 'datetime',
+        'credit_card_info' => 'array',
+        'asaas_response' => 'array'
     ];
 
     /**
-     * Relacionamento com Company
+     * Relacionamento com Subscription
      */
-    public function company(): BelongsTo
+    public function subscription(): BelongsTo
     {
-        return $this->belongsTo(Company::class);
-    }
-
-    /**
-     * Relacionamento com Plan
-     */
-    public function plan(): BelongsTo
-    {
-        return $this->belongsTo(Plan::class);
+        return $this->belongsTo(Subscription::class);
     }
 
     /**
@@ -56,7 +44,7 @@ class Payment extends Model
      */
     public function isPaid(): bool
     {
-        return in_array($this->status, ['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH']);
+        return in_array($this->status, ['confirmed', 'received']);
     }
 
     /**
@@ -64,7 +52,7 @@ class Payment extends Model
      */
     public function isPending(): bool
     {
-        return $this->status === 'PENDING';
+        return $this->status === 'pending';
     }
 
     /**
@@ -72,7 +60,7 @@ class Payment extends Model
      */
     public function isOverdue(): bool
     {
-        return $this->status === 'OVERDUE' || ($this->status === 'PENDING' && $this->due_date < now());
+        return $this->status === 'overdue' || ($this->status === 'pending' && $this->due_date < now());
     }
 
     /**
@@ -81,24 +69,24 @@ class Payment extends Model
     public function markAsPaid(): void
     {
         $this->update([
-            'status' => 'RECEIVED',
-            'paid_at' => now()
+            'status' => 'confirmed',
+            'confirmed_at' => now()
         ]);
     }
 
     /**
      * Atualiza o status do pagamento
      */
-    public function updateStatus(string $status, array $webhookData = null): void
+    public function updateStatus(string $status, array $asaasResponse = null): void
     {
         $updateData = ['status' => $status];
         
-        if ($webhookData) {
-            $updateData['webhook_data'] = $webhookData;
+        if ($asaasResponse) {
+            $updateData['asaas_response'] = $asaasResponse;
         }
         
-        if (in_array($status, ['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH']) && !$this->paid_at) {
-            $updateData['paid_at'] = now();
+        if (in_array($status, ['confirmed', 'received']) && !$this->confirmed_at) {
+            $updateData['confirmed_at'] = now();
         }
         
         $this->update($updateData);
@@ -109,7 +97,7 @@ class Payment extends Model
      */
     public function scopePending($query)
     {
-        return $query->where('status', 'PENDING');
+        return $query->where('status', 'pending');
     }
 
     /**
@@ -117,7 +105,7 @@ class Payment extends Model
      */
     public function scopePaid($query)
     {
-        return $query->whereIn('status', ['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH']);
+        return $query->whereIn('status', ['confirmed', 'received']);
     }
 
     /**
@@ -126,11 +114,35 @@ class Payment extends Model
     public function scopeOverdue($query)
     {
         return $query->where(function($q) {
-            $q->where('status', 'OVERDUE')
+            $q->where('status', 'overdue')
               ->orWhere(function($subQ) {
-                  $subQ->where('status', 'PENDING')
+                  $subQ->where('status', 'pending')
                        ->where('due_date', '<', now());
               });
         });
+    }
+
+    /**
+     * Verifica se é pagamento PIX
+     */
+    public function isPix(): bool
+    {
+        return $this->payment_method === 'pix';
+    }
+
+    /**
+     * Verifica se é pagamento por cartão
+     */
+    public function isCreditCard(): bool
+    {
+        return $this->payment_method === 'credit_card';
+    }
+
+    /**
+     * Verifica se é boleto
+     */
+    public function isBankSlip(): bool
+    {
+        return $this->payment_method === 'bank_slip';
     }
 }

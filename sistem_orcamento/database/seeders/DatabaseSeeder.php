@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             // Seeders básicos do sistema
             CompeSeeder::class,
             SystemSettingSeeder::class,
+            PlansSeeder::class,
             
             // Seeders de categorias e produtos
             CategorySeeder::class,

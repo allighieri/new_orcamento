@@ -3,9 +3,12 @@
 @section('title', 'Escolher Plano')
 
 @section('content')
+@php
+    $plans = \App\Models\Plan::where('active', true)->orderBy('monthly_price')->get();
+@endphp
 <div class="container mx-auto row">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-left mb-4">
             <div>
                 <h1>
                     <i class="bi bi-credit-card"></i> 
@@ -26,113 +29,58 @@
 
 <div class="container mx-auto row">
 
-    <div class="row justify-content-center">
-        @foreach($plans as $plan)
-        @php
-            $isCurrentPlan = $currentSubscription && $currentSubscription->plan_id == $plan->id;
-        @endphp
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card pricing-card {{ $plan->name === 'Prata' ? 'border-primary' : '' }} {{ $isCurrentPlan ? 'current-plan border-success' : '' }}">
-                @if($isCurrentPlan)
-                <div class="ribbon ribbon-top-right"><span class="bg-success">Plano Atual</span></div>
-                @elseif($plan->name === 'Prata')
-                <div class="ribbon ribbon-top-right"><span class="bg-primary">Mais Popular</span></div>
-                @endif
-                
-                <div class="card-body text-center">
-                    <div class="pricing-header">
-                        <h3 class="fw-bold text-uppercase">{{ $plan->name }}</h3>
-                        <div class="pricing-price">
-                             <span class="monthly-price" style="display: none;">
+        <div class="row justify-content-center">
+            @foreach($plans as $plan)
+            @php
+                $features = json_decode($plan->description, true) ?? [];
+                $yearlySavings = ($plan->monthly_price * 12) - $plan->yearly_price;
+            @endphp
+            <div class="col-md-4 mb-4">
+                 <div class="card plan-card h-100 d-flex flex-column">
+                     <div class="card-body text-center flex-grow-1">
+                         <h3 class="plan-title fs-1 fw-bold">{{ strtoupper($plan->name) }}</h3>
+                         <div class="price-section mb-5">
+                             <div class="monthly-price">
                                  <span class="price-currency">R$</span>
-                                 <span class="price-amount">{{ number_format($plan->monthly_price, 2, ',', '.') }}</span>
-                                 <span class="price-period">/mês</span>
-                             </span>
-                             <span class="yearly-price">
-                                 <span class="price-currency">R$</span>
-                                 <span class="price-amount">{{ number_format($plan->annual_price * 12, 2, ',', '.') }}</span>
+                                 <span class="price-value">{{ number_format($plan->yearly_price, 2, ',', '.') }}</span>
                                  <span class="price-period">/ano</span>
-                             </span>
-                         </div>
-                         <div class="yearly-info text-muted small">
-                             Valor para o plano anual
-                         </div>
-                         <div class="yearly-savings text-success small">
-                            Economize R$ {{ number_format(($plan->monthly_price * 12) - ($plan->annual_price * 12), 2, ',', '.') }} por ano!
-                        </div>
-                    </div>
-                    
-                    <div class="pricing-features mt-4">
-                        <ul class="list-unstyled">
-                            <li class="mb-2">
-                                <i class="mdi mdi-check text-success me-2"></i>
-                                @if($plan->name === 'Ouro')
-                                    <strong>Orçamentos ilimitados</strong>
-                                @else
-                                    <strong>{{ $plan->budget_limit }}</strong> orçamentos por mês
-                                @endif
-                            </li>
-                            <li class="mb-2">
-                                <i class="mdi mdi-check text-success me-2"></i>
-                                Suporte por email
-                            </li>
-                            <li class="mb-2">
-                                <i class="mdi mdi-check text-success me-2"></i>
-                                Envio de e-mails integrado com Gmail
-                            </li>
-                            <li class="mb-2">
-                                <i class="mdi mdi-check text-success me-2"></i>
-                                Templates de Email personalizados
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    <div class="pricing-action mt-4">
-                        @if($isCurrentPlan)
-                             <div class="d-flex justify-content-center gap-2">
-                                 @if($currentSubscription->billing_cycle === 'annual')
-                                     <button class="btn btn-success px-3 py-2 w-100 mb-2" disabled>
-                                         <div class="small">Anual Ativo</div>
-                                         <div class="fw-bold">R$ {{ number_format($plan->annual_price * 12, 2, ',', '.') }}</div>
-                                         @if($currentSubscription->ends_at)
-                                             <div class="small text-white-50">Até {{ $currentSubscription->ends_at->format('d/m/Y') }}</div>
-                                         @endif
-                                     </button>
-                                     <a href="{{ route('payments.checkout', $plan->id) }}?period=monthly" class="btn btn-outline-primary px-3 py-2 w-100 mb-2">
-                                         <div class="fw-bold">R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}</div>
-                                     </a>
-                                 @else
-                                     <a href="{{ route('payments.checkout', $plan->id) }}?period=yearly" class="btn btn-outline-primary px-3 py-2 w-100 mb-2">
-                                         <div class="fw-bold">R$ {{ number_format($plan->annual_price * 12, 2, ',', '.') }}</div>
-                                         <div class="small text-muted">Economize R$ {{ number_format(($plan->monthly_price * 12) - ($plan->annual_price * 12), 2, ',', '.') }}</div>
-                                     </a>
-                                     <button class="btn btn-success px-3 py-2 w-100 mb-2" disabled>
-                                         <div class="small">Mensal Ativo</div>
-                                         <div class="fw-bold">R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}</div>
-                                         @if($currentSubscription->ends_at)
-                                            <div class="small text-white-50">Até {{ $currentSubscription->ends_at->format('d/m/Y') }}</div>
-                                         @endif
-                                     </button>
-                                 @endif
                              </div>
-                        @else
-                            <div class="d-flex justify-content-center gap-2">
-                                <a href="{{ route('payments.checkout', $plan->id) }}?period=monthly" class="btn btn-outline-primary px-3 py-2 w-100 mb-2">
-                                    <div class="small">Mensal</div>
-                                    <div class="fw-bold">R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}</div>
-                                </a>
-                                <a href="{{ route('payments.checkout', $plan->id) }}?period=yearly" class="btn btn-primary px-3 py-2 w-100 mb-2">
-                                    <div class="small">Anual</div>
-                                    <div class="fw-bold">R$ {{ number_format($plan->annual_price * 12, 2, ',', '.') }}</div>
-                                </a>
-                            </div>
-                        @endif
-                    </div>
-                    </div>
-            </div>
+                             <div class="annual-info mt-2">
+                                 <small class="text-muted">Valor para o plano anual</small>
+                                 <div class="annual-savings text-success">
+                                     <strong>Economize R$ {{ number_format($yearlySavings, 2, ',', '.') }} por ano!</strong>
+                                 </div>
+                             </div>
+                         </div>
+                         
+                         <ul class="plan-features-list list-unstyled mb-4 text-start">
+                              @foreach($features as $feature)
+                              <li class="mb-2">
+                                  <i class="bi bi-check-circle text-success me-2"></i>
+                                  {{ $feature }}
+                              </li>
+                              @endforeach
+                          </ul>
+                     </div>
+                     
+                     <div class="card-footer bg-transparent border-0 p-3">
+                          <div class="pricing-buttons d-flex gap-2">
+                              <button class="btn btn-outline-primary flex-fill monthly-btn" 
+                                      data-plan="{{ $plan->slug }}" data-cycle="monthly" data-price="{{ $plan->monthly_price }}">
+                                  Mensal<br>
+                                  <strong>R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}</strong>
+                              </button>
+                              <button class="btn btn-primary flex-fill annual-btn" 
+                                      data-plan="{{ $plan->slug }}" data-cycle="yearly" data-price="{{ $plan->yearly_price }}">
+                                  Anual<br>
+                                  <strong>R$ {{ number_format($plan->yearly_price, 2, ',', '.') }}</strong>
+                              </button>
+                          </div>
+                     </div>
+                 </div>
+             </div>
+            @endforeach
         </div>
-        @endforeach
-    </div>
 
     @if($company->subscription && $company->subscription->status === 'active')
     <div class="row justify-content-center mt-4">

@@ -26,16 +26,15 @@ class PlansSeeder extends Seeder
             [
                 'name' => 'Bronze',
                 'slug' => 'bronze',
-                'description' => 'Plano básico ideal para pequenas empresas. Inclui até 10 orçamentos por mês.',
-                'budget_limit' => 10,
-                'monthly_price' => 30.00,
-                'annual_price' => 25.00,
-                'features' => json_encode([
-                    'Até 10 orçamentos por mês',
+                'description' => json_encode([
+                    '5 orçamentos por mês',
                     'Suporte por email',
-                    'Relatórios básicos',
-                    'Backup diário'
+                    'Envio de e-mails integrado com Gmail',
+                    'Templates de Email personalizados'
                 ]),
+                'budget_limit' => 5,
+                'monthly_price' => 30.00,
+                'yearly_price' => 300.00,
                 'active' => true,
                 'created_at' => now(),
                 'updated_at' => now()
@@ -43,18 +42,15 @@ class PlansSeeder extends Seeder
             [
                 'name' => 'Prata',
                 'slug' => 'prata',
-                'description' => 'Plano intermediário para empresas em crescimento. Inclui até 50 orçamentos por mês.',
+                'description' => json_encode([
+                    '50 orçamentos por mês',
+                    'Suporte por email',
+                    'Envio de e-mails integrado com Gmail',
+                    'Templates de Email personalizados'
+                ]),
                 'budget_limit' => 50,
                 'monthly_price' => 40.00,
-                'annual_price' => 35.00, 
-                'features' => json_encode([
-                    'Até 50 orçamentos por mês',
-                    'Suporte prioritário',
-                    'Relatórios avançados',
-                    'Backup diário',
-                    'Integração com WhatsApp',
-                    'Templates personalizados'
-                ]),
+                'yearly_price' => 420.00,
                 'active' => true,
                 'created_at' => now(),
                 'updated_at' => now()
@@ -62,20 +58,15 @@ class PlansSeeder extends Seeder
             [
                 'name' => 'Ouro',
                 'slug' => 'ouro',
-                'description' => 'Plano premium com orçamentos ilimitados. Ideal para grandes empresas.',
+                'description' => json_encode([
+                    'Orçamentos ilimitados',
+                    'Suporte por email',
+                    'Envio de e-mails integrado com Gmail',
+                    'Templates de Email personalizados'
+                ]),
                 'budget_limit' => null, // Ilimitado
                 'monthly_price' => 50.00,
-                'annual_price' => 45.00, 
-                'features' => json_encode([
-                    'Orçamentos ilimitados',
-                    'Suporte 24/7',
-                    'Relatórios completos',
-                    'Backup em tempo real',
-                    'Integração completa WhatsApp',
-                    'Templates ilimitados',
-                    'API personalizada',
-                    'Gerente de conta dedicado'
-                ]),
+                'yearly_price' => 540.00,
                 'active' => true,
                 'created_at' => now(),
                 'updated_at' => now()

@@ -13,15 +13,13 @@ class Plan extends Model
         'description',
         'budget_limit',
         'monthly_price',
-        'annual_price',
-        'features',
+        'yearly_price',
         'active'
     ];
 
     protected $casts = [
         'monthly_price' => 'decimal:2',
-        'annual_price' => 'decimal:2',
-        'features' => 'array',
+        'yearly_price' => 'decimal:2',
         'active' => 'boolean'
     ];
 
@@ -46,17 +44,22 @@ class Plan extends Model
      */
     public function getPriceForCycle(string $cycle): float
     {
-        return $cycle === 'annual' ? ($this->monthly_price * 12) : $this->monthly_price;
+        return $cycle === 'yearly' ? $this->yearly_price : $this->monthly_price;
     }
 
     /**
-     * Retorna a economia anual em porcentagem
+     * Retorna a economia anual em reais
      */
-    public function getAnnualSavingsPercentage(): float
+    public function getYearlySavings(): float
     {
-        if ($this->monthly_price == 0) return 0;
-        
-        $annualPrice = $this->monthly_price * 12;
-        return round((($this->monthly_price - $annualPrice) / $this->monthly_price) * 100, 2);
+        return ($this->monthly_price * 12) - $this->yearly_price;
+    }
+
+    /**
+     * Retorna a quantidade de orçamentos extras que podem ser comprados
+     */
+    public function getExtraBudgetsQuantity(): int
+    {
+        return $this->budget_limit ?? 0;
     }
 }

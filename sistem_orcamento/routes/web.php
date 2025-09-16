@@ -141,6 +141,16 @@ Route::middleware(['auth', 'user.active', 'role:super_admin'])->group(function (
 
 
 
+// Rotas para Sistema de Assinaturas
+Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(function () {
+    // Rotas para assinaturas
+    Route::get('subscriptions', [App\Http\Controllers\SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::post('subscriptions', [App\Http\Controllers\SubscriptionController::class, 'store'])->name('subscriptions.store');
+    Route::patch('subscriptions/{subscription}/activate', [App\Http\Controllers\SubscriptionController::class, 'activate'])->name('subscriptions.activate');
+    Route::patch('subscriptions/{subscription}/cancel', [App\Http\Controllers\SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+    Route::post('subscriptions/extra-budgets', [App\Http\Controllers\SubscriptionController::class, 'buyExtraBudgets'])->name('subscriptions.buy-extra-budgets');
+});
+
 // Rotas para Sistema de Pagamentos
 Route::middleware(['auth', 'user.active', 'tenant', 'require.company'])->group(function () {
     Route::get('payments/plans', [App\Http\Controllers\PaymentController::class, 'selectPlan'])->name('payments.select-plan');

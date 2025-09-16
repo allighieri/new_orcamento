@@ -6,6 +6,7 @@ use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\UsageControl;
 use App\Services\AsaasService;
+use App\Services\PlanUpgradeService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -33,7 +34,7 @@ class ProcessAsaasWebhook implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(AsaasService $asaasService)
+    public function handle(AsaasService $asaasService, PlanUpgradeService $planUpgradeService)
     {
         try {
             Log::info('Processando webhook Asaas via fila', [
@@ -53,7 +54,7 @@ class ProcessAsaasWebhook implements ShouldQueue
 
             // Processar diferentes tipos de eventos
             if (str_starts_with($event, 'PAYMENT_')) {
-                $this->handlePaymentEvent();
+                $this->handlePaymentEvent($planUpgradeService);
             } elseif (str_starts_with($event, 'SUBSCRIPTION_')) {
                 $this->handleSubscriptionEvent();
             } else {
@@ -83,7 +84,7 @@ class ProcessAsaasWebhook implements ShouldQueue
     /**
      * Processar eventos de pagamento
      */
-    private function handlePaymentEvent()
+    private function handlePaymentEvent(PlanUpgradeService $planUpgradeService)
     {
         if (!isset($this->payload['payment'])) {
             Log::warning('Evento de pagamento sem dados de pagamento', [
@@ -126,7 +127,7 @@ class ProcessAsaasWebhook implements ShouldQueue
         switch ($event) {
             case 'PAYMENT_RECEIVED':
             case 'PAYMENT_CONFIRMED':
-                $this->handlePaymentApproved($payment, $paymentData);
+                $this->handlePaymentApproved($payment, $paymentData, $planUpgradeService);
                 break;
                 
             case 'PAYMENT_OVERDUE':
@@ -280,7 +281,7 @@ class ProcessAsaasWebhook implements ShouldQueue
     /**
      * Processar pagamento aprovado
      */
-    private function handlePaymentApproved(Payment $payment, array $paymentData)
+    private function handlePaymentApproved(Payment $payment, array $paymentData, PlanUpgradeService $planUpgradeService)
     {
         // Atualizar status do pagamento
         $payment->updateStatus($paymentData['status'], $paymentData);
@@ -289,11 +290,11 @@ class ProcessAsaasWebhook implements ShouldQueue
         if ($payment->type === 'cancellation_fee') {
             $this->handleCancellationFeePayment($payment);
         } elseif ($payment->type === 'plan_change') {
-            $this->handlePlanChangePayment($payment);
+            $this->handlePlanChangePayment($payment, $planUpgradeService);
         } elseif ($payment->type === 'plan_change_annual') {
             $this->handleAnnualPlanChangePayment($payment, $paymentData);
         } elseif ($payment->type === 'extra_budgets') {
-            $this->handleExtraBudgetsPayment($payment);
+            $this->handleExtraBudgetsPayment($payment, $planUpgradeService);
         } else {
             $this->handleSubscriptionPayment($payment, $paymentData);
         }
@@ -302,7 +303,7 @@ class ProcessAsaasWebhook implements ShouldQueue
     /**
      * Processar pagamento de orçamentos extras
      */
-    private function handleExtraBudgetsPayment(Payment $payment)
+    private function handleExtraBudgetsPayment(Payment $payment, PlanUpgradeService $planUpgradeService)
     {
         // Buscar assinatura ativa da empresa
         $subscription = Subscription::where('company_id', $payment->company_id)
@@ -317,24 +318,18 @@ class ProcessAsaasWebhook implements ShouldQueue
             return;
         }
         
-        // Buscar controle de uso atual
-        $usageControl = UsageControl::getOrCreateForCurrentMonth(
-            $payment->company_id,
-            $subscription->id,
-            $subscription->plan->budget_limit
-        );
+        // Obter quantidade de orçamentos extras do metadata do pagamento
+        $asaasResponse = is_string($payment->asaas_response) ? json_decode($payment->asaas_response, true) : $payment->asaas_response;
+        $quantity = $asaasResponse['extra_budgets_quantity'] ?? ($subscription->plan->budget_limit ?? 10);
         
-        // Adicionar orçamentos extras ao limite atual (mesmo valor do plano)
-        $extraBudgets = $subscription->plan->budget_limit;
-        $usageControl->addExtraBudgets($extraBudgets, $payment->amount);
+        // Usar o PlanUpgradeService para processar a compra
+        $planUpgradeService->processExtraBudgetsPurchase($subscription, $quantity, $payment);
         
-        Log::info('Orçamentos extras adicionados via pagamento (fila)', [
+        Log::info('Orçamentos extras processados via PlanUpgradeService (fila)', [
             'payment_id' => $payment->id,
             'company_id' => $payment->company_id,
             'subscription_id' => $subscription->id,
-            'extra_budgets_added' => $extraBudgets,
-            'total_extra_budgets' => $usageControl->extra_budgets_purchased,
-            'budgets_limit' => $usageControl->budgets_limit,
+            'quantity' => $quantity,
             'amount_paid' => $payment->amount
         ]);
     }
@@ -589,7 +584,7 @@ class ProcessAsaasWebhook implements ShouldQueue
     /**
      * Processar pagamento de mudança de plano
      */
-    private function handlePlanChangePayment(Payment $payment)
+    private function handlePlanChangePayment(Payment $payment, PlanUpgradeService $planUpgradeService)
     {
         Log::info('Pagamento de mudança de plano confirmado via fila', [
             'payment_id' => $payment->id,
@@ -611,56 +606,21 @@ class ProcessAsaasWebhook implements ShouldQueue
                 return;
             }
             
-            // Buscar assinatura anual ativa
+            // Buscar assinatura ativa
             $activeSubscription = $company->activeSubscription();
             
-            if (!$activeSubscription || !$activeSubscription->isAnnual()) {
-                Log::error('Assinatura anual ativa não encontrada para mudança de plano', [
+            if (!$activeSubscription) {
+                Log::error('Assinatura ativa não encontrada para mudança de plano', [
                     'payment_id' => $payment->id,
                     'company_id' => $payment->company_id
                 ]);
                 return;
             }
             
-            // Cancelar assinatura anual atual
-            if ($activeSubscription->asaas_subscription_id) {
-                try {
-                    $asaasService = app(\App\Services\AsaasService::class);
-                    $asaasService->cancelSubscription($activeSubscription->asaas_subscription_id);
-                } catch (\Exception $e) {
-                    Log::warning('Erro ao cancelar assinatura no Asaas via webhook', [
-                        'subscription_id' => $activeSubscription->asaas_subscription_id,
-                        'error' => $e->getMessage()
-                    ]);
-                }
-            }
+            // Usar o PlanUpgradeService para processar o upgrade
+            $newSubscription = $planUpgradeService->processUpgrade($activeSubscription, $newPlan, $payment);
             
-            // Marcar assinatura atual como cancelada
-            $activeSubscription->update([
-                'status' => 'cancelled',
-                'cancelled_at' => now(),
-                'end_date' => now(),
-                'cancellation_fee_paid' => true
-            ]);
-            
-            // Criar nova assinatura mensal
-            $newSubscription = \App\Models\Subscription::create([
-                'company_id' => $payment->company_id,
-                'plan_id' => $newPlan->id,
-                'status' => 'active',
-                'start_date' => now(),
-                'end_date' => now()->addMonth(),
-                'billing_cycle' => 'monthly',
-                'amount' => $newPlan->monthly_price,
-                'payment_id' => $payment->id
-            ]);
-            
-            // Atualizar pagamento com a nova assinatura
-            $payment->update([
-                'subscription_id' => $newSubscription->id
-            ]);
-            
-            Log::info('Mudança de plano processada com sucesso via webhook', [
+            Log::info('Mudança de plano processada via PlanUpgradeService (webhook)', [
                 'payment_id' => $payment->id,
                 'company_id' => $payment->company_id,
                 'old_subscription_id' => $activeSubscription->id,

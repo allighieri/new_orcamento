@@ -42,6 +42,8 @@ class PaymentController extends Controller
         return view('payments.select-plan', compact('plans', 'company', 'currentSubscription'));
     }
 
+
+
     /**
      * Exibir página de seleção de planos para troca de plano
      */
