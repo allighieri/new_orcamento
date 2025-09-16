@@ -1443,7 +1443,12 @@ class PaymentController extends Controller
     private function processSuccessfulPlanChange($payment, $activeSubscription, $newPlan)
     {
         try {
-            // Cancelar assinatura anual atual
+            // Usar PlanUpgradeService para processar a mudança corretamente
+            // Isso garante que os orçamentos não utilizados sejam transferidos
+            $planUpgradeService = new \App\Services\PlanUpgradeService();
+            $newSubscription = $planUpgradeService->processUpgrade($activeSubscription, $newPlan, $payment);
+            
+            // Cancelar assinatura anual no Asaas se necessário
             if ($activeSubscription->asaas_subscription_id) {
                 try {
                     $this->asaasService->cancelSubscription($activeSubscription->asaas_subscription_id);
@@ -1455,43 +1460,7 @@ class PaymentController extends Controller
                 }
             }
             
-            // Marcar assinatura atual como cancelada
-            $activeSubscription->update([
-                'status' => 'cancelled',
-                'cancelled_at' => now(),
-                'end_date' => now(),
-                'cancellation_fee_paid' => true
-            ]);
-            
-            // Criar nova assinatura baseada no período
-            $billingCycle = $payment->billing_cycle;
-            $startDate = now();
-            $endDate = $billingCycle === 'monthly' ? $startDate->copy()->addMonth() : $startDate->copy()->addYear();
-            $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
-            $amount = $billingCycle === 'monthly' ? $newPlan->monthly_price : $newPlan->annual_price;
-            
-            $newSubscription = Subscription::create([
-                'company_id' => $payment->company_id,
-                'plan_id' => $newPlan->id,
-                'status' => 'active',
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'starts_at' => $startDate,
-                'ends_at' => $endDate,
-                'grace_period_ends_at' => $gracePeriodEndDate,
-
-                'billing_cycle' => $billingCycle,
-                'amount' => $amount,
-                'payment_id' => $payment->id
-            ]);
-            
-            // Atualizar status do pagamento
-            $payment->update([
-                'status' => 'CONFIRMED',
-                'subscription_id' => $newSubscription->id
-            ]);
-            
-            Log::info('Mudança de plano processada com sucesso', [
+            Log::info('Mudança de plano processada com sucesso via PlanUpgradeService', [
                 'company_id' => $payment->company_id,
                 'old_subscription_id' => $activeSubscription->id,
                 'new_subscription_id' => $newSubscription->id,

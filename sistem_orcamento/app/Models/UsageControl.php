@@ -158,4 +158,46 @@ class UsageControl extends Model
             'inherited_budgets_used' => 0
         ]);
     }
+
+    /**
+     * Cria ou obtém o controle de uso para o mês atual, resetando valores se necessário
+     * Usado especificamente para mudanças de plano
+     */
+    public static function getOrCreateForCurrentMonthWithReset(int $companyId, int $subscriptionId, int $inheritedBudgets = 0): self
+    {
+        $year = now()->year;
+        $month = now()->month;
+
+        // Primeiro tenta encontrar o registro existente
+        $usageControl = self::where('company_id', $companyId)
+            ->where('year', $year)
+            ->where('month', $month)
+            ->first();
+
+        if ($usageControl) {
+            // Se existe, reseta todos os valores para a nova assinatura
+            $usageControl->update([
+                'subscription_id' => $subscriptionId,
+                'budgets_used' => 0,
+                'extra_budgets_purchased' => 0,
+                'extra_budgets_used' => 0,
+                'inherited_budgets' => $inheritedBudgets,
+                'inherited_budgets_used' => 0
+            ]);
+            return $usageControl;
+        }
+
+        // Se não existe, cria um novo com valores padrão
+        return self::create([
+            'company_id' => $companyId,
+            'subscription_id' => $subscriptionId,
+            'year' => $year,
+            'month' => $month,
+            'budgets_used' => 0,
+            'extra_budgets_purchased' => 0,
+            'extra_budgets_used' => 0,
+            'inherited_budgets' => $inheritedBudgets,
+            'inherited_budgets_used' => 0
+        ]);
+    }
 }

@@ -38,7 +38,7 @@ class ProcessAsaasWebhook implements ShouldQueue
     {
         try {
             Log::info('Processando webhook Asaas via fila', [
-                'job_id' => $this->job->getJobId(),
+                'job_id' => $this->job ? $this->job->getJobId() : 'direct_execution',
                 'payload' => $this->payload
             ]);
 
@@ -306,6 +306,19 @@ class ProcessAsaasWebhook implements ShouldQueue
         // Atualizar status do pagamento
         $payment->updateStatus($paymentData['status'], $paymentData);
         
+        // Detectar automaticamente mudanças de plano se o tipo não estiver definido
+        if (!$payment->type || $payment->type === 'subscription') {
+            $detectedType = $this->detectPaymentType($payment);
+            if ($detectedType && $detectedType !== $payment->type) {
+                $payment->update(['type' => $detectedType]);
+                Log::info('Tipo de pagamento detectado automaticamente', [
+                    'payment_id' => $payment->id,
+                    'detected_type' => $detectedType,
+                    'original_type' => $payment->type
+                ]);
+            }
+        }
+        
         // Verificar tipo de pagamento
         if ($payment->type === 'cancellation_fee') {
             $this->handleCancellationFeePayment($payment);
@@ -317,6 +330,58 @@ class ProcessAsaasWebhook implements ShouldQueue
             $this->handleExtraBudgetsPayment($payment, $planUpgradeService);
         } else {
             $this->handleSubscriptionPayment($payment, $paymentData);
+        }
+    }
+
+    /**
+     * Detectar automaticamente o tipo de pagamento baseado no contexto
+     */
+    private function detectPaymentType(Payment $payment): ?string
+    {
+        try {
+            // Se não tem plan_id, não é mudança de plano
+            if (!$payment->plan_id) {
+                return null;
+            }
+            
+            // Buscar empresa e assinatura ativa
+            $company = \App\Models\Company::find($payment->company_id);
+            if (!$company) {
+                return null;
+            }
+            
+            $activeSubscription = $company->activeSubscription();
+            if (!$activeSubscription) {
+                // Se não há assinatura ativa, é uma nova assinatura
+                return 'subscription';
+            }
+            
+            // Se o plano do pagamento é diferente do plano da assinatura ativa, é mudança de plano
+            if ($payment->plan_id != $activeSubscription->plan_id) {
+                // Verificar se é anual ou mensal baseado no billing_cycle
+                if ($payment->billing_cycle === 'annual') {
+                    return 'plan_change_annual';
+                } else {
+                    return 'plan_change';
+                }
+            }
+            
+            // Se é o mesmo plano, pode ser renovação ou orçamentos extras
+            // Verificar se tem metadata de orçamentos extras
+            $metadata = is_string($payment->metadata) ? json_decode($payment->metadata, true) : $payment->metadata;
+            if ($metadata && isset($metadata['extra_budgets_quantity'])) {
+                return 'extra_budgets';
+            }
+            
+            // Por padrão, é uma assinatura normal
+            return 'subscription';
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao detectar tipo de pagamento', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
     }
 

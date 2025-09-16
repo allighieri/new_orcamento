@@ -88,7 +88,7 @@ class TestPlanUpgradeScenario extends Command
             'billing_cycle' => 'monthly'
         ]);
         
-        // Criar UsageControl com o cenário específico
+        // Criar UsageControl com o cenário específico do usuário
         $usageControl = UsageControl::create([
             'company_id' => $company->id,
             'subscription_id' => $subscription->id,
@@ -96,7 +96,7 @@ class TestPlanUpgradeScenario extends Command
             'month' => now()->month,
             'budgets_used' => 45, // 45 dos 50 do plano Prata
             'extra_budgets_purchased' => 50, // 50 extras comprados
-            'extra_budgets_used' => 0, // Nenhum extra usado
+            'extra_budgets_used' => 20, // 20 extras usados
             'inherited_budgets' => 0,
             'inherited_budgets_used' => 0
         ]);
@@ -108,6 +108,7 @@ class TestPlanUpgradeScenario extends Command
         $this->info("   - Orçamentos restantes do plano: " . ($planPrata->budget_limit - $usageControl->budgets_used));
         $this->info("   - Extras comprados: {$usageControl->extra_budgets_purchased}");
         $this->info("   - Extras usados: {$usageControl->extra_budgets_used}");
+        $this->info("   - Extras restantes: " . ($usageControl->extra_budgets_purchased - $usageControl->extra_budgets_used));
         $this->info("   - Total não utilizado: " . (($planPrata->budget_limit - $usageControl->budgets_used) + ($usageControl->extra_budgets_purchased - $usageControl->extra_budgets_used)));
     }
     
@@ -121,13 +122,13 @@ class TestPlanUpgradeScenario extends Command
         // Simular o upgrade usando o PlanUpgradeService
         $upgradeService = new PlanUpgradeService();
         
-        // Calcular orçamentos herdados manualmente para verificar
+        // Calcular orçamentos herdados manualmente para verificar (cenário do usuário)
         $remainingFromPlan = max(0, 50 - 45); // 5 restantes do plano Prata
-        $remainingFromExtras = max(0, 50 - 0); // 50 extras não usados
-        $totalRemaining = $remainingFromPlan + $remainingFromExtras; // 55 total
+        $remainingFromExtras = max(0, 50 - 20); // 30 extras não usados (50 comprados - 20 usados)
+        $totalRemaining = $remainingFromPlan + $remainingFromExtras; // 35 total
         
         // Agora herda 100% dos orçamentos não utilizados
-         $expectedInherited = $totalRemaining; // 55
+         $expectedInherited = $totalRemaining; // 35
         
         $this->info("🧮 Cálculo esperado:");
         $this->info("   - Restantes do plano: {$remainingFromPlan}");

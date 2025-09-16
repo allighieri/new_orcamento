@@ -61,18 +61,13 @@ class PlanUpgradeService
                 'subscription_id' => $newSubscription->id
             ]);
 
-            // Criar controle de uso para nova assinatura com orçamentos herdados
-            $newUsageControl = UsageControl::create([
-                'company_id' => $oldSubscription->company_id,
-                'subscription_id' => $newSubscription->id,
-                'year' => now()->year,
-                'month' => now()->month,
-                'budgets_used' => 0,
-                'extra_budgets_purchased' => 0,
-                'extra_budgets_used' => 0,
-                'inherited_budgets' => $inheritedBudgets, // Orçamentos não utilizados viram herdados
-                'inherited_budgets_used' => 0
-            ]);
+            // Criar ou atualizar controle de uso para nova assinatura com orçamentos herdados
+            // Usa método especial que reseta todos os valores para evitar manter dados antigos
+            $newUsageControl = UsageControl::getOrCreateForCurrentMonthWithReset(
+                $oldSubscription->company_id,
+                $newSubscription->id,
+                $inheritedBudgets // Orçamentos não utilizados viram herdados
+            );
 
             DB::commit();
 
