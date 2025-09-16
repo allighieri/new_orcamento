@@ -283,50 +283,31 @@ class PaymentController extends Controller
                 // Para planos anuais com pagamento único
                 $annualTotalPrice = $plan->annual_price * 12; // Valor total de 12 meses
                 $paymentCreateData = [
-                    'company_id' => $company->id,
                     'plan_id' => $plan->id,
                     'subscription_id' => isset($activeSubscription) ? $activeSubscription->id : null,
                     'asaas_payment_id' => $asaasPayment['id'], // ID da cobrança única
-                    'asaas_subscription_id' => null, // Não há assinatura recorrente
-                    'asaas_customer_id' => $customer['id'],
                     'amount' => $annualTotalPrice, // Valor total de 12 meses
-                    'billing_type' => 'PIX',
-                    'type' => $paymentType,
+                    'payment_method' => 'PIX',
                     'status' => 'PENDING',
-                    'due_date' => $asaasPayment['dueDate'],
-                    'description' => $description . ' - Pagamento único de 12 meses',
-                    'billing_cycle' => $billingCycle
+                    'due_date' => $asaasPayment['dueDate']
                 ];
                 
-                // Adicionar metadados para mudança de plano
-                if (isset($isPlanChange) && $isPlanChange && isset($oldSubscriptionId)) {
-                    $paymentCreateData['webhook_data'] = json_encode([
-                        'is_plan_change' => true,
-                        'old_subscription_id' => $oldSubscriptionId
-                    ]);
-                }
+                // Metadados para mudança de plano serão gerenciados externamente
             } else {
                 // Para outros tipos de pagamento
                 $actualAmount = $price;
                 $paymentCreateData = [
-                    'company_id' => $company->id,
                     'plan_id' => $type === 'extra_budgets' ? null : $plan->id,
                     'subscription_id' => isset($activeSubscription) ? $activeSubscription->id : null,
                     'asaas_payment_id' => $asaasPayment['id'],
-                    'asaas_customer_id' => $customer['id'],
                     'amount' => $actualAmount,
-                    'billing_type' => 'PIX',
-                    'type' => $type === 'extra_budgets' ? 'extra_budgets' : 'subscription',
+                    'payment_method' => 'PIX',
                     'status' => 'PENDING',
-                    'due_date' => $asaasPayment['dueDate'],
-                    'description' => $description,
-                    'billing_cycle' => $billingCycle
+                    'due_date' => $asaasPayment['dueDate']
                 ];
             }
             
-            if ($type === 'extra_budgets') {
-                $paymentCreateData['extra_budgets_quantity'] = $activeSubscription->plan->budget_limit;
-            }
+            // Campos específicos para orçamentos extras podem ser adicionados aqui se necessário
             
             $payment = Payment::create($paymentCreateData);
 
@@ -365,12 +346,7 @@ class PaymentController extends Controller
                 Log::info('Payload PIX gerado como fallback', ['generated_payload' => $payload]);
             }
             
-            $payment->update([
-                'payment_data' => [
-                    'pix_qr_code' => $qrCodeImage,
-                    'pix_copy_paste' => $payload
-                ]
-            ]);
+            // QR Code PIX será gerenciado externamente via Asaas
             
             Log::info('QR Code salvo no pagamento', [
                 'payment_id' => $payment->id,
@@ -1391,10 +1367,8 @@ class PaymentController extends Controller
                 }
                 
                 $payment->update([
-                    'payment_data' => [
-                        'pix_qr_code' => $qrCodeImage,
-                        'pix_copy_paste' => $payload
-                    ]
+                    'pix_qr_code' => $payload, // Salvar apenas o texto do PIX, não a imagem base64
+                    'pix_copy_paste' => $payload
                 ]);
                 
                 DB::commit();

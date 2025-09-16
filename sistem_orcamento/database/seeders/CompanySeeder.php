@@ -17,28 +17,20 @@ class CompanySeeder extends Seeder
         
         // Empresa 1: Construtora
         Company::create([
-            'fantasy_name' => 'Construtora Alvorada',
-            'corporate_name' => 'Construtora Alvorada Ltda',
-            'document_number' => '12.345.678/0001-90',
-            'state_registration' => '123456789',
-            'phone' => '(11) 3456-7890',
-            'email' => 'contato@construtoralvorada.com.br',
-            'address' => 'Rua das Construções, 1250',
-            'city' => 'São Paulo',
-            'state' => 'SP'
+            'fantasy_name' => 'KARAOKÊ CLUBE',
+            'corporate_name' => 'KARAOKÊ CLUBE LTDA',
+            'document_number' => '975.026.851-20',
+            'state_registration' => '70680200',
+            'phone' => '(61) 99253-0902',
+            'email' => 'agenciaolhardigital@gmail.com',
+            'address' => 'QMSW 2',
+            'address_line_2' => 'CONJ D LOJA 13A',
+            'district' => 'SUDOESTE',
+            'city' => 'BRASÍLIA',
+            'state' => 'DF',
+            'cep' => '70.680-200'
         ]);
         
-        // Empresa 2: Loja de Informática
-        Company::create([
-            'fantasy_name' => 'TechnoInfo',
-            'corporate_name' => 'TechnoInfo Soluções em Informática Ltda',
-            'document_number' => '98.765.432/0001-10',
-            'state_registration' => '987654321',
-            'phone' => '(21) 2987-6543',
-            'email' => 'vendas@technoinfo.com.br',
-            'address' => 'Av. Presidente Vargas, 850',
-            'city' => 'Rio de Janeiro',
-            'state' => 'RJ'
-        ]);
+        
     }
 }

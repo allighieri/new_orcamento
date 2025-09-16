@@ -10,14 +10,11 @@ class Payment extends Model
 {
     protected $fillable = [
         'subscription_id',
+        'plan_id',
         'asaas_payment_id',
         'amount',
         'payment_method',
         'status',
-        'pix_qr_code',
-        'pix_copy_paste',
-        'bank_slip_url',
-        'credit_card_info',
         'due_date',
         'confirmed_at',
         'asaas_response'
@@ -27,7 +24,6 @@ class Payment extends Model
         'amount' => 'decimal:2',
         'due_date' => 'datetime',
         'confirmed_at' => 'datetime',
-        'credit_card_info' => 'array',
         'asaas_response' => 'array'
     ];
 
@@ -37,6 +33,14 @@ class Payment extends Model
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class);
+    }
+
+    /**
+     * Relacionamento com Plan
+     */
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
     }
 
     /**

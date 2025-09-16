@@ -21,6 +21,9 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Primeiro, atualizar registros com 'CNPJ' para 'CPF' antes de alterar o ENUM
+        DB::table('bank_accounts')->where('key', 'CNPJ')->update(['key' => 'CPF']);
+        
         // Reverter para o enum original
         DB::statement("ALTER TABLE bank_accounts MODIFY COLUMN `key` ENUM('CPF', 'email', 'telefone') NULL");
     }
