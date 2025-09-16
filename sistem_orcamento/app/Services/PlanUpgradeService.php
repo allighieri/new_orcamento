@@ -110,6 +110,11 @@ class PlanUpgradeService
             return 0;
         }
 
+        // Se está mudando de Prata ou Bronze para Ouro, zerar inherited_budgets
+        if (in_array($oldPlan->name, ['Prata', 'Bronze']) && $newPlan->name === 'Ouro') {
+            return 0;
+        }
+
         // Calcular orçamentos restantes do plano anterior
         $remainingFromPlan = max(0, $oldPlan->budget_limit - $currentUsageControl->budgets_used);
         $remainingFromExtras = max(0, $currentUsageControl->extra_budgets_purchased - $currentUsageControl->extra_budgets_used);
