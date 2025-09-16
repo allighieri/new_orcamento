@@ -163,8 +163,7 @@ class PlanUpgradeService
 
             // Atualizar pagamento
             $payment->update([
-                'subscription_id' => $subscription->id,
-                'status' => 'confirmed'
+                'subscription_id' => $subscription->id
             ]);
 
             DB::commit();

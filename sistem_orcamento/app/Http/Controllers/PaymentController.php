@@ -771,12 +771,12 @@ class PaymentController extends Controller
      */
     private function getStatusText($status)
     {
-        return match($status) {
-            'PENDING' => 'Aguardando Pagamento',
-            'RECEIVED' => 'Pago',
-            'CONFIRMED' => 'Confirmado',
-            'OVERDUE' => 'Vencido',
-            'CANCELLED' => 'Cancelado',
+        return match(strtolower($status)) {
+            'pending' => 'Aguardando Pagamento',
+            'received' => 'Pago',
+            'confirmed' => 'Confirmado',
+            'overdue' => 'Vencido',
+            'cancelled' => 'Cancelado',
             default => ucfirst($status)
         };
     }

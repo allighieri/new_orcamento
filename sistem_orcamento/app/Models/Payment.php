@@ -104,13 +104,15 @@ class Payment extends Model
      */
     public function updateStatus(string $status, array $asaasResponse = null): void
     {
-        $updateData = ['status' => $status];
+        // Converter status para minúsculo para padronização
+        $normalizedStatus = strtolower($status);
+        $updateData = ['status' => $normalizedStatus];
         
         if ($asaasResponse) {
             $updateData['asaas_response'] = $asaasResponse;
         }
         
-        if (in_array($status, ['confirmed', 'received']) && !$this->confirmed_at) {
+        if (in_array($normalizedStatus, ['confirmed', 'received']) && !$this->confirmed_at) {
             $updateData['confirmed_at'] = now();
         }
         
