@@ -274,6 +274,10 @@ class PaymentController extends Controller
                 $paymentType = 'plan_change_annual';
             }
             
+            // Definir variáveis para evitar erros
+            $isPlanChange = false;
+            $oldSubscriptionId = null;
+            
             // Salvar pagamento no banco
             if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
                 // Para planos anuais com pagamento único
@@ -281,6 +285,7 @@ class PaymentController extends Controller
                 $paymentCreateData = [
                     'company_id' => $company->id,
                     'plan_id' => $plan->id,
+                    'subscription_id' => isset($activeSubscription) ? $activeSubscription->id : null,
                     'asaas_payment_id' => $asaasPayment['id'], // ID da cobrança única
                     'asaas_subscription_id' => null, // Não há assinatura recorrente
                     'asaas_customer_id' => $customer['id'],
@@ -306,6 +311,7 @@ class PaymentController extends Controller
                 $paymentCreateData = [
                     'company_id' => $company->id,
                     'plan_id' => $type === 'extra_budgets' ? null : $plan->id,
+                    'subscription_id' => isset($activeSubscription) ? $activeSubscription->id : null,
                     'asaas_payment_id' => $asaasPayment['id'],
                     'asaas_customer_id' => $customer['id'],
                     'amount' => $actualAmount,
@@ -395,7 +401,7 @@ class PaymentController extends Controller
             Log::error('Erro ao processar pagamento PIX', [
                 'error' => $e->getMessage(),
                 'plan_id' => $plan->id,
-                'company_id' => $user->company->id ?? 'N/A'
+                'company_id' => Auth::user() && Auth::user()->company ? Auth::user()->company->id : 'N/A'
             ]);
 
             // Se for erro específico da API do Asaas, retornar a mensagem específica
@@ -605,6 +611,7 @@ class PaymentController extends Controller
                 $paymentCreateData = [
                     'company_id' => $company->id,
                     'plan_id' => $type === 'extra_budgets' ? null : $plan->id,
+                    'subscription_id' => isset($activeSubscription) ? $activeSubscription->id : null,
                     'asaas_payment_id' => $asaasPayment['id'],
                     'asaas_customer_id' => $customer['id'],
                     'amount' => $price,
@@ -1090,6 +1097,7 @@ class PaymentController extends Controller
             $payment = Payment::create([
                 'company_id' => $company->id,
                 'plan_id' => null, // Não é um plano, são orçamentos extras
+                'subscription_id' => $activeSubscription->id,
                 'amount' => $totalAmount,
                 'payment_method' => $request->payment_method,
                 'billing_type' => strtoupper($request->payment_method), // PIX ou CREDIT_CARD
@@ -1352,6 +1360,7 @@ class PaymentController extends Controller
             $payment = Payment::create([
                 'company_id' => $company->id,
                 'plan_id' => $newPlan->id,
+                'subscription_id' => $activeSubscription->id,
                 'asaas_payment_id' => $asaasPayment['id'],
                 'asaas_customer_id' => $customer['id'],
                 'amount' => $totalAmount,

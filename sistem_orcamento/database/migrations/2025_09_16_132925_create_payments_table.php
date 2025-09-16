@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('subscription_id')->constrained()->onDelete('cascade'); // Relaciona com subscription
+            $table->foreignId('subscription_id')->nullable()->constrained()->onDelete('cascade'); // Relaciona com subscription
             $table->string('asaas_payment_id')->unique(); // ID do pagamento no Asaas
             $table->decimal('amount', 10, 2); // Valor do pagamento
             $table->enum('payment_method', ['pix', 'credit_card', 'bank_slip']); // Método de pagamento

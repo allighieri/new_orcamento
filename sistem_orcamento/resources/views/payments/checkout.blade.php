@@ -96,7 +96,7 @@
                     <div class="tab-content" id="paymentTabsContent">
                         <!-- PIX -->
                         <div class="tab-pane fade show active" id="pix" role="tabpanel">
-                            <form id="pixForm" action="{{ route('payments.process-pix', $plan->id) }}" method="POST">
+                            <form id="pixForm" action="{{ route('payments.process-pix', $plan->slug) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
                                 <input type="hidden" name="period" value="{{ $period }}">
@@ -156,7 +156,7 @@
 
                         <!-- Cartão de Crédito -->
                         <div class="tab-pane fade" id="credit-card" role="tabpanel">
-                            <form id="creditCardForm" action="{{ route('payments.process-credit-card', $plan->id) }}" method="POST">
+                            <form id="creditCardForm" action="{{ route('payments.process-credit-card', $plan->slug) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
                                 @if(isset($isExtraBudgets) && $isExtraBudgets)
@@ -382,7 +382,7 @@ $(document).ready(function() {
                 });
                 
                 // Reabilitar botão
-                submitButton.prop('disabled', false).text('Gerar PIX');
+                submitButton.prop('disabled', false).text('Gerar PIX - {{ number_format($plan->monthly_price, 2, ',', '.') }}');
                 
                 var errorMsg = 'Erro ao processar pagamento. Tente novamente.';
                 
