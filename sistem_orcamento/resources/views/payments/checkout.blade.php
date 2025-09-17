@@ -159,6 +159,7 @@
                             <form id="creditCardForm" action="{{ route('payments.process-credit-card', $plan->slug) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                <input type="hidden" name="period" value="{{ $period }}">
                                 @if(isset($isExtraBudgets) && $isExtraBudgets)
                                     <input type="hidden" name="type" value="extra_budgets">
                                 @endif
@@ -332,7 +333,34 @@
                                            placeholder="Nome como impresso no cartão" required>
                                 </div>
 
-                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <!-- Parcelamento -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="installments" class="form-label">Parcelamento</label>
+                                        <select class="form-select" id="installments" name="installments" required>
+                                            <option value="1">1x sem juros</option>
+                                            <option value="2">2x sem juros</option>
+                                            <option value="3">3x sem juros</option>
+                                            <option value="4">4x sem juros</option>
+                                            <option value="5">5x sem juros</option>
+                                            <option value="6">6x sem juros</option>
+                                            <option value="7">7x sem juros</option>
+                                            <option value="8">8x sem juros</option>
+                                            <option value="9">9x sem juros</option>
+                                            <option value="10">10x sem juros</option>
+                                            <option value="11">11x sem juros</option>
+                                            <option value="12">12x sem juros</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Valor da Parcela</label>
+                                        <div class="form-control-plaintext fw-bold text-primary" id="installment_value">
+                                            R$ {{ number_format($amount, 2, ',', '.') }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-lg w-100" id="payment_button">
                                     @if($period === 'yearly')
                                         <i class="mdi mdi-credit-card me-2"></i>Pagar R$ {{ number_format($amount, 2, ',', '.') }}
                                     @else
@@ -854,6 +882,31 @@ $(document).ready(function() {
             btn.classList.add('btn-outline-secondary');
         }, 2000);
     };
+    
+    // Calcular valor das parcelas
+    function calculateInstallmentValue() {
+        const installments = parseInt($('#installments').val()) || 1;
+        const totalAmount = {{ $amount }};
+        const installmentValue = totalAmount / installments;
+        
+        $('#installment_value').text('R$ ' + installmentValue.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }));
+        
+        // Atualizar texto do botão
+        const buttonText = installments === 1 
+            ? 'Pagar R$ ' + totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : 'Pagar ' + installments + 'x de R$ ' + installmentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
+        $('#payment_button').html('<i class="mdi mdi-credit-card me-2"></i>' + buttonText);
+    }
+    
+    // Evento para recalcular quando mudar o parcelamento
+    $('#installments').on('change', calculateInstallmentValue);
+    
+    // Calcular valor inicial
+    calculateInstallmentValue();
 });
 </script>
 @endpush

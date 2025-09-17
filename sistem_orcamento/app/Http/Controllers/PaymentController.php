@@ -444,7 +444,8 @@ class PaymentController extends Controller
             'card_holder_name' => 'required|string',
             'card_expiry_month' => 'required|string|size:2',
             'card_expiry_year' => 'required|string|size:4',
-            'card_cvv' => 'required|string|size:3'
+            'card_cvv' => 'required|string|size:3',
+            'installments' => 'required|integer|min:1|max:12'
         ]);
 
         if ($validator->fails()) {
@@ -534,6 +535,8 @@ class PaymentController extends Controller
                 // Para planos anuais, criar cobrança única do valor total de 12 meses
                 $annualTotalPrice = $plan->yearly_price; // Valor anual
                 
+                $installments = (int) $request->installments;
+                
                 $paymentData = [
                     'customer' => $customer['id'],
                     'value' => $annualTotalPrice,
@@ -558,10 +561,20 @@ class PaymentController extends Controller
                     ]
                 ];
                 
+                // Adicionar dados de parcelamento se for mais de 1x
+                if ($installments > 1) {
+                    $installmentValue = $annualTotalPrice / $installments;
+                    $paymentData['installmentCount'] = $installments;
+                    $paymentData['installmentValue'] = $installmentValue;
+                    $paymentData['totalValue'] = $annualTotalPrice;
+                    // Remover o campo value para parcelamento conforme documentação Asaas
+                    unset($paymentData['value']);
+                }
+                
                 $asaasPayment = $this->asaasService->createCreditCardCharge($paymentData);
                 $asaasSubscription = null; // Não há assinatura recorrente
             } else {
-                // Criar cobrança com cartão no Asaas
+                // Para todos os outros casos (planos mensais, orçamentos extras, etc.) - sempre cobrança única
                 $price = $billingCycle === 'annual' ? $plan->yearly_price : $plan->monthly_price;
                 
                 // Aplicar taxa de cancelamento se necessário
@@ -569,6 +582,9 @@ class PaymentController extends Controller
                     $cancellationFee = $activeSubscription->getCancellationFee();
                     $price = $cancellationFee + $plan->yearly_price;
                 }
+                
+                $installments = (int) $request->installments;
+                
                 $paymentData = [
                     'customer' => $customer['id'],
                     'value' => $price,
@@ -592,9 +608,19 @@ class PaymentController extends Controller
                         'state' => $request->state
                     ]
                 ];
+                
+                // Adicionar dados de parcelamento se for mais de 1x
+                if ($installments > 1) {
+                    $installmentValue = $price / $installments;
+                    $paymentData['installmentCount'] = $installments;
+                    $paymentData['installmentValue'] = $installmentValue;
+                    $paymentData['totalValue'] = $price;
+                    // Remover o campo value para parcelamento conforme documentação Asaas
+                    unset($paymentData['value']);
+                }
 
                 $asaasPayment = $this->asaasService->createCreditCardCharge($paymentData);
-                $asaasSubscription = null;
+                $asaasSubscription = null; // Nunca há assinatura recorrente
             }
 
             // Salvar pagamento no banco
@@ -616,19 +642,19 @@ class PaymentController extends Controller
                     'billing_cycle' => $billingCycle
                 ];
             } elseif ($type !== 'extra_budgets' && $billingCycle === 'monthly') {
-                // Para planos mensais com assinatura recorrente
+                // Para planos mensais - cobrança única que dura 1 mês
                 $paymentCreateData = [
                     'company_id' => $company->id,
                     'plan_id' => $plan->id,
-                    'asaas_payment_id' => null, // Não há cobrança única
-                    'asaas_subscription_id' => $asaasSubscription['id'], // ID da assinatura
+                    'asaas_payment_id' => $asaasPayment['id'], // ID da cobrança única
+                    'asaas_subscription_id' => null, // Não há assinatura recorrente
                     'asaas_customer_id' => $customer['id'],
-                    'amount' => $plan->monthly_price, // Valor mensal
+                    'amount' => $asaasPayment['value'] ?? $asaasPayment['totalValue'], // Valor do pagamento
                     'billing_type' => 'CREDIT_CARD',
                     'type' => $paymentType,
                     'status' => 'PENDING',
-                    'due_date' => $asaasSubscription['nextDueDate'],
-                    'description' => $description,
+                    'due_date' => $asaasPayment['dueDate'],
+                    'description' => $description . ' - Pagamento único de 1 mês',
                     'billing_cycle' => $billingCycle
                 ];
             } else {
