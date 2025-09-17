@@ -109,7 +109,7 @@ class SubscriptionController extends Controller
                 'asaas_subscription_id' => null, // Será preenchido se for assinatura recorrente
                 'payment_id' => null, // Será preenchido pelo webhook
                 'amount' => $amount,
-                'payment_method' => $request->payment_method,
+                'billing_type' => $this->mapPaymentMethod($request->payment_method),
                 'status' => 'pending',
                 'due_date' => now()->addDays(3),
                 'pix_qr_code' => $paymentData['pix_qr_code'] ?? null,
@@ -263,7 +263,7 @@ class SubscriptionController extends Controller
                 'asaas_subscription_id' => null, // Será preenchido se for assinatura recorrente
                 'payment_id' => null, // Será preenchido pelo webhook
                 'amount' => $amount,
-                'payment_method' => $request->payment_method,
+                'billing_type' => $this->mapPaymentMethod($request->payment_method),
                 'status' => 'pending',
                 'due_date' => now()->addDays(3),
                 'pix_qr_code' => $paymentData['pix_qr_code'] ?? null,

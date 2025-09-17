@@ -1245,7 +1245,6 @@ class PaymentController extends Controller
                 'asaas_subscription_id' => null, // Não é uma assinatura
                 'payment_id' => null, // Será preenchido após processar o pagamento
                 'amount' => $totalAmount,
-                'payment_method' => $request->payment_method,
                 'billing_type' => strtoupper($request->payment_method), // PIX ou CREDIT_CARD
                 'billing_cycle' => 'one_time',
                 'type' => 'extra_budgets',

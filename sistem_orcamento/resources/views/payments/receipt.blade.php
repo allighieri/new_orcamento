@@ -283,14 +283,14 @@
                 <span class="info-label">Método de Pagamento:</span>
                 <span class="info-value">
                     @php
-                        $paymentMethodText = match($payment->payment_method) {
-                            'pix' => 'PIX',
-                            'credit_card' => 'Cartão de Crédito',
-                            'boleto' => 'Boleto Bancário',
-                            'debit_card' => 'Cartão de Débito',
-                            default => ucfirst(str_replace('_', ' ', $payment->payment_method))
-                        };
-                    @endphp
+                    $paymentMethodText = match($payment->billing_type) {
+                        'PIX' => 'PIX',
+                        'CREDIT_CARD' => 'Cartão de Crédito',
+                        'BOLETO' => 'Boleto Bancário',
+                        'DEBIT_CARD' => 'Cartão de Débito',
+                        default => ucfirst(str_replace('_', ' ', strtolower($payment->billing_type ?? '')))
+                    };
+                @endphp
                     {{ $paymentMethodText }}
                 </span>
             </div>

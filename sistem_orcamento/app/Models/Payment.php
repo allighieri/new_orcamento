@@ -17,7 +17,6 @@ class Payment extends Model
         'asaas_subscription_id',
         'payment_id',
         'amount',
-        'payment_method',
         'billing_type',
         'billing_cycle',
         'type',
@@ -154,7 +153,7 @@ class Payment extends Model
      */
     public function isPix(): bool
     {
-        return $this->payment_method === 'pix';
+        return $this->billing_type === 'PIX';
     }
 
     /**
@@ -162,7 +161,7 @@ class Payment extends Model
      */
     public function isCreditCard(): bool
     {
-        return $this->payment_method === 'credit_card';
+        return $this->billing_type === 'CREDIT_CARD';
     }
 
     /**
@@ -170,6 +169,6 @@ class Payment extends Model
      */
     public function isBankSlip(): bool
     {
-        return $this->payment_method === 'bank_slip';
+        return $this->billing_type === 'BOLETO';
     }
 }
