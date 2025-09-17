@@ -215,6 +215,13 @@
                                                    placeholder="00000-000" maxlength="9" required>
                                         </div>
                                     </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="cc_address" class="form-label">Logradouro</label>
+                                            <input type="text" class="form-control" id="cc_address" name="address" 
+                                                   placeholder="Rua, Avenida, etc." required>
+                                        </div>
+                                    </div>
                                     <div class="col-md-3">
                                         <div class="mb-3">
                                             <label for="cc_address_number" class="form-label">Número</label>
@@ -222,14 +229,23 @@
                                                    placeholder="123" required>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="cc_district" class="form-label">Bairro</label>
+                                            <input type="text" class="form-control" id="cc_district" name="district" 
+                                                   placeholder="Bairro" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="cc_city" class="form-label">Cidade</label>
                                             <input type="text" class="form-control" id="cc_city" name="city" 
                                                    placeholder="Cidade" required>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="cc_state" class="form-label">Estado</label>
                                             <select class="form-select" id="cc_state" name="state" required>
@@ -318,7 +334,7 @@
 
                                 <button type="submit" class="btn btn-primary btn-lg w-100">
                                     @if($period === 'yearly')
-                                        <i class="mdi mdi-credit-card me-2"></i>Pagar R$ {{ number_format($amount * 12, 2, ',', '.') }}
+                                        <i class="mdi mdi-credit-card me-2"></i>Pagar R$ {{ number_format($amount, 2, ',', '.') }}
                                     @else
                                         <i class="mdi mdi-credit-card me-2"></i>Pagar R$ {{ number_format($amount, 2, ',', '.') }}
                                     @endif
@@ -387,6 +403,66 @@ $(document).ready(function() {
     
     // Máscara para CEP
     $('#cc_postal_code').mask('00000-000');
+    
+    // Busca automática de endereço por CEP
+    $('#cc_postal_code').on('input', function() {
+        var cep = $(this).val().replace(/\D/g, '');
+        
+        if (cep.length === 8) {
+            // Exibe loading nos campos
+            $('#cc_address, #cc_district, #cc_city, #cc_state').prop('disabled', true);
+            $('#cc_address').val('Carregando...');
+            $('#cc_district').val('Carregando...');
+            $('#cc_city').val('Carregando...');
+            $('#cc_state').val('');
+            
+            $.ajax({
+                url: 'https://viacep.com.br/ws/' + cep + '/json/',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (!data.erro) {
+                        $('#cc_address').val(data.logradouro.toUpperCase());
+                        $('#cc_district').val(data.bairro.toUpperCase());
+                        $('#cc_city').val(data.localidade.toUpperCase());
+                        $('#cc_state').val(data.uf.toUpperCase());
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'CEP não encontrado',
+                            text: 'O CEP informado não foi encontrado. Verifique se está correto.',
+                            toast: true,
+                            position: 'bottom-start',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                        $('#cc_address, #cc_district, #cc_city, #cc_state').val('');
+                    }
+                    // Reabilita os campos
+                    $('#cc_address, #cc_district, #cc_city').prop('disabled', false);
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro de Conexão',
+                        text: 'Não foi possível conectar ao serviço de CEP. Verifique sua conexão com a internet.',
+                        toast: true,
+                        position: 'bottom-start',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                    $('#cc_address, #cc_district, #cc_city, #cc_state').val('');
+                    // Reabilita os campos
+                    $('#cc_address, #cc_district, #cc_city').prop('disabled', false);
+                }
+            });
+        } else {
+            // Limpa os campos se o CEP não tiver 8 dígitos
+            $('#cc_address, #cc_district, #cc_city, #cc_state').val('');
+        }
+    });
     
     // Submissão do formulário PIX
     $('#pixForm').on('submit', function(e) {
