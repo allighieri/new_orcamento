@@ -34,7 +34,7 @@
             @php
                 $features = json_decode($plan->description, true) ?? [];
                 $yearlySavings = ($plan->monthly_price * 12) - $plan->yearly_price;
-                $isCurrentPlan = $company->subscription && $company->subscription->plan_id == $plan->id;
+                $isCurrentPlan = $currentSubscription && $currentSubscription->plan_id == $plan->id;
                 $isPrata = strtolower($plan->name) === 'prata';
             @endphp
             <div class="col-md-4 mb-4">
@@ -78,26 +78,28 @@
                      <div class="card-footer bg-transparent border-0 p-3">
                           <div class="pricing-buttons d-flex gap-2">
                               @php
-                                  $isCurrentMonthly = $isCurrentPlan && $company->subscription->billing_cycle === 'monthly';
-                                  $isCurrentAnnual = $isCurrentPlan && $company->subscription->billing_cycle === 'yearly';
+                                  $isCurrentMonthly = $isCurrentPlan && $currentSubscription->billing_cycle === 'monthly';
+                                  $isCurrentAnnual = $isCurrentPlan && $currentSubscription->billing_cycle === 'yearly';
                               @endphp
-                              <button class="btn {{ $isCurrentMonthly ? 'btn-secondary' : 'btn-outline-primary' }} flex-fill monthly-btn" 
+                              <button class="btn {{ $isCurrentMonthly ? 'btn-success' : 'btn-outline-primary' }} flex-fill monthly-btn" 
                                       data-plan="{{ $plan->slug }}" data-cycle="monthly" data-price="{{ $plan->monthly_price }}"
                                       {{ $isCurrentMonthly ? 'disabled' : '' }}>
                                   Mensal<br>
                                   <strong>R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}</strong>
                                   @if($isCurrentMonthly)
-                                      <br><small class="text-muted">Plano Atual</small>
+                                      <br><small class="text-white">Plano Atual</small>
                                   @endif
                               </button>
-                              <button class="btn {{ $isCurrentAnnual ? 'btn-secondary' : 'btn-primary' }} flex-fill annual-btn" 
+                              <button class="btn {{ $isCurrentAnnual ? 'btn-success' : 'btn-primary' }} flex-fill annual-btn" 
                                       data-plan="{{ $plan->slug }}" data-cycle="yearly" data-price="{{ $plan->yearly_price }}"
                                       {{ $isCurrentAnnual ? 'disabled' : '' }}>
-                                  Anual<br>
-                                  <strong>R$ {{ number_format($plan->yearly_price, 2, ',', '.') }}</strong>
-                                  @if($isCurrentAnnual)
-                                      <br><small class="text-muted">Plano Atual</small>
-                                  @endif
+                                       @if($isCurrentAnnual)
+                                            <i class="bi bi-check-circle-fill"></i> Anual<br>
+                                            <strong>R$ {{ number_format($plan->yearly_price, 2, ',', '.') }}</strong>
+                                        @else
+                                            Anual<br>
+                                            <strong>R$ {{ number_format($plan->yearly_price, 2, ',', '.') }}</strong>
+                                        @endif
                               </button>
                           </div>
                      </div>
@@ -106,13 +108,13 @@
             @endforeach
         </div>
 
-    @if($company->subscription && $company->subscription->status === 'active')
+    @if($currentSubscription && $currentSubscription->status === 'active')
     <div class="row justify-content-center mt-4">
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="alert alert-info text-center">
                 <i class="mdi mdi-information me-2"></i>
-                <strong>Plano Atual:</strong> {{ $company->subscription->plan->name }} 
-                (válido até {{ $company->subscription->ends_at->format('d/m/Y') }})
+                <strong>Plano Atual:</strong> {{ $currentSubscription->plan->name }} 
+                (válido até {{ $currentSubscription->ends_at->format('d/m/Y') }})
             </div>
         </div>
     </div>
@@ -140,13 +142,13 @@
 
 .plan-card.current-plan {
     border-color: #28a745;
-    border-width: 2px;
-    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.2);
+    border-width: 1px;
     background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%);
 }
 
-.plan-card.current-plan .card-body {
+.plan-card {
     position: relative;
+    overflow: hidden;
 }
 
 .pricing-header {
@@ -189,25 +191,25 @@
     top: -5px;
     z-index: 1;
     overflow: hidden;
-    width: 75px;
-    height: 75px;
+    width: 90px;
+    height: 90px;
     text-align: right;
 }
 
 .ribbon span {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: bold;
     color: #fff;
     text-transform: uppercase;
     text-align: center;
-    line-height: 20px;
+    line-height: 22px;
     transform: rotate(45deg);
     -webkit-transform: rotate(45deg);
-    width: 100px;
+    width: 120px;
     display: block;
     position: absolute;
-    top: 19px;
-    right: -21px;
+    top: 22px;
+    right: -25px;
 }
 
 .ribbon span.bg-primary {
