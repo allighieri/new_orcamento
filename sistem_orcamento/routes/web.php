@@ -181,7 +181,7 @@ Route::post('payments/extra-budgets/purchase', [App\Http\Controllers\PaymentCont
     Route::post('payments/{payment}/cancel', [App\Http\Controllers\PaymentController::class, 'cancel'])->name('payments.cancel');
     
     // Rotas para cancelamento de planos anuais
-    Route::get('payments/cancel-annual-plan', [App\Http\Controllers\PaymentController::class, 'cancelAnnualPlan'])->name('payments.cancel-annual-plan');
+    Route::get('payments/cancel-yearly-plan', [App\Http\Controllers\PaymentController::class, 'cancelYearlyPlan'])->name('payments.cancel-yearly-plan');
     Route::get('payments/cancellation-fee/{plan}', [App\Http\Controllers\PaymentController::class, 'cancellationFeeCheckout'])->name('payments.cancellation-fee');
     Route::post('payments/process-cancellation-fee', [App\Http\Controllers\PaymentController::class, 'processCancellationFee'])->name('payments.process-cancellation-fee');
 });
@@ -215,3 +215,27 @@ Route::any('payments/test-debug-public', function() {
     ]);
     return response()->json(['success' => true, 'message' => 'Teste OK']);
 })->name('payments.test-debug-public');
+
+// Rota de teste para disparar evento PaymentConfirmed (sem CSRF)
+Route::any('test-payment-event', function() {
+    try {
+        event(new \App\Events\PaymentConfirmed(
+            rand(1000, 9999), // payment_id
+            'CONFIRMED',       // status
+            1,                 // user_id
+            'Teste',          // plan_type
+            99.90             // amount
+        ));
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Evento PaymentConfirmed disparado com sucesso!',
+            'timestamp' => now()->toDateTimeString()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Erro ao disparar evento: ' . $e->getMessage()
+        ], 500);
+    }
+})->withoutMiddleware(['csrf']);

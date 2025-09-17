@@ -1,105 +1,92 @@
 <?php
 
-require_once 'vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
-// Carregar configuração do Laravel
-$app = require_once 'bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-$kernel->bootstrap();
+$app = require_once __DIR__ . '/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use App\Models\Payment;
 use App\Models\Subscription;
-use App\Http\Controllers\WebhookController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use App\Events\PaymentConfirmed;
 
-echo "=== TESTE DA CORREÇÃO DO WEBHOOK ===\n\n";
+echo "=== VERIFICANDO PAGAMENTOS RECENTES ===\n";
 
-// Simular um pagamento anual que deveria criar uma subscription anual
-// mas a empresa já tem uma subscription mensal ativa
+// Buscar pagamentos recentes
+$payments = Payment::orderBy('id', 'desc')->take(5)->get();
 
-// 1. Verificar estado atual
-echo "1. Estado atual da empresa 1:\n";
-$activeSubscriptions = Subscription::where('company_id', 1)
-    ->where('status', 'active')
-    ->get();
-    
-foreach ($activeSubscriptions as $sub) {
-    echo "   - Subscription ID {$sub->id}: {$sub->billing_cycle} | {$sub->status}\n";
+foreach ($payments as $payment) {
+    echo "ID: {$payment->id} | Asaas: {$payment->asaas_payment_id} | Status: {$payment->status} | Valor: {$payment->amount} | Ciclo: {$payment->billing_cycle} | Tipo: {$payment->billing_type} | Criado: {$payment->created_at}\n";
 }
 
-// 2. Criar um payment anual de teste
-echo "\n2. Criando payment anual de teste...\n";
-$testPayment = Payment::create([
-    'company_id' => 1,
-    'plan_id' => 1,
-    'billing_cycle' => 'annual',
-    'amount' => 1200.00,
-    'billing_type' => 'PIX',
-    'type' => 'subscription',
-    'status' => 'RECEIVED',
-    'due_date' => now()->addDay(),
-    'asaas_payment_id' => 'pay_test_' . time(),
-    'asaas_subscription_id' => 'sub_test_' . time(),
-    'created_at' => now(),
-    'updated_at' => now()
-]);
+echo "\n=== BUSCANDO PAGAMENTO RECEIVED ===\n";
 
-echo "   Payment criado: ID {$testPayment->id} | {$testPayment->billing_cycle} | {$testPayment->asaas_subscription_id}\n";
-
-// 3. Simular o webhook processando este payment
-echo "\n3. Simulando processamento do webhook...\n";
-
-// Criar instância do AsaasService
-$asaasService = app(\App\Services\AsaasService::class);
-$webhookController = new WebhookController($asaasService);
-
-// Usar reflexão para chamar o método privado
-$reflection = new ReflectionClass($webhookController);
-$method = $reflection->getMethod('handleSubscriptionPayment');
-$method->setAccessible(true);
-
-try {
-    $method->invoke($webhookController, $testPayment);
-    echo "   ✅ Webhook processado com sucesso\n";
-} catch (Exception $e) {
-    echo "   ❌ Erro no webhook: " . $e->getMessage() . "\n";
-    echo "   Stack trace: " . $e->getTraceAsString() . "\n";
-}
-
-// 4. Verificar resultado
-echo "\n4. Estado após processamento:\n";
-$subscriptionsAfter = Subscription::where('company_id', 1)
-    ->orderBy('created_at', 'desc')
-    ->get();
-    
-foreach ($subscriptionsAfter as $sub) {
-    echo "   - Subscription ID {$sub->id}: {$sub->billing_cycle} | {$sub->status} | Asaas: {$sub->asaas_subscription_id} | Created: {$sub->created_at}\n";
-}
-
-// 5. Verificar se foi criada subscription anual
-$newAnnualSub = Subscription::where('company_id', 1)
-    ->where('billing_cycle', 'annual')
-    ->where('asaas_subscription_id', $testPayment->asaas_subscription_id)
-    ->where('status', 'active')
+// Buscar o pagamento com status 'received' mais recente (pode ser o pagamento via cartão)
+$receivedPayment = Payment::where('status', 'received')
+    ->orderBy('id', 'desc')
     ->first();
+
+if ($receivedPayment) {
+    echo "Pagamento RECEIVED encontrado: ID {$receivedPayment->id}\n";
+    echo "Asaas ID: {$receivedPayment->asaas_payment_id}\n";
+    echo "Status: {$receivedPayment->status}\n";
+    echo "Valor: {$receivedPayment->amount}\n";
+    echo "Ciclo: {$receivedPayment->billing_cycle}\n";
+    echo "Tipo: {$receivedPayment->billing_type}\n";
+    echo "User ID: {$receivedPayment->user_id}\n";
     
-if ($newAnnualSub) {
-    echo "\n✅ SUCESSO: Subscription anual criada corretamente!\n";
-    echo "   - ID: {$newAnnualSub->id}\n";
-    echo "   - Billing Cycle: {$newAnnualSub->billing_cycle}\n";
-    echo "   - Status: {$newAnnualSub->status}\n";
-    echo "   - Asaas Subscription ID: {$newAnnualSub->asaas_subscription_id}\n";
+    // Verificar se já tem assinatura
+    $subscription = Subscription::where('payment_id', $receivedPayment->id)->first();
+    if ($subscription) {
+        echo "Assinatura já existe: ID {$subscription->id}, Status: {$subscription->status}\n";
+    } else {
+        echo "Nenhuma assinatura encontrada para este pagamento.\n";
+        
+        echo "\n=== TESTANDO EVENTO PaymentConfirmed ===\n";
+        
+        try {
+            // Disparar o evento PaymentConfirmed com os parâmetros corretos
+            event(new PaymentConfirmed(
+                $receivedPayment->id,
+                'confirmed',
+                $receivedPayment->user_id,
+                $receivedPayment->billing_cycle,
+                $receivedPayment->amount
+            ));
+            echo "Evento PaymentConfirmed disparado com sucesso!\n";
+            
+            // Verificar se a assinatura foi criada após o evento
+            sleep(2); // Aguardar um pouco mais
+            $newSubscription = Subscription::where('payment_id', $receivedPayment->id)->first();
+            if ($newSubscription) {
+                echo "Assinatura criada após evento: ID {$newSubscription->id}, Status: {$newSubscription->status}\n";
+            } else {
+                echo "Assinatura ainda não foi criada.\n";
+            }
+            
+        } catch (Exception $e) {
+            echo "Erro ao disparar evento: " . $e->getMessage() . "\n";
+        }
+    }
 } else {
-    echo "\n❌ FALHA: Subscription anual não foi criada\n";
+    echo "Nenhum pagamento com status 'received' encontrado.\n";
 }
 
-// 6. Limpar dados de teste
-echo "\n6. Limpando dados de teste...\n";
-$testPayment->delete();
-if ($newAnnualSub) {
-    $newAnnualSub->delete();
+echo "\n=== VERIFICANDO TODOS OS PAGAMENTOS CONFIRMED ===\n";
+
+$confirmedPayments = Payment::where('status', 'confirmed')
+    ->orderBy('id', 'desc')
+    ->take(3)
+    ->get();
+
+foreach ($confirmedPayments as $payment) {
+    echo "ID: {$payment->id} | Status: {$payment->status} | Valor: {$payment->amount} | Tipo: {$payment->billing_type}\n";
+    
+    $subscription = Subscription::where('payment_id', $payment->id)->first();
+    if ($subscription) {
+        echo "  -> Tem assinatura: ID {$subscription->id}, Status: {$subscription->status}\n";
+    } else {
+        echo "  -> SEM assinatura\n";
+    }
 }
-echo "   Dados de teste removidos\n";
 
 echo "\n=== TESTE CONCLUÍDO ===\n";

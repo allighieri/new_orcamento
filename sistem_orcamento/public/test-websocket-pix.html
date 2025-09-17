@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste WebSocket PIX - Debug Completo</title>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .event { background: #f0f8ff; border: 1px solid #ccc; padding: 10px; margin: 5px 0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Teste WebSocket PIX - Debug Completo</h1>
+    
+    <div class="status info">
+        <strong>Configuração:</strong><br>
+        • Host: localhost:8080<br>
+        • Key: hm3yrq4f7pvaf6nl5oqz<br>
+        • Canal: payments<br>
+        • Evento: payment.confirmed
+    </div>
+    
+    <div id="connection-status" class="status">🔄 Conectando...</div>
+    
+    <button onclick="testConnection()">🔄 Reconectar</button>
+    <button onclick="clearEvents()">🗑️ Limpar Eventos</button>
+    <button onclick="simulateEvent()">🧪 Simular Evento Local</button>
+    
+    <h2>📡 Eventos Recebidos:</h2>
+    <div id="events-container"></div>
+    
+    <h2>📋 Log de Debug:</h2>
+    <div id="debug-log" style="background: #f5f5f5; padding: 10px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
+    
+    <script>
+        let pusher = null;
+        let channel = null;
+        let eventCount = 0;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('debug-log');
+            const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue';
+            logDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function updateConnectionStatus(status, message, type = 'info') {
+            const statusDiv = document.getElementById('connection-status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = `${status} ${message}`;
+        }
+        
+        function addEvent(data, source = 'websocket') {
+            eventCount++;
+            const container = document.getElementById('events-container');
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event';
+            eventDiv.innerHTML = `
+                <strong>🎯 Evento #${eventCount} (${source})</strong><br>
+                <strong>Timestamp:</strong> ${new Date().toLocaleString()}<br>
+                <strong>Payment ID:</strong> ${data.payment_id || 'N/A'}<br>
+                <strong>Status:</strong> ${data.status || 'N/A'}<br>
+                <strong>Company ID:</strong> ${data.company_id || 'N/A'}<br>
+                <strong>Plan Type:</strong> ${data.plan_type || 'N/A'}<br>
+                <strong>Amount:</strong> ${data.amount || 'N/A'}<br>
+                <strong>Raw Data:</strong> <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            container.insertBefore(eventDiv, container.firstChild);
+        }
+        
+        function clearEvents() {
+            document.getElementById('events-container').innerHTML = '';
+            eventCount = 0;
+            log('Eventos limpos', 'info');
+        }
+        
+        function simulateEvent() {
+            const fakeData = {
+                payment_id: 999,
+                status: 'received',
+                company_id: 1,
+                plan_type: 'bronze',
+                amount: 29.90
+            };
+            addEvent(fakeData, 'simulação');
+            log('Evento simulado localmente', 'success');
+        }
+        
+        function initWebSocket() {
+            try {
+                log('Iniciando conexão WebSocket...', 'info');
+                
+                // Configurar Pusher/Reverb
+                pusher = new Pusher('hm3yrq4f7pvaf6nl5oqz', {
+                    wsHost: 'localhost',
+                    wsPort: 8080,
+                    wssPort: 8080,
+                    forceTLS: false,
+                    disableStats: true,
+                    enabledTransports: ['ws', 'wss'],
+                    authEndpoint: '/broadcasting/auth',
+                    auth: {
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                        }
+                    }
+                });
+                
+                // Eventos de conexão
+                pusher.connection.bind('connected', () => {
+                    updateConnectionStatus('✅', 'Conectado ao WebSocket', 'success');
+                    log('Conectado ao WebSocket com sucesso!', 'success');
+                });
+                
+                pusher.connection.bind('connecting', () => {
+                    updateConnectionStatus('🔄', 'Conectando ao WebSocket...', 'info');
+                    log('Tentando conectar ao WebSocket...', 'info');
+                });
+                
+                pusher.connection.bind('disconnected', () => {
+                    updateConnectionStatus('❌', 'Desconectado do WebSocket', 'error');
+                    log('Desconectado do WebSocket', 'error');
+                });
+                
+                pusher.connection.bind('error', (err) => {
+                    updateConnectionStatus('❌', `Erro na conexão: ${JSON.stringify(err)}`, 'error');
+                    log(`Erro na conexão: ${JSON.stringify(err)}`, 'error');
+                });
+                
+                pusher.connection.bind('state_change', (states) => {
+                    log(`Estado mudou de ${states.previous} para ${states.current}`, 'info');
+                });
+                
+                // Escutar canal de pagamentos
+                log('Inscrevendo no canal "payments"...', 'info');
+                channel = pusher.subscribe('payments');
+                
+                channel.bind('pusher:subscription_succeeded', () => {
+                    log('Inscrição no canal "payments" bem-sucedida!', 'success');
+                });
+                
+                channel.bind('pusher:subscription_error', (err) => {
+                    log(`Erro na inscrição do canal: ${JSON.stringify(err)}`, 'error');
+                });
+                
+                // Escutar evento payment.confirmed
+                channel.bind('payment.confirmed', (data) => {
+                    log(`Evento payment.confirmed recebido: ${JSON.stringify(data)}`, 'success');
+                    addEvent(data, 'websocket');
+                    
+                    // Mostrar notificação visual
+                    if (typeof alert !== 'undefined') {
+                        setTimeout(() => {
+                            alert(`🎉 Pagamento PIX Confirmado!\n\nPayment ID: ${data.payment_id}\nStatus: ${data.status}`);
+                        }, 100);
+                    }
+                });
+                
+                // Escutar todos os eventos do canal para debug
+                channel.bind_global((eventName, data) => {
+                    if (eventName !== 'payment.confirmed') {
+                        log(`Evento genérico recebido: ${eventName} - ${JSON.stringify(data)}`, 'info');
+                    }
+                });
+                
+                log('WebSocket configurado com sucesso!', 'success');
+                
+            } catch (error) {
+                log(`Erro ao inicializar WebSocket: ${error.message}`, 'error');
+                updateConnectionStatus('❌', `Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        function testConnection() {
+            if (pusher) {
+                pusher.disconnect();
+            }
+            setTimeout(initWebSocket, 1000);
+        }
+        
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Página carregada, iniciando teste...', 'info');
+            initWebSocket();
+        });
+        
+        // Log de informações do navegador
+        log(`Navegador: ${navigator.userAgent}`, 'info');
+        log(`URL atual: ${window.location.href}`, 'info');
+    </script>
+</body>
+</html>

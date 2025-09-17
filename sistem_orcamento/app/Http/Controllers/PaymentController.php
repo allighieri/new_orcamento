@@ -207,9 +207,9 @@ class PaymentController extends Controller
             } else {
                 // Para assinatura de plano - usar período da URL
                 $period = $request->get('period', 'yearly');
-                $billingCycle = $period === 'monthly' ? 'monthly' : 'annual';
+                $billingCycle = $period === 'monthly' ? 'monthly' : 'yearly';
                 // Para planos anuais, usar o valor anual
-                $price = $billingCycle === 'annual' ? $plan->yearly_price : $plan->monthly_price;
+                $price = $billingCycle === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
                 Log::info('Valores do plano carregado', [
                     'plan_id' => $plan->id,
                     'plan_name' => $plan->name,
@@ -218,7 +218,7 @@ class PaymentController extends Controller
                     'billing_cycle' => $billingCycle,
                     'calculated_price' => $price
                 ]);
-                $cycleText = $billingCycle === 'annual' ? 'Anual' : 'Mensal';
+                $cycleText = $billingCycle === 'yearly' ? 'Anual' : 'Mensal';
                 $description = "Assinatura {$cycleText} do plano {$plan->name} - " .
                               ($company->fantasy_name ?? $company->corporate_name);
                               
@@ -236,7 +236,7 @@ class PaymentController extends Controller
                     }
                     
                     // Se tem assinatura anual ativa e quer trocar para outro plano anual
-                    if ($activeSubscription->isYearly() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
+                    if ($activeSubscription->isYearly() && $billingCycle === 'yearly' && $activeSubscription->plan_id !== $plan->id) {
                         // Marcar que é uma mudança de plano (será processado após confirmação do pagamento)
                         $isPlanChange = true;
                         $oldSubscriptionId = $activeSubscription->id;
@@ -248,19 +248,19 @@ class PaymentController extends Controller
             }
             
             // Para planos anuais, criar pagamento único de 12 meses
-            if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
+            if ($type !== 'extra_budgets' && $billingCycle === 'yearly') {
                 // Para planos anuais, criar cobrança única do valor total de 12 meses
                 // Valor total: R$ 45,00 * 12 = R$ 540,00
                 
-                $annualTotalPrice = $plan->yearly_price; // Valor anual
+                $yearlyTotalPrice = $plan->yearly_price; // Valor anual
                 Log::info('Calculando valor anual', [
                     'plan_yearly_price' => $plan->yearly_price,
-                    'annual_total_price' => $annualTotalPrice
+                    'yearly_total_price' => $yearlyTotalPrice
                 ]);
                 
                 $paymentData = [
                     'customer' => $customer['id'],
-                    'value' => $annualTotalPrice,
+                    'value' => $yearlyTotalPrice,
                     'dueDate' => now()->addDays(1)->format('Y-m-d'),
                     'description' => $description . ' - Pagamento único de 12 meses'
                 ];
@@ -282,8 +282,8 @@ class PaymentController extends Controller
 
             // Determinar tipo de pagamento
             $paymentType = 'subscription';
-            if (isset($activeSubscription) && $activeSubscription && $activeSubscription->isYearly() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
-                $paymentType = 'plan_change_annual';
+            if (isset($activeSubscription) && $activeSubscription && $activeSubscription->isYearly() && $billingCycle === 'yearly' && $activeSubscription->plan_id !== $plan->id) {
+                    $paymentType = 'plan_change_yearly';
             }
             
             // Definir variáveis para evitar erros
@@ -291,9 +291,9 @@ class PaymentController extends Controller
             $oldSubscriptionId = null;
             
             // Salvar pagamento no banco
-            if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
+            if ($type !== 'extra_budgets' && $billingCycle === 'yearly') {
                 // Para planos anuais com pagamento único
-                $annualTotalPrice = $plan->yearly_price; // Valor anual
+                $yearlyTotalPrice = $plan->yearly_price; // Valor anual
                 $paymentCreateData = [
                     'company_id' => $company->id,
                     'plan_id' => $plan->id,
@@ -302,7 +302,7 @@ class PaymentController extends Controller
                     'asaas_customer_id' => $customer['id'],
                     'asaas_subscription_id' => $asaasSubscription['id'] ?? null,
                     'payment_id' => null, // Será preenchido após criar a subscription
-                    'amount' => $annualTotalPrice, // Valor total de 12 meses
+                    'amount' => $yearlyTotalPrice, // Valor total de 12 meses
                     'billing_type' => 'PIX',
                     'billing_cycle' => $billingCycle,
                     'type' => $paymentType,
@@ -341,7 +341,7 @@ class PaymentController extends Controller
             $payment = Payment::create($paymentCreateData);
 
             // Gerar QR Code PIX dinâmico
-            if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
+            if ($type !== 'extra_budgets' && $billingCycle === 'yearly') {
                 // Para planos anuais, usar diretamente a cobrança única criada
                 Log::info('Cobrança única anual criada', ['payment_id' => $asaasPayment['id']]);
                 
@@ -363,7 +363,7 @@ class PaymentController extends Controller
             // Se o payload vier null, gerar um PIX copia e cola informativo
             if (empty($payload) && !empty($qrCodeImage)) {
                 // Definir valor correto baseado no tipo de pagamento
-                if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
+                if ($type !== 'extra_budgets' && $billingCycle === 'yearly') {
                     $displayAmount = $plan->yearly_price; // Valor anual
                     $dueDate = $asaasPayment['dueDate'];
                 } else {
@@ -387,7 +387,7 @@ class PaymentController extends Controller
             DB::commit();
 
             // Definir data de vencimento correta baseada no tipo de pagamento
-            if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
+            if ($type !== 'extra_budgets' && $billingCycle === 'yearly') {
                 $responseDueDate = $asaasPayment['dueDate'];
             } else {
                 $responseDueDate = $asaasPayment['dueDate'];
@@ -493,8 +493,8 @@ class PaymentController extends Controller
             } else {
                 // Para assinatura de plano - usar período da URL
                 $period = $request->get('period', 'yearly');
-                $billingCycle = $period === 'monthly' ? 'monthly' : 'annual';
-                $cycleText = $billingCycle === 'annual' ? 'Anual' : 'Mensal';
+                $billingCycle = $period === 'monthly' ? 'monthly' : 'yearly';
+            $cycleText = $billingCycle === 'yearly' ? 'Anual' : 'Mensal';
                 $description = "Assinatura {$cycleText} do plano {$plan->name} - " .
                     ($company->fantasy_name ?? $company->corporate_name);
                 
@@ -512,7 +512,7 @@ class PaymentController extends Controller
                     }
                     
                     // Se tem assinatura anual ativa e quer trocar para outro plano anual
-                    if ($activeSubscription->isYearly() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
+                    if ($activeSubscription->isYearly() && $billingCycle === 'yearly' && $activeSubscription->plan_id !== $plan->id) {
                         // Marcar que é uma mudança de plano (será processado após confirmação do pagamento)
                         $isPlanChange = true;
                         $oldSubscriptionId = $activeSubscription->id;
@@ -525,21 +525,21 @@ class PaymentController extends Controller
             
             // Definir tipo de pagamento baseado no contexto
             if (isset($isPlanChange) && $isPlanChange) {
-                $paymentType = 'plan_change_annual';
+                $paymentType = 'plan_change_yearly';
             } else {
                 $paymentType = 'subscription';
             }
             
             // Para planos anuais, criar cobrança única com cartão
-            if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
+            if ($type !== 'extra_budgets' && $billingCycle === 'yearly') {
                 // Para planos anuais, criar cobrança única do valor total de 12 meses
-                $annualTotalPrice = $plan->yearly_price; // Valor anual
+                $yearlyTotalPrice = $plan->yearly_price; // Valor anual
                 
                 $installments = (int) $request->installments;
                 
                 $paymentData = [
                     'customer' => $customer['id'],
-                    'value' => $annualTotalPrice,
+                    'value' => $yearlyTotalPrice,
                     'dueDate' => now()->format('Y-m-d'),
                     'description' => $description . ' - Pagamento único de 12 meses',
                     'creditCard' => [
@@ -563,10 +563,10 @@ class PaymentController extends Controller
                 
                 // Adicionar dados de parcelamento se for mais de 1x
                 if ($installments > 1) {
-                    $installmentValue = $annualTotalPrice / $installments;
+                    $installmentValue = $yearlyTotalPrice / $installments;
                     $paymentData['installmentCount'] = $installments;
                     $paymentData['installmentValue'] = $installmentValue;
-                    $paymentData['totalValue'] = $annualTotalPrice;
+                    $paymentData['totalValue'] = $yearlyTotalPrice;
                     // Remover o campo value para parcelamento conforme documentação Asaas
                     unset($paymentData['value']);
                 }
@@ -575,10 +575,10 @@ class PaymentController extends Controller
                 $asaasSubscription = null; // Não há assinatura recorrente
             } else {
                 // Para todos os outros casos (planos mensais, orçamentos extras, etc.) - sempre cobrança única
-                $price = $billingCycle === 'annual' ? $plan->yearly_price : $plan->monthly_price;
+                $price = $billingCycle === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
                 
                 // Aplicar taxa de cancelamento se necessário
-                if (isset($activeSubscription) && $activeSubscription && $activeSubscription->isYearly() && $billingCycle === 'annual' && $activeSubscription->plan_id !== $plan->id) {
+                if (isset($activeSubscription) && $activeSubscription && $activeSubscription->isYearly() && $billingCycle === 'yearly' && $activeSubscription->plan_id !== $plan->id) {
                     $cancellationFee = $activeSubscription->getCancellationFee();
                     $price = $cancellationFee + $plan->yearly_price;
                 }
@@ -624,16 +624,16 @@ class PaymentController extends Controller
             }
 
             // Salvar pagamento no banco
-            if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
+            if ($type !== 'extra_budgets' && $billingCycle === 'yearly') {
                 // Para planos anuais, criar cobrança única
-                $annualTotalPrice = $plan->yearly_price;
+                $yearlyTotalPrice = $plan->yearly_price;
                 $paymentCreateData = [
                     'company_id' => $company->id,
                     'plan_id' => $plan->id,
                     'asaas_payment_id' => $asaasPayment['id'], // ID da cobrança única
                     'asaas_subscription_id' => null, // Não há assinatura recorrente
                     'asaas_customer_id' => $customer['id'],
-                    'amount' => $annualTotalPrice, // Valor total anual
+                    'amount' => $yearlyTotalPrice, // Valor total anual
                     'billing_type' => 'CREDIT_CARD',
                     'type' => $paymentType,
                     'status' => 'PENDING',
@@ -659,7 +659,7 @@ class PaymentController extends Controller
                 ];
             } else {
                 // Para outros tipos de pagamento
-                $price = $billingCycle === 'annual' ? $plan->yearly_price : $plan->monthly_price;
+                $price = $billingCycle === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
                 $paymentCreateData = [
                     'company_id' => $company->id,
                     'plan_id' => $type === 'extra_budgets' ? null : $plan->id,
@@ -1356,7 +1356,7 @@ class PaymentController extends Controller
         }
         
         $period = $request->get('period', 'monthly');
-        if (!in_array($period, ['monthly', 'annual'])) {
+        if (!in_array($period, ['monthly', 'yearly'])) {
             return redirect()->route('payments.select-plan')
                            ->with('error', 'Período inválido.');
         }
@@ -1417,7 +1417,7 @@ class PaymentController extends Controller
         $validator = Validator::make($request->all(), [
             'plan_id' => 'required|exists:plans,id',
             'payment_type' => 'required|in:pix,credit_card',
-            'period' => 'required|in:monthly,annual',
+            'period' => 'required|in:monthly,yearly',
             'cpf_cnpj' => 'required|string',
             'name' => 'required|string|max:255',
             'email' => 'required|email',
@@ -1518,7 +1518,7 @@ class PaymentController extends Controller
                 'status' => 'PENDING',
                 'due_date' => $asaasPayment['dueDate'],
                 'description' => $paymentData['description'],
-                'billing_cycle' => $request->period === 'monthly' ? 'monthly' : 'annual',
+                'billing_cycle' => $request->period === 'monthly' ? 'monthly' : 'yearly',
                 'metadata' => [
                     'old_plan_id' => $activeSubscription->plan_id,
                     'new_plan_id' => $newPlan->id,
@@ -1632,7 +1632,7 @@ class PaymentController extends Controller
     /**
      * Cancelar plano anual (após pagamento da taxa)
      */
-    public function cancelAnnualPlan()
+    public function cancelYearlyPlan()
     {
         try {
             DB::beginTransaction();

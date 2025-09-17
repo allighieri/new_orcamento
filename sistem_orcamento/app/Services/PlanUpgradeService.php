@@ -38,11 +38,17 @@ class PlanUpgradeService
 
             // Criar nova assinatura
             $startDate = now();
-            $endDate = $this->calculateEndDate($payment->billing_cycle ?? 'monthly');
-            $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
             
-            // Converter billing_cycle para o formato correto da tabela subscriptions
-            $billingCycleForSubscription = $payment->billing_cycle === 'annual' ? 'yearly' : ($payment->billing_cycle ?? 'monthly');
+            // Normalizar billing_cycle para garantir valores válidos
+            $billingCycleForSubscription = match($payment->billing_cycle ?? 'monthly') {
+                'yearly', 'annual' => 'yearly',
+                'monthly' => 'monthly',
+                default => 'monthly'
+            };
+            
+            // Calcular datas baseadas no ciclo de cobrança
+            $endDate = $this->calculateEndDate($billingCycleForSubscription);
+            $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
             
             $newSubscription = Subscription::create([
                 'company_id' => $oldSubscription->company_id,
@@ -55,7 +61,7 @@ class PlanUpgradeService
                 'ends_at' => $endDate,
                 'grace_period_ends_at' => $gracePeriodEndDate,
 
-                'next_billing_date' => $this->calculateNextBillingDate($payment->billing_cycle ?? 'monthly'),
+                'next_billing_date' => $this->calculateNextBillingDate($billingCycleForSubscription),
                 'auto_renew' => true
             ]);
 
@@ -194,7 +200,7 @@ class PlanUpgradeService
     private function calculateEndDate(string $billingCycle): Carbon
     {
         return match($billingCycle) {
-            'yearly', 'annual' => now()->addYear(),
+            'yearly' => now()->addYear(),
             'monthly' => now()->addMonth(),
             default => now()->addMonth()
         };
@@ -206,7 +212,7 @@ class PlanUpgradeService
     private function calculateNextBillingDate(string $billingCycle): Carbon
     {
         return match($billingCycle) {
-            'yearly', 'annual' => now()->addYear(),
+            'yearly' => now()->addYear(),
             'monthly' => now()->addMonth(),
             default => now()->addMonth()
         };

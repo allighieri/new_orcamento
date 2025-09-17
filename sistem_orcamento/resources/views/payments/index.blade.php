@@ -426,6 +426,32 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Configurar escuta de eventos de pagamento em tempo real
+    if (window.Echo) {
+        window.Echo.channel('payments')
+            .listen('.payment.confirmed', (e) => {
+                console.log('Evento de pagamento recebido na listagem:', e);
+                
+                // Mostrar notificação de sucesso
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pagamento Confirmado!',
+                        text: 'Um pagamento foi processado com sucesso.',
+                        timer: 3000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+                
+                // Recarregar a página após um pequeno delay para mostrar o novo pagamento
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            });
+    }
 });
 </script>
 @endpush

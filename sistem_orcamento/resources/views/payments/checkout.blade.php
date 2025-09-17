@@ -625,7 +625,7 @@ $(document).ready(function() {
                             if (result.isConfirmed) {
                                 // Redirecionar diretamente para o checkout do novo plano anual
                                 if (planId) {
-                                    window.location.href = '/payments/checkout/' + planId + '?billing_cycle=annual';
+                                    window.location.href = '/payments/checkout/' + planId + '?billing_cycle=yearly';
                                 } else {
                                     window.location.href = '{{ route("payments.select-plan") }}';
                                 }
@@ -907,6 +907,62 @@ $(document).ready(function() {
     
     // Calcular valor inicial
     calculateInstallmentValue();
+    
+    // Configurar escuta de eventos de pagamento em tempo real
+    @if(isset($payment) && $payment->id)
+    window.Echo.channel('payments')
+        .listen('.payment.confirmed', (e) => {
+            console.log('Evento de pagamento recebido:', e);
+            
+            // Verificar se é o pagamento atual
+            if (e.paymentId == {{ $payment->id ?? 'null' }}) {
+                // Mostrar notificação de sucesso
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Pagamento Confirmado!',
+                    text: 'Seu pagamento foi processado com sucesso.',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    // Redirecionar para página de sucesso ou payments
+                    @if(isset($isExtraBudgets) && $isExtraBudgets)
+                        window.location.href = '{{ route("payments.extra-budgets") }}';
+                    @else
+                        window.location.href = '{{ route("payments.index") }}';
+                    @endif
+                });
+            }
+        });    
+    @endif
+    
+    // Configurar escuta de eventos de pagamento em tempo real
+    if (window.Echo) {
+        window.Echo.channel('payments')
+            .listen('.payment.confirmed', (e) => {
+                console.log('Evento de pagamento recebido em checkout:', e);
+                
+                // Mostrar notificação de sucesso
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pagamento Confirmado!',
+                        text: 'Seu pagamento foi processado com sucesso.',
+                        timer: 3000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+                
+                // Redirecionar após confirmação
+                setTimeout(() => {
+                    @if(isset($isExtraBudgets) && $isExtraBudgets)
+                        window.location.href = '{{ route("payments.extra-budgets") }}';
+                    @else
+                        window.location.href = '{{ route("payments.index") }}';
+                    @endif
+                }, 2000);
+            });
+    }
 });
 </script>
 @endpush

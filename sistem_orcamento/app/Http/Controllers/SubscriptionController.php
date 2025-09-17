@@ -72,13 +72,19 @@ class SubscriptionController extends Controller
 
             // Criar assinatura
             $startDate = now();
-            $endDate = $request->billing_cycle === 'yearly' ? $startDate->copy()->addYear() : $startDate->copy()->addMonth();
+            
+            // Normalizar billing_cycle para evitar valores inválidos como 'annual'
+            $billingCycle = in_array($request->billing_cycle, ['monthly', 'yearly']) 
+                ? $request->billing_cycle 
+                : ($request->billing_cycle === 'annual' ? 'yearly' : 'monthly');
+            
+            $endDate = $billingCycle === 'yearly' ? $startDate->copy()->addYear() : $startDate->copy()->addMonth();
             $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
             
             $subscription = Subscription::create([
                 'company_id' => $company->id,
                 'plan_id' => $plan->id,
-                'billing_cycle' => $request->billing_cycle,
+                'billing_cycle' => $billingCycle,
                 'status' => 'pending',
                 'start_date' => $startDate,
                 'end_date' => $endDate,
@@ -89,7 +95,7 @@ class SubscriptionController extends Controller
             ]);
 
             // Calcular valor do pagamento
-            $amount = $request->billing_cycle === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
+            $amount = $billingCycle === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
 
             // Criar pagamento via Asaas
             $paymentData = $this->createAsaasPayment($subscription, $amount, $request->payment_method);

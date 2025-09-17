@@ -2,9 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Events\PaymentConfirmed;
 use App\Models\Payment;
+use App\Models\Plan;
 use App\Models\Subscription;
-use App\Models\UsageControl;
 use App\Services\AsaasService;
 use App\Services\PlanUpgradeService;
 use Illuminate\Bus\Queueable;
@@ -12,8 +13,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ProcessAsaasWebhook implements ShouldQueue
 {
@@ -146,6 +147,10 @@ class ProcessAsaasWebhook implements ShouldQueue
         // Processar diferentes tipos de eventos de pagamento
         switch ($event) {
             case 'PAYMENT_RECEIVED':
+                // Para PAYMENT_RECEIVED, processar com prioridade alta para melhor responsividade
+                $this->handlePaymentReceived($payment, $paymentData, $planUpgradeService);
+                break;
+                
             case 'PAYMENT_CONFIRMED':
                 $this->handlePaymentApproved($payment, $paymentData, $planUpgradeService);
                 break;
@@ -300,10 +305,69 @@ class ProcessAsaasWebhook implements ShouldQueue
     }
 
     /**
-     * Processar pagamento aprovado
+     * Processar pagamento recebido (PAYMENT_RECEIVED) - Otimizado para responsividade
+     */
+    private function handlePaymentReceived(Payment $payment, array $paymentData, PlanUpgradeService $planUpgradeService)
+    {
+        // Atualizar status imediatamente para melhor responsividade
+        $payment->updateStatus($paymentData['status'], $this->payload);
+        
+        // Definir confirmed_at se ainda não estiver definido
+        if (!$payment->confirmed_at) {
+            $payment->update(['confirmed_at' => now()]);
+        }
+        
+        // Disparar evento imediatamente para atualização em tempo real
+        $planType = null;
+        if ($payment->plan_id) {
+            $plan = Plan::find($payment->plan_id);
+            $planType = $plan ? $plan->name : null;
+        }
+        
+        event(new PaymentConfirmed(
+            $payment->id,
+            $payment->status,
+            $payment->company_id,
+            $planType,
+            $payment->amount
+        ));
+        
+        Log::info('Evento PaymentConfirmed disparado (RECEIVED)', [
+            'payment_id' => $payment->id,
+            'status' => $payment->status,
+            'company_id' => $payment->company_id,
+            'plan_type' => $planType,
+            'amount' => $payment->amount
+        ]);
+        
+        // Processar lógica de negócio em segundo plano (sem afetar responsividade)
+        $this->processPaymentBusinessLogic($payment, $paymentData, $planUpgradeService);
+    }
+    
+    /**
+     * Processar pagamento aprovado (PAYMENT_CONFIRMED)
      */
     private function handlePaymentApproved(Payment $payment, array $paymentData, PlanUpgradeService $planUpgradeService)
     {
+        // Atualizar status do pagamento
+        $payment->updateStatus($paymentData['status'], $this->payload);
+        
+        // Processar lógica de negócio
+        $this->processPaymentBusinessLogic($payment, $paymentData, $planUpgradeService);
+    }
+    
+    /**
+     * Processar lógica de negócio do pagamento (compartilhada entre RECEIVED e CONFIRMED)
+     */
+    private function processPaymentBusinessLogic(Payment $payment, array $paymentData, PlanUpgradeService $planUpgradeService)
+    {
+        // Normalizar billing_cycle para garantir valores válidos
+        $billingCycleForSubscription = match($payment->billing_cycle) {
+            'yearly', 'annual' => 'yearly',
+            'monthly' => 'monthly',
+            default => 'monthly'
+        };
+        
         // Atualizar status do pagamento e corrigir valor se necessário
         $updateData = ['status' => strtolower($paymentData['status'])];
         
@@ -311,7 +375,7 @@ class ProcessAsaasWebhook implements ShouldQueue
         if ($payment->plan_id && in_array($payment->type, ['subscription', 'plan_change', null])) {
             $plan = \App\Models\Plan::find($payment->plan_id);
             if ($plan) {
-                $correctAmount = $payment->billing_cycle === 'annual' ? $plan->yearly_price : $plan->monthly_price;
+                $correctAmount = $billingCycleForSubscription === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
                 if (abs($payment->amount - $correctAmount) > 0.01) {
                     $updateData['amount'] = $correctAmount;
                     Log::info('Valor do pagamento corrigido no webhook', [
@@ -319,7 +383,7 @@ class ProcessAsaasWebhook implements ShouldQueue
                         'old_amount' => $payment->amount,
                         'new_amount' => $correctAmount,
                         'plan_id' => $plan->id,
-                        'billing_cycle' => $payment->billing_cycle
+                        'billing_cycle' => $billingCycleForSubscription
                     ]);
                 }
             }
@@ -339,7 +403,7 @@ class ProcessAsaasWebhook implements ShouldQueue
             'payment_id' => $payment->id,
             'company_id' => $payment->company_id,
             'plan_id' => $payment->plan_id,
-            'billing_cycle' => $payment->billing_cycle,
+            'billing_cycle' => $billingCycleForSubscription,
             'amount' => $payment->amount,
             'current_type' => $payment->type
         ]);
@@ -367,8 +431,8 @@ class ProcessAsaasWebhook implements ShouldQueue
             $this->handleCancellationFeePayment($payment);
         } elseif ($payment->type === 'plan_change') {
             $this->handlePlanChangePayment($payment, $planUpgradeService);
-        } elseif ($payment->type === 'plan_change_annual') {
-            $this->handleAnnualPlanChangePayment($payment, $paymentData);
+        } elseif ($payment->type === 'plan_change_yearly') {
+            $this->handleYearlyPlanChangePayment($payment, $paymentData);
         } elseif ($payment->type === 'extra_budgets') {
             $this->handleExtraBudgetsPayment($payment, $planUpgradeService);
         } else {
@@ -386,8 +450,8 @@ class ProcessAsaasWebhook implements ShouldQueue
                 'payment_id' => $payment->id,
                 'plan_id' => $payment->plan_id,
                 'company_id' => $payment->company_id,
-                'billing_cycle' => $payment->billing_cycle
-            ]);
+                'billing_cycle' => $billingCycleForSubscription
+             ]);
             
             // Se não tem plan_id, não é mudança de plano
             if (!$payment->plan_id) {
@@ -437,18 +501,18 @@ class ProcessAsaasWebhook implements ShouldQueue
             // Se o plano do pagamento é diferente do plano da assinatura ativa, é mudança de plano
             if ($payment->plan_id != $activeSubscription->plan_id) {
                 Log::info('DEBUG: Detectada mudança de plano', [
-                    'payment_id' => $payment->id,
-                    'old_plan_id' => $activeSubscription->plan_id,
-                    'new_plan_id' => $payment->plan_id,
-                    'billing_cycle' => $payment->billing_cycle
-                ]);
+                'payment_id' => $payment->id,
+                'old_plan_id' => $activeSubscription->plan_id,
+                'new_plan_id' => $payment->plan_id,
+                'billing_cycle' => $billingCycleForSubscription
+            ]);
                 
                 // Verificar se é anual ou mensal baseado no billing_cycle
-                if ($payment->billing_cycle === 'annual') {
-                    return 'plan_change_annual';
-                } else {
-                    return 'plan_change';
-                }
+             if ($billingCycleForSubscription === 'yearly') {
+                 return 'plan_change_yearly';
+             } else {
+                 return 'plan_change';
+             }
             }
             
             // Se é o mesmo plano, pode ser renovação ou orçamentos extras
@@ -471,8 +535,8 @@ class ProcessAsaasWebhook implements ShouldQueue
             ]);
             
             // Verificar se é anual ou mensal baseado no billing_cycle
-            if ($payment->billing_cycle === 'annual') {
-                return 'plan_change_annual';
+                if ($billingCycleForSubscription === 'yearly') {
+            return 'plan_change_yearly';
             } else {
                 return 'plan_change';
             }
@@ -546,15 +610,15 @@ class ProcessAsaasWebhook implements ShouldQueue
             Log::info('Primeiro pagamento de assinatura - criando assinatura (fila)', [
                 'payment_id' => $payment->id,
                 'company_id' => $payment->company_id,
-                'billing_cycle' => $payment->billing_cycle,
+                'billing_cycle' => $billingCycleForSubscription,
                 'asaas_subscription_id' => $payment->asaas_subscription_id
             ]);
-        } else if ($payment->billing_cycle === 'annual') {
+        } else if ($billingCycleForSubscription === 'yearly') {
             // Para planos anuais, é um pagamento único - criar assinatura diretamente
             Log::info('Pagamento único anual confirmado - criando assinatura (fila)', [
                 'payment_id' => $payment->id,
                 'company_id' => $payment->company_id,
-                'billing_cycle' => $payment->billing_cycle,
+                'billing_cycle' => $billingCycleForSubscription,
                 'amount' => $payment->amount
             ]);
         }
@@ -574,7 +638,7 @@ class ProcessAsaasWebhook implements ShouldQueue
                 'old_plan_id' => $activeSubscription->plan_id,
                 'new_plan_id' => $payment->plan_id,
                 'old_billing_cycle' => $activeSubscription->billing_cycle,
-                'new_billing_cycle' => $payment->billing_cycle
+                 'new_billing_cycle' => $billingCycleForSubscription
             ]);
             
             // Cancelar no Asaas se tiver subscription_id
@@ -607,14 +671,14 @@ class ProcessAsaasWebhook implements ShouldQueue
             return;
         }
         
+        // Converter billing_cycle para o formato correto da tabela subscriptions
+         // Já normalizado no início do método
+        
         // Determinar datas baseadas no ciclo de cobrança
         $startDate = now();
-        $endDate = $payment->billing_cycle === 'annual' ? $startDate->copy()->addYear() : $startDate->copy()->addMonth();
-        $nextBillingDate = $payment->billing_cycle === 'annual' ? $endDate : $startDate->copy()->addMonth();
+        $endDate = $billingCycleForSubscription === 'yearly' ? $startDate->copy()->addYear() : $startDate->copy()->addMonth();
+        $nextBillingDate = $billingCycleForSubscription === 'yearly' ? $endDate : $startDate->copy()->addMonth();
         $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
-        
-        // Converter billing_cycle para o formato correto da tabela subscriptions
-        $billingCycleForSubscription = $payment->billing_cycle === 'annual' ? 'yearly' : $payment->billing_cycle;
         
         // Criar nova assinatura
         $newSubscription = \App\Models\Subscription::create([
@@ -653,7 +717,7 @@ class ProcessAsaasWebhook implements ShouldQueue
             'company_id' => $payment->company_id,
             'new_subscription_id' => $newSubscription->id,
             'plan_id' => $plan->id,
-            'billing_cycle' => $payment->billing_cycle,
+            'billing_cycle' => $billingCycleForSubscription,
             'amount' => $payment->amount,
             'usage_control_created' => true,
             'inherited_budgets' => $inheritedBudgets
@@ -714,7 +778,7 @@ class ProcessAsaasWebhook implements ShouldQueue
     /**
      * Processar pagamento de mudança entre planos anuais
      */
-    private function handleAnnualPlanChangePayment(Payment $payment, array $paymentData)
+    private function handleYearlyPlanChangePayment(Payment $payment, array $paymentData)
     {
         Log::info('Pagamento de mudança entre planos anuais confirmado via fila', [
             'payment_id' => $payment->id,
@@ -757,7 +821,7 @@ class ProcessAsaasWebhook implements ShouldQueue
                 'old_subscription_id' => $activeSubscription->id,
                 'new_subscription_id' => $newSubscription->id,
                 'new_plan_id' => $newPlan->id,
-                'billing_cycle' => $payment->billing_cycle
+                'billing_cycle' => $billingCycleForSubscription
             ]);
             
         } catch (\Exception $e) {
@@ -775,6 +839,13 @@ class ProcessAsaasWebhook implements ShouldQueue
      */
     private function handlePlanChangePayment(Payment $payment, PlanUpgradeService $planUpgradeService)
     {
+        // Normalizar billing_cycle para garantir valores válidos
+        $billingCycleForSubscription = match($payment->billing_cycle) {
+            'yearly', 'annual' => 'yearly',
+            'monthly' => 'monthly',
+            default => 'monthly'
+        };
+        
         Log::info('Pagamento de mudança de plano confirmado via fila', [
             'payment_id' => $payment->id,
             'company_id' => $payment->company_id,

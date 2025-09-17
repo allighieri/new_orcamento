@@ -57,9 +57,9 @@
                                  <span class="price-value">{{ number_format($plan->yearly_price, 2, ',', '.') }}</span>
                                  <span class="price-period">/ano</span>
                              </div>
-                             <div class="annual-info mt-2">
+                             <div class="yearly-info mt-2">
                                  <small class="text-muted">Valor para o plano anual</small>
-                                 <div class="annual-savings text-success">
+                                 <div class="yearly-savings text-success">
                                      <strong>Economize R$ {{ number_format($yearlySavings, 2, ',', '.') }} por ano!</strong>
                                  </div>
                              </div>
@@ -79,21 +79,22 @@
                           <div class="pricing-buttons d-flex gap-2">
                               @php
                                   $isCurrentMonthly = $isCurrentPlan && $currentSubscription->billing_cycle === 'monthly';
-                                  $isCurrentAnnual = $isCurrentPlan && $currentSubscription->billing_cycle === 'yearly';
+                                  $isCurrentYearly = $isCurrentPlan && $currentSubscription->billing_cycle === 'yearly';
                               @endphp
                               <button class="btn {{ $isCurrentMonthly ? 'btn-success' : 'btn-outline-primary' }} flex-fill monthly-btn" 
                                       data-plan="{{ $plan->slug }}" data-cycle="monthly" data-price="{{ $plan->monthly_price }}"
                                       {{ $isCurrentMonthly ? 'disabled' : '' }}>
-                                  Mensal<br>
-                                  <strong>R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}</strong>
                                   @if($isCurrentMonthly)
-                                      <br><small class="text-white">Plano Atual</small>
+                                  <i class="bi bi-check-circle-fill"></i> Mensal<br>
+                                        <strong>R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}</strong>
+                                  @else
+                                        <strong>R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}</strong>
                                   @endif
                               </button>
-                              <button class="btn {{ $isCurrentAnnual ? 'btn-success' : 'btn-primary' }} flex-fill annual-btn" 
+                              <button class="btn {{ $isCurrentYearly ? 'btn-success' : 'btn-primary' }} flex-fill yearly-btn" 
                                       data-plan="{{ $plan->slug }}" data-cycle="yearly" data-price="{{ $plan->yearly_price }}"
-                                      {{ $isCurrentAnnual ? 'disabled' : '' }}>
-                                       @if($isCurrentAnnual)
+                                      {{ $isCurrentYearly ? 'disabled' : '' }}>
+                                       @if($isCurrentYearly)
                                             <i class="bi bi-check-circle-fill"></i> Anual<br>
                                             <strong>R$ {{ number_format($plan->yearly_price, 2, ',', '.') }}</strong>
                                         @else
@@ -233,7 +234,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Event listeners para os botões de plano
-    document.querySelectorAll('.monthly-btn, .annual-btn').forEach(button => {
+    document.querySelectorAll('.monthly-btn, .yearly-btn').forEach(button => {
         button.addEventListener('click', function() {
             const planSlug = this.getAttribute('data-plan');
             const cycle = this.getAttribute('data-cycle');
@@ -242,6 +243,32 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = `/payments/checkout/${planSlug}?period=${cycle}`;
         });
     });
+    
+    // Configurar escuta de eventos de pagamento em tempo real
+    if (window.Echo) {
+        window.Echo.channel('payments')
+            .listen('.payment.confirmed', (e) => {
+                console.log('Evento de pagamento recebido em select-plan:', e);
+                
+                // Mostrar notificação de sucesso
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pagamento Confirmado!',
+                        text: 'Seu plano foi ativado com sucesso.',
+                        timer: 3000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+                
+                // Redirecionar para payments após confirmação
+                setTimeout(() => {
+                    window.location.href = '{{ route("payments.index") }}';
+                }, 2000);
+            });
+    }
 });
 </script>
 @endpush
