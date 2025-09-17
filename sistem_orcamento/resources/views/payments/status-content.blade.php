@@ -1,110 +1,176 @@
-<!-- Card Principal do Status -->
-<div class="card">
+@php
+    // Definição única das traduções de status para uso em todo o arquivo
+    $statusTranslations = [
+        'PENDING' => 'Pendente',
+        'RECEIVED' => 'Pago',
+        'CONFIRMED' => 'Pago',
+        'OVERDUE' => 'Vencido',
+        'REFUNDED' => 'Reembolsado',
+        'RECEIVED_IN_CASH' => 'Pago em Dinheiro',
+        'REFUND_REQUESTED' => 'Reembolso Solicitado',
+        'CHARGEBACK_REQUESTED' => 'Chargeback Solicitado',
+        'CHARGEBACK_DISPUTE' => 'Disputa de Chargeback',
+        'AWAITING_CHARGEBACK_REVERSAL' => 'Aguardando Reversão de Chargeback'
+    ];
+    $currentStatus = $payment->status;
+    $translatedStatus = $statusTranslations[$currentStatus] ?? ucfirst($currentStatus);
+@endphp
+
+<!-- Cabeçalho Azul -->
+<div class="card p-4 my-3 bg-primary text-white">
+    <div class="header-content">
+        <div class="customer-info">
+            <h4 class="customer-name">Orça Já!</h4>
+            <div class="customer-details">
+                {{-- <div>(61) 99461-9520</div> --}}
+                <div>agenciaolhardigital@gmail.com</div>
+                <div>CPF: 975.........20</div>
+                <div>Brasília, DF</div>
+            </div>
+        </div>
+        <div class="payment-status-header">
+            @if($payment->isPaid())
+                <i class="bi bi-check-circle-fill status-icon-header text-success"></i>
+                <span class="status-text">{{ $translatedStatus }}</span>
+            @elseif($payment->status === 'PENDING')
+                <i class="bi bi-clock-fill status-icon-header text-white"></i>
+                <span class="status-text">{{ $translatedStatus }}</span>
+            @elseif($payment->status === 'OVERDUE')
+                <i class="bi bi-exclamation-triangle-fill status-icon-header text-white"></i>
+                <span class="status-text">{{ $translatedStatus }}</span>
+            @else
+                <i class="bi bi-info-circle-fill status-icon-header text-white"></i>
+                <span class="status-text">{{ $translatedStatus }}</span>
+            @endif
+            {{-- 
+            <div class="text-end mt-2">
+                <a href="#" class="btn btn-link text-white p-0" onclick="reportProblem()">Reportar problema</a>
+            </div>
+             --}}
+        </div>
+    </div>
+</div>
+
+<!-- Dados da Fatura -->
+<div class="card mt-0">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Dados da fatura - {{ $payment->asaas_payment_id ?? $payment->id }}</h5>
+    </div>
     <div class="card-body">
         <div class="row">
-            <!-- Status Visual -->
-            <div class="col-md-4 text-center">
-                <div class="status-visual mb-4">
-                    @if($payment->isPaid())
-                        <div class="status-icon mb-3">
-                            <i class="bi bi-check-circle-fill display-1 text-success"></i>
-                        </div>
-                        <h3 class="text-success">Pagamento Aprovado</h3>
-                        <p class="text-muted">Seu pagamento foi processado com sucesso</p>
-                    @elseif($payment->status === 'PENDING')
-                        <div class="status-icon mb-3">
-                            <i class="bi bi-clock-fill display-1 text-warning"></i>
-                        </div>
-                        <h3 class="text-warning">Aguardando Pagamento</h3>
-                        <p class="text-muted">Seu pagamento está sendo processado</p>
-                    @elseif($payment->status === 'OVERDUE')
-                        <div class="status-icon mb-3">
-                            <i class="bi bi-exclamation-triangle-fill display-1 text-danger"></i>
-                        </div>
-                        <h3 class="text-danger">Pagamento Vencido</h3>
-                        <p class="text-muted">O prazo para pagamento expirou</p>
-                    @else
-                        <div class="status-icon mb-3">
-                            <i class="bi bi-info-circle-fill display-1 text-info"></i>
-                        </div>
-                        <h3 class="text-info">{{ ucfirst($payment->status) }}</h3>
-                        <p class="text-muted">Status atual do pagamento</p>
-                    @endif
+            <div class="col-md-6">
+                <div class="info-section">
+                    <label class="info-label">Valor total</label>
+                    <div class="info-value text-success fw-bold fs-4">R$ {{ number_format($payment->amount, 2, ',', '.') }}</div>
                 </div>
             </div>
-            
-            <!-- Informações do Pagamento -->
-            <div class="col-md-8">
-                <h5 class="mb-3">Detalhes do Pagamento</h5>
-                
-                <div class="row">
-                    <div class="col-sm-6">
-                        <div class="info-item mb-3">
-                            <label class="text-muted small">ID do Pagamento</label>
-                            <div class="fw-bold">#{{ $payment->id }}</div>
-                        </div>
-                        
-                        @if($payment->asaas_payment_id)
-                        <div class="info-item mb-3">
-                            <label class="text-muted small">ID Asaas</label>
-                            <div class="fw-bold">{{ $payment->asaas_payment_id }}</div>
-                        </div>
-                        @endif
-                        
-                        <div class="info-item mb-3">
-                            <label class="text-muted small">Plano</label>
-                            <div class="fw-bold">
-                                @if($payment->plan)
-                                    {{ $payment->plan->name }}
-                                @else
-                                    Orçamentos Extras
-                                @endif
-                            </div>
-                            @if($payment->extra_budgets_quantity)
-                                <small class="text-info">+ {{ $payment->extra_budgets_quantity }} orçamentos extras</small>
-                            @endif
-                        </div>
-                        
-                        <div class="info-item mb-3">
-                            <label class="text-muted small">Valor</label>
-                            <div class="fw-bold text-success fs-5">R$ {{ number_format($payment->amount, 2, ',', '.') }}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-sm-6">
-                        <div class="info-item mb-3">
-                            <label class="text-muted small">Método de Pagamento</label>
-                            <div>
-                                @if($payment->billing_type === 'PIX')
-                                    <span class="badge bg-info fs-6"><i class="bi bi-qr-code me-1"></i>PIX</span>
-                                @elseif($payment->billing_type === 'CREDIT_CARD')
-                                    <span class="badge bg-primary fs-6"><i class="bi bi-credit-card me-1"></i>Cartão de Crédito</span>
-                                @else
-                                    <span class="badge bg-secondary fs-6">{{ $payment->billing_type }}</span>
-                                @endif
-                            </div>
-                        </div>
-                        
-                        <div class="info-item mb-3">
-                            <label class="text-muted small">Data de Criação</label>
-                            <div class="fw-bold">{{ $payment->created_at->format('d/m/Y H:i') }}</div>
-                        </div>
-                        
-                        <div class="info-item mb-3">
-                            <label class="text-muted small">Vencimento</label>
-                            <div class="fw-bold">{{ $payment->due_date->format('d/m/Y H:i') }}</div>
-                        </div>
-                        
-                        @if($payment->paid_at)
-                        <div class="info-item mb-3">
-                            <label class="text-muted small">Data do Pagamento</label>
-                            <div class="fw-bold text-success">{{ $payment->paid_at->format('d/m/Y H:i') }}</div>
-                        </div>
-                        @endif
-                    </div>
+            <div class="col-md-6">
+                <div class="info-section">
+                    <label class="info-label">Data de vencimento</label>
+                    <div class="info-value">{{ $payment->due_date->format('d/m/Y') }}</div>
+                    <small class="text-muted">({{ $payment->due_date->diffForHumans() }})</small>
                 </div>
             </div>
         </div>
+        <div class="mt-3">
+            <label class="info-label">Descrição</label>
+            <div class="info-value">
+                @if($payment->plan)
+                    Assinatura Mensal do plano {{ $payment->plan->name }} - KARAOKÊ CLUBE
+                @else
+                    Orçamentos Extras - KARAOKÊ CLUBE
+                @endif
+                @if($payment->extra_budgets_quantity)
+                    (+ {{ $payment->extra_budgets_quantity }} orçamentos extras)
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dados do Comprador -->
+<div class="card mt-3">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Dados do comprador</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-section">
+                    <label class="info-label">Nome</label>
+                    <div class="info-value">{{ $payment->user->name ?? 'KARAOKÊ CLUBE' }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-section">
+                    <label class="info-label">Email</label>
+                    <div class="info-value">{{ $payment->user->email ?? 'agenciabardigital@gmail.com' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forma de Pagamento -->
+<div class="card mt-3">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Forma de pagamento</h5>
+    </div>
+    <div class="card-body">
+        @if($payment->billing_type === 'PIX')
+            <div class="pix-payment-section">
+                <div class="pix-header mb-3">
+                    <span class="pix-label">Pix</span>
+                </div>
+                
+                @if((strtoupper($payment->status) === 'PENDING' || $payment->status === 'pending') && isset($qrCodeData) && (isset($qrCodeData['encodedImage']) || isset($qrCodeData['payload'])))
+                    <div class="row">
+                        <!-- QR Code -->
+                        @if(isset($qrCodeData['encodedImage']))
+                        <div class="col-md-6 text-center">
+                            <div class="qr-code-container mb-3">
+                                <img src="data:image/png;base64,{{ $qrCodeData['encodedImage'] }}" alt="QR Code PIX" class="qr-code-image" style="max-width: 200px; height: auto; border: 1px solid #ddd; border-radius: 8px;">
+                            </div>
+                            <p class="text-muted small">Abra seu APP de pagamentos e faça a leitura do QR Code acima para efetuar o pagamento de forma rápida e segura.</p>
+                        </div>
+                        @endif
+                        
+                        <!-- Código Copia e Cola -->
+                        @if(isset($qrCodeData['payload']))
+                        <div class="col-md-6">
+                            <div class="pix-code-section">
+                                <label class="info-label mb-2">Código Pix copia e cola</label>
+                                <div class="pix-code-container">
+                                    <textarea class="form-control pix-code-textarea" id="pixCodeModal" readonly>{{ $qrCodeData['payload'] }}</textarea>
+                                    <button class="btn btn-primary mt-2 w-100" type="button" onclick="copyPixCodeModal()">
+                                        <i class="bi bi-clipboard me-1"></i>Copiar
+                                    </button>
+                                </div>
+                                <small class="text-muted mt-2 d-block">Cole este código no seu app do banco para fazer o pagamento</small>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                @else
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        @if($payment->isPaid())
+                            Pagamento realizado via PIX
+                        @else
+                            QR Code PIX não disponível no momento
+                        @endif
+                    </div>
+                @endif
+            </div>
+        @elseif($payment->billing_type === 'CREDIT_CARD')
+            <div class="credit-card-section">
+                <span class="badge bg-primary fs-6"><i class="bi bi-credit-card me-1"></i>Cartão de Crédito</span>
+            </div>
+        @else
+            <div class="other-payment-section">
+                <span class="badge bg-secondary fs-6">{{ $payment->billing_type }}</span>
+            </div>
+        @endif
     </div>
 </div>
 
@@ -171,22 +237,10 @@
                     <label class="text-muted small">Status no Gateway</label>
                     <div class="fw-bold">
                         @php
-                            $statusTranslations = [
-                                'PENDING' => 'Pendente',
-                                'RECEIVED' => 'Recebido',
-                                'CONFIRMED' => 'Confirmado',
-                                'OVERDUE' => 'Vencido',
-                                'REFUNDED' => 'Reembolsado',
-                                'RECEIVED_IN_CASH' => 'Recebido em Dinheiro',
-                                'REFUND_REQUESTED' => 'Reembolso Solicitado',
-                                'CHARGEBACK_REQUESTED' => 'Chargeback Solicitado',
-                                'CHARGEBACK_DISPUTE' => 'Disputa de Chargeback',
-                                'AWAITING_CHARGEBACK_REVERSAL' => 'Aguardando Reversão de Chargeback'
-                            ];
                             $gatewayStatus = $asaasPayment['status'] ?? 'N/A';
-                            $translatedStatus = $statusTranslations[$gatewayStatus] ?? $gatewayStatus;
+                            $gatewayTranslatedStatus = $statusTranslations[$gatewayStatus] ?? $gatewayStatus;
                         @endphp
-                        {{ $translatedStatus }}
+                        {{ $gatewayTranslatedStatus }}
                     </div>
                 </div>
             </div>
@@ -203,14 +257,16 @@
 </div>
 @endif
 
+
+
 <!-- Ações -->
 <div class="card mt-4">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 @if($payment->status === 'PENDING' && $payment->billing_type === 'PIX')
-                    <a href="{{ route('payments.pix-payment', $payment) }}" class="btn btn-primary me-2" target="_blank">
-                        <i class="bi bi-qr-code me-1"></i>Ver QR Code PIX
+                    <a href="{{ route('payments.pix-payment', $payment) }}" class="btn btn-outline-primary me-2" target="_blank">
+                        <i class="bi bi-external-link me-1"></i>Abrir Página de Pagamento
                     </a>
                 @endif
                 
@@ -236,10 +292,82 @@
 @endif
 
 <style>
-.status-visual {
-    padding: 2rem 1rem;
+/* Cabeçalho Azul */
+
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
 }
 
+.customer-info .customer-name {
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+.customer-details div {
+    margin-bottom: 0.25rem;
+    opacity: 0.9;
+}
+
+.payment-status-header {
+    text-align: right;
+}
+
+.status-icon-header {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.status-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: block;
+}
+
+/* Seções de Informação */
+.info-section {
+    margin-bottom: 1rem;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.info-value {
+    font-weight: 600;
+    color: #111827;
+}
+
+/* PIX Styles */
+.pix-label {
+    background: #10b981;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.pix-code-textarea {
+    min-height: 100px;
+    font-family: monospace;
+    font-size: 0.875rem;
+    resize: none;
+}
+
+.qr-code-image {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Timeline */
 .timeline {
     position: relative;
     padding-left: 2rem;
@@ -252,7 +380,7 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: #e9ecef;
+    background: #e5e7eb;
 }
 
 .timeline-item {
@@ -267,43 +395,111 @@
     height: 1rem;
     border-radius: 50%;
     border: 2px solid #fff;
-    box-shadow: 0 0 0 2px #e9ecef;
+    box-shadow: 0 0 0 2px #e5e7eb;
 }
 
 .timeline-content {
-    background: #f8f9fa;
+    background: #f9fafb;
     padding: 1rem;
-    border-radius: 0.375rem;
-    border-left: 3px solid #dee2e6;
+    border-radius: 0.5rem;
+    border-left: 3px solid #d1d5db;
 }
 
 .timeline-title {
     margin-bottom: 0.25rem;
     font-weight: 600;
+    color: #111827;
 }
 
 .timeline-text {
     margin-bottom: 0;
     font-size: 0.875rem;
+    color: #6b7280;
 }
 
-.info-item label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-}
-
+/* Cards */
 .card {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    border: 1px solid rgba(0, 0, 0, 0.125);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
 }
 
-.badge {
-    font-size: 0.75rem;
+.card-header {
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .payment-header {
+        padding: 1.5rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .payment-status-header {
+        text-align: left;
+    }
+    
+    .customer-info .customer-name {
+        font-size: 1.25rem;
+    }
 }
 </style>
 
 <script>
+// Função para copiar código PIX na modal
+function copyPixCodeModal() {
+    const pixCodeInput = document.getElementById('pixCodeModal');
+    if (pixCodeInput) {
+        pixCodeInput.select();
+        pixCodeInput.setSelectionRange(0, 99999); // Para dispositivos móveis
+        
+        try {
+            document.execCommand('copy');
+            
+            // Feedback visual
+            const button = event.target.closest('button');
+            const originalHtml = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check me-1"></i>Copiado!';
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-success');
+            
+            setTimeout(() => {
+                button.innerHTML = originalHtml;
+                button.classList.remove('btn-success');
+                button.classList.add('btn-primary');
+            }, 2000);
+            
+        } catch (err) {
+            console.error('Erro ao copiar código PIX:', err);
+            alert('Erro ao copiar código PIX');
+        }
+    }
+}
+
+// Função para reportar problema
+function reportProblem() {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'info',
+            title: 'Reportar Problema',
+            text: 'Entre em contato conosco através do email: suporte@karaokeclube.com.br',
+            confirmButtonText: 'OK'
+        });
+    } else {
+        alert('Entre em contato conosco através do email: suporte@karaokeclube.com.br');
+    }
+}
+
 function updatePaymentStatusInModal(paymentId) {
     const button = event.target.closest('button');
     const originalHtml = button.innerHTML;

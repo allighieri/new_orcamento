@@ -791,14 +791,16 @@ class PaymentController extends Controller
         // Verificar se já tem uma assinatura ativa
         $activeSubscription = $company->activeSubscription();
         
-        if (!$activeSubscription) {
-            return redirect()->route('payments.select-plan')
-                           ->with('info', 'Você precisa selecionar um plano para continuar.');
-        }
-        
+        // Buscar pagamentos da empresa
         $query = Payment::where('company_id', $company->id)
             ->with(['plan'])
             ->orderBy('created_at', 'desc');
+        
+        // Se não há assinatura ativa e não há pagamentos, redirecionar para select-plan
+        if (!$activeSubscription && $query->count() == 0) {
+            return redirect()->route('payments.select-plan')
+                           ->with('info', 'Você precisa selecionar um plano para continuar.');
+        }
         
         // Filtro por data inicial
         if ($request->filled('date_from')) {
@@ -864,6 +866,7 @@ class PaymentController extends Controller
      */
     public function status(Payment $payment)
     {
+
         // Verificar se o pagamento pertence à empresa do usuário
         if ($payment->company_id !== Auth::user()->company_id) {
             abort(403, 'Acesso negado.');
@@ -872,16 +875,43 @@ class PaymentController extends Controller
         try {
             // Buscar informações atualizadas do Asaas se houver ID
             $asaasPayment = null;
+            $qrCodeData = null;
+            
             if ($payment->asaas_payment_id) {
                 $asaasPayment = $this->asaasService->getPaymentStatus($payment->asaas_payment_id);
+                
+                // Se for PIX e estiver pendente, buscar QR Code
+                if ($payment->billing_type === 'PIX' && (strtoupper($payment->status) === 'PENDING' || $payment->status === 'pending')) {
+                    try {
+                        \Log::info('Tentando buscar QR Code PIX para pagamento', [
+                            'payment_id' => $payment->id,
+                            'asaas_payment_id' => $payment->asaas_payment_id,
+                            'billing_type' => $payment->billing_type,
+                            'status' => $payment->status
+                        ]);
+                        
+                        $qrCodeData = $this->asaasService->getPixQrCode($payment->asaas_payment_id);
+                        
+                        \Log::info('QR Code PIX obtido com sucesso', [
+                            'payment_id' => $payment->id,
+                            'has_encoded_image' => isset($qrCodeData['encodedImage']),
+                            'has_payload' => isset($qrCodeData['payload'])
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::warning('Erro ao buscar QR Code PIX no status', [
+                            'error' => $e->getMessage(),
+                            'payment_id' => $payment->id
+                        ]);
+                    }
+                }
             }
 
             // Se for requisição AJAX, retornar apenas o conteúdo da view
             if (request()->ajax()) {
-                return view('payments.status-content', compact('payment', 'asaasPayment'))->render();
+                return view('payments.status-content', compact('payment', 'asaasPayment', 'qrCodeData'))->render();
             }
 
-            return view('payments.status', compact('payment', 'asaasPayment'));
+            return view('payments.status', compact('payment', 'asaasPayment', 'qrCodeData'));
         } catch (\Exception $e) {
             \Log::error('Erro ao carregar status do pagamento', [
                 'error' => $e->getMessage(),
@@ -889,10 +919,10 @@ class PaymentController extends Controller
             ]);
             
             if (request()->ajax()) {
-                return view('payments.status-content', compact('payment'))->with('error', 'Não foi possível carregar informações atualizadas do pagamento.')->render();
+                return view('payments.status-content', compact('payment'))->with('error', 'Não foi possível carregar informações atualizadas do pagamento.')->with('qrCodeData', null)->render();
             }
             
-            return view('payments.status', compact('payment'))->with('error', 'Não foi possível carregar informações atualizadas do pagamento.');
+            return view('payments.status', compact('payment'))->with('error', 'Não foi possível carregar informações atualizadas do pagamento.')->with('qrCodeData', null);
         }
     }
 

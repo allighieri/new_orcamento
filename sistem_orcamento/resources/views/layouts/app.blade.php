@@ -97,7 +97,7 @@
                     @endif
                     
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}" href="{{ route('payments.select-plan') }}">
+                        <a class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
                             <i class="bi bi-credit-card"></i> Planos</a>
                     </li>
                 </ul>

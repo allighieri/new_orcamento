@@ -34,9 +34,21 @@
             @php
                 $features = json_decode($plan->description, true) ?? [];
                 $yearlySavings = ($plan->monthly_price * 12) - $plan->yearly_price;
+                $isCurrentPlan = $company->subscription && $company->subscription->plan_id == $plan->id;
+                $isPrata = strtolower($plan->name) === 'prata';
             @endphp
             <div class="col-md-4 mb-4">
-                 <div class="card plan-card h-100 d-flex flex-column">
+                 <div class="card plan-card h-100 d-flex flex-column {{ $isCurrentPlan ? 'current-plan' : '' }} position-relative">
+                     @if($isPrata && !$isCurrentPlan)
+                         <div class="ribbon">
+                             <span class="bg-warning text-dark">MELHOR ESCOLHA</span>
+                         </div>
+                     @endif
+                     @if($isCurrentPlan)
+                         <div class="ribbon">
+                             <span class="bg-success">PLANO ATUAL</span>
+                         </div>
+                     @endif
                      <div class="card-body text-center flex-grow-1">
                          <h3 class="plan-title fs-1 fw-bold">{{ strtoupper($plan->name) }}</h3>
                          <div class="price-section mb-5">
@@ -65,15 +77,27 @@
                      
                      <div class="card-footer bg-transparent border-0 p-3">
                           <div class="pricing-buttons d-flex gap-2">
-                              <button class="btn btn-outline-primary flex-fill monthly-btn" 
-                                      data-plan="{{ $plan->slug }}" data-cycle="monthly" data-price="{{ $plan->monthly_price }}">
+                              @php
+                                  $isCurrentMonthly = $isCurrentPlan && $company->subscription->billing_cycle === 'monthly';
+                                  $isCurrentAnnual = $isCurrentPlan && $company->subscription->billing_cycle === 'yearly';
+                              @endphp
+                              <button class="btn {{ $isCurrentMonthly ? 'btn-secondary' : 'btn-outline-primary' }} flex-fill monthly-btn" 
+                                      data-plan="{{ $plan->slug }}" data-cycle="monthly" data-price="{{ $plan->monthly_price }}"
+                                      {{ $isCurrentMonthly ? 'disabled' : '' }}>
                                   Mensal<br>
                                   <strong>R$ {{ number_format($plan->monthly_price, 2, ',', '.') }}</strong>
+                                  @if($isCurrentMonthly)
+                                      <br><small class="text-muted">Plano Atual</small>
+                                  @endif
                               </button>
-                              <button class="btn btn-primary flex-fill annual-btn" 
-                                      data-plan="{{ $plan->slug }}" data-cycle="yearly" data-price="{{ $plan->yearly_price }}">
+                              <button class="btn {{ $isCurrentAnnual ? 'btn-secondary' : 'btn-primary' }} flex-fill annual-btn" 
+                                      data-plan="{{ $plan->slug }}" data-cycle="yearly" data-price="{{ $plan->yearly_price }}"
+                                      {{ $isCurrentAnnual ? 'disabled' : '' }}>
                                   Anual<br>
                                   <strong>R$ {{ number_format($plan->yearly_price, 2, ',', '.') }}</strong>
+                                  @if($isCurrentAnnual)
+                                      <br><small class="text-muted">Plano Atual</small>
+                                  @endif
                               </button>
                           </div>
                      </div>
@@ -114,14 +138,14 @@
     box-shadow: 0 5px 15px rgba(90, 103, 216, 0.2);
 }
 
-.pricing-card.current-plan {
+.plan-card.current-plan {
     border-color: #28a745;
     border-width: 2px;
     box-shadow: 0 5px 15px rgba(40, 167, 69, 0.2);
     background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%);
 }
 
-.pricing-card.current-plan .card-body {
+.plan-card.current-plan .card-body {
     position: relative;
 }
 
@@ -192,6 +216,11 @@
 
 .ribbon span.bg-success {
     background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.ribbon span.bg-warning {
+    background: linear-gradient(45deg, #ffc107, #ffca2c);
+    color: #212529 !important;
 }
 </style>
 
