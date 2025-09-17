@@ -953,12 +953,13 @@ class PaymentController extends Controller
                 }
             }
 
-            // Se for requisição AJAX, retornar apenas o conteúdo da view
+            // Sempre retornar o conteúdo da modal (status-content)
             if (request()->ajax()) {
                 return view('payments.status-content', compact('payment', 'asaasPayment', 'qrCodeData'))->render();
             }
 
-            return view('payments.status', compact('payment', 'asaasPayment', 'qrCodeData'));
+            // Para requisições não-AJAX, redirecionar para a página de pagamentos
+            return redirect()->route('payments.index');
         } catch (\Exception $e) {
             \Log::error('Erro ao carregar status do pagamento', [
                 'error' => $e->getMessage(),
@@ -969,7 +970,8 @@ class PaymentController extends Controller
                 return view('payments.status-content', compact('payment'))->with('error', 'Não foi possível carregar informações atualizadas do pagamento.')->with('qrCodeData', null)->render();
             }
             
-            return view('payments.status', compact('payment'))->with('error', 'Não foi possível carregar informações atualizadas do pagamento.')->with('qrCodeData', null);
+            // Para requisições não-AJAX, redirecionar para a página de pagamentos com erro
+            return redirect()->route('payments.index')->with('error', 'Não foi possível carregar informações atualizadas do pagamento.');
         }
     }
 

@@ -15,7 +15,7 @@
                     @if(isset($isExtraBudgets) && $isExtraBudgets)
                         <li class="breadcrumb-item"><a href="{{ route('payments.extra-budgets') }}">Orçamentos Extras</a></li>
                     @else
-                        <li class="breadcrumb-item"><a href="{{ route('payments.select-plan') }}">Escolher Plano</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('payments.change-plan') }}">Escolher Plano</a></li>
                     @endif
                     <li class="breadcrumb-item active">Checkout</li>
                 </ol>
@@ -688,11 +688,11 @@ $(document).ready(function() {
                         icon: 'success',
                         title: 'Pagamento Processado!',
                         text: 'Seu pagamento com cartão foi enviado para processamento.',
-                        confirmButtonText: 'Ver Status',
+                        confirmButtonText: 'Ver Histórico',
                         confirmButtonColor: '#28a745'
                     }).then(() => {
-                        // Redirecionar para página de status
-                        window.location.href = '/payments/' + response.payment_id + '/status';
+                        // Redirecionar para página de payments
+                        window.location.href = '/payments';
                     });
                 } else {
                     // Reabilitar botão
