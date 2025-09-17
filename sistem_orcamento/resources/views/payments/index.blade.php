@@ -82,7 +82,7 @@
                                    class="form-control" 
                                    id="date_from" 
                                    name="date_from" 
-                                   value="{{ request('date_from', now()->format('Y-m-d')) }}">
+                                   value="{{ request('date_from', now()->startOfMonth()->format('Y-m-d')) }}">
                         </div>
                         <div class="col-md-3">
                             <label for="date_to" class="form-label">Data Final</label>
@@ -90,13 +90,13 @@
                                    class="form-control" 
                                    id="date_to" 
                                    name="date_to" 
-                                   value="{{ request('date_to', now()->addMonths(3)->format('Y-m-d')) }}">
+                                   value="{{ request('date_to', now()->endOfMonth()->format('Y-m-d')) }}">
                         </div>
                         <div class="col-md-2">
                             <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status">
                                 <option value="">Todos</option>
-                                <option value="PENDING" {{ request('status') === 'PENDING' ? 'selected' : '' }}>Aguardando</option>
+                                <option value="PENDING" {{ request('status') === 'PENDING' ? 'selected' : '' }}>Pendente</option>
                                 <option value="RECEIVED" {{ request('status') === 'RECEIVED' ? 'selected' : '' }}>Pago</option>
                                 <!-- <option value="CONFIRMED" {{ request('status') === 'CONFIRMED' ? 'selected' : '' }}>Confirmado</option> -->
                                 <option value="OVERDUE" {{ request('status') === 'OVERDUE' ? 'selected' : '' }}>Vencido</option>
@@ -388,6 +388,45 @@ function generateReceipt(paymentId) {
     const receiptUrl = `/payments/${paymentId}/receipt`;
     window.open(receiptUrl, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
 }
+
+// Validação de datas
+function validateDates() {
+    const dateFrom = document.getElementById('date_from').value;
+    const dateTo = document.getElementById('date_to').value;
+    
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Data Inválida!',
+            text: 'A data final não pode ser menor que a data inicial.',
+            confirmButtonText: 'OK'
+        });
+        return false;
+    }
+    return true;
+}
+
+// Adicionar eventos aos campos de data
+document.addEventListener('DOMContentLoaded', function() {
+    const dateFromInput = document.getElementById('date_from');
+    const dateToInput = document.getElementById('date_to');
+    const filterForm = document.querySelector('form[action="{{ route('payments.index') }}"]');
+    
+    // Validar ao alterar as datas
+    if (dateFromInput && dateToInput) {
+        dateFromInput.addEventListener('change', validateDates);
+        dateToInput.addEventListener('change', validateDates);
+    }
+    
+    // Validar ao submeter o formulário
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            if (!validateDates()) {
+                e.preventDefault();
+            }
+        });
+    }
+});
 </script>
 @endpush
 

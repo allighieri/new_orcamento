@@ -823,12 +823,12 @@ class PaymentController extends Controller
         
         // Filtro por data inicial
         if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+            $query->whereDate('due_date', '>=', $request->date_from);
         }
         
         // Filtro por data final
         if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+            $query->whereDate('due_date', '<=', $request->date_to);
         }
         
         // Filtro por status
