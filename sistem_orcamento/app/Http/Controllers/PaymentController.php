@@ -434,11 +434,15 @@ class PaymentController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email',
             'phone' => 'required|string',
+            'postal_code' => 'required|string',
+            'address_number' => 'required|string|max:10',
+            'city' => 'required|string',
+            'state' => 'required|string|size:2',
             'card_number' => 'required|string',
             'card_holder_name' => 'required|string',
             'card_expiry_month' => 'required|string|size:2',
             'card_expiry_year' => 'required|string|size:4',
-            'card_ccv' => 'required|string|size:3'
+            'card_cvv' => 'required|string|size:3'
         ]);
 
         if ($validator->fails()) {
@@ -516,6 +520,13 @@ class PaymentController extends Controller
                 }
             }
             
+            // Definir tipo de pagamento baseado no contexto
+            if (isset($isPlanChange) && $isPlanChange) {
+                $paymentType = 'plan_change_annual';
+            } else {
+                $paymentType = 'subscription';
+            }
+            
             // Para planos anuais, criar cobrança única com cartão
             if ($type !== 'extra_budgets' && $billingCycle === 'annual') {
                 // Para planos anuais, criar cobrança única do valor total de 12 meses
@@ -531,13 +542,17 @@ class PaymentController extends Controller
                         'number' => $request->card_number,
                         'expiryMonth' => $request->card_expiry_month,
                         'expiryYear' => $request->card_expiry_year,
-                        'ccv' => $request->card_ccv
+                        'ccv' => $request->card_cvv
                     ],
                     'creditCardHolderInfo' => [
                         'name' => $request->name,
                         'email' => $request->email,
                         'cpfCnpj' => $request->cpf_cnpj,
-                        'phone' => $request->phone
+                        'phone' => $request->phone,
+                        'postalCode' => $request->postal_code,
+                        'addressNumber' => $request->address_number,
+                        'city' => $request->city,
+                        'state' => $request->state
                     ]
                 ];
                 
@@ -562,13 +577,17 @@ class PaymentController extends Controller
                         'number' => $request->card_number,
                         'expiryMonth' => $request->card_expiry_month,
                         'expiryYear' => $request->card_expiry_year,
-                        'ccv' => $request->card_ccv
+                        'ccv' => $request->card_cvv
                     ],
                     'creditCardHolderInfo' => [
                         'name' => $request->name,
                         'email' => $request->email,
                         'cpfCnpj' => $request->cpf_cnpj,
-                        'phone' => $request->phone
+                        'phone' => $request->phone,
+                        'postalCode' => $request->postal_code,
+                        'addressNumber' => $request->address_number,
+                        'city' => $request->city,
+                        'state' => $request->state
                     ]
                 ];
 
@@ -1448,7 +1467,7 @@ class PaymentController extends Controller
                     'number' => str_replace(' ', '', $request->card_number),
                     'expiryMonth' => $request->card_expiry_month,
                     'expiryYear' => $request->card_expiry_year,
-                    'ccv' => $request->card_ccv
+                    'ccv' => $request->card_cvv
                 ];
                 $asaasPayment = $this->asaasService->createCreditCardCharge($paymentData);
             }

@@ -183,7 +183,7 @@
                                         <div class="mb-3">
                                             <label for="cc_cpf_cnpj" class="form-label">CPF/CNPJ</label>
                                             <input type="text" class="form-control" id="cc_cpf_cnpj" name="cpf_cnpj" 
-                                                   placeholder="000.000.000-00" required>
+                                                   placeholder="000.000.000-00" value="{{ auth()->user()->company->document_number ?? '' }}" required>
                                         </div>
                                     </div>
                                 </div>
@@ -201,6 +201,67 @@
                                             <label for="cc_phone" class="form-label">Telefone</label>
                                             <input type="text" class="form-control" id="cc_phone" name="phone" 
                                                    value="{{ auth()->user()->company->phone ?? '' }}" placeholder="(11) 99999-9999" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Endereço do Titular -->
+                                <h6 class="mb-3 mt-4">Endereço do Titular</h6>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="cc_postal_code" class="form-label">CEP</label>
+                                            <input type="text" class="form-control" id="cc_postal_code" name="postal_code" 
+                                                   placeholder="00000-000" maxlength="9" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="cc_address_number" class="form-label">Número</label>
+                                            <input type="text" class="form-control" id="cc_address_number" name="address_number" 
+                                                   placeholder="123" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="cc_city" class="form-label">Cidade</label>
+                                            <input type="text" class="form-control" id="cc_city" name="city" 
+                                                   placeholder="Cidade" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="cc_state" class="form-label">Estado</label>
+                                            <select class="form-select" id="cc_state" name="state" required>
+                                                <option value="">Selecione</option>
+                                                <option value="AC">Acre</option>
+                                                <option value="AL">Alagoas</option>
+                                                <option value="AP">Amapá</option>
+                                                <option value="AM">Amazonas</option>
+                                                <option value="BA">Bahia</option>
+                                                <option value="CE">Ceará</option>
+                                                <option value="DF">Distrito Federal</option>
+                                                <option value="ES">Espírito Santo</option>
+                                                <option value="GO">Goiás</option>
+                                                <option value="MA">Maranhão</option>
+                                                <option value="MT">Mato Grosso</option>
+                                                <option value="MS">Mato Grosso do Sul</option>
+                                                <option value="MG">Minas Gerais</option>
+                                                <option value="PA">Pará</option>
+                                                <option value="PB">Paraíba</option>
+                                                <option value="PR">Paraná</option>
+                                                <option value="PE">Pernambuco</option>
+                                                <option value="PI">Piauí</option>
+                                                <option value="RJ">Rio de Janeiro</option>
+                                                <option value="RN">Rio Grande do Norte</option>
+                                                <option value="RS">Rio Grande do Sul</option>
+                                                <option value="RO">Rondônia</option>
+                                                <option value="RR">Roraima</option>
+                                                <option value="SC">Santa Catarina</option>
+                                                <option value="SP">São Paulo</option>
+                                                <option value="SE">Sergipe</option>
+                                                <option value="TO">Tocantins</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
@@ -323,6 +384,9 @@ $(document).ready(function() {
     
     // Máscara para CVV
     $('#card_cvv').mask('0000');
+    
+    // Máscara para CEP
+    $('#cc_postal_code').mask('00000-000');
     
     // Submissão do formulário PIX
     $('#pixForm').on('submit', function(e) {
@@ -485,11 +549,82 @@ $(document).ready(function() {
     $('#creditCardForm').on('submit', function(e) {
         e.preventDefault();
         
+        console.log('=== INÍCIO SUBMISSÃO CARTÃO ===');
+        console.log('Form action:', $(this).attr('action'));
+        console.log('Form data:', $(this).serialize());
+        
+        // Prevenir múltiplas submissões
+        var submitButton = $(this).find('button[type="submit"]');
+        if (submitButton.prop('disabled')) {
+            return false;
+        }
+        
+        submitButton.prop('disabled', true).text('Processando...');
+        
         // Mostrar modal de loading
         $('#loadingModal').modal('show');
         
-        // Submeter o formulário
-        this.submit();
+        // Fazer requisição AJAX
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: $(this).serialize(),
+            timeout: 90000,
+            success: function(response) {
+                $('#loadingModal').modal('hide');
+                
+                console.log('Resposta do Cartão:', response);
+                
+                if (response.success) {
+                    // Mostrar sucesso e redirecionar para status
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pagamento Processado!',
+                        text: 'Seu pagamento com cartão foi enviado para processamento.',
+                        confirmButtonText: 'Ver Status',
+                        confirmButtonColor: '#28a745'
+                    }).then(() => {
+                        // Redirecionar para página de status
+                        window.location.href = '/payments/' + response.payment_id + '/status';
+                    });
+                } else {
+                    // Reabilitar botão
+                    submitButton.prop('disabled', false).text('Pagar R$ {{ number_format($amount, 2, ",", ".") }}');
+                    
+                    alert('Erro ao processar pagamento: ' + (response.message || 'Tente novamente'));
+                }
+            },
+            error: function(xhr) {
+                $('#loadingModal').modal('hide');
+                
+                console.error('Erro na requisição Cartão:', {
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                    responseText: xhr.responseText,
+                    responseJSON: xhr.responseJSON
+                });
+                
+                // Reabilitar botão
+                submitButton.prop('disabled', false).text('Pagar R$ {{ number_format($amount, 2, ",", ".") }}');
+                
+                var errorMsg = 'Erro ao processar pagamento. Verifique os dados do cartão e tente novamente.';
+                
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    var errors = Object.values(xhr.responseJSON.errors).flat();
+                    errorMsg = errors.join('\n');
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro no Pagamento',
+                    text: errorMsg,
+                    confirmButtonText: 'Tentar Novamente',
+                    confirmButtonColor: '#d33'
+                });
+            }
+        });
     });
     
     // Validação em tempo real do cartão
