@@ -295,6 +295,55 @@
                 </span>
             </div>
             
+            @if($payment->billing_type === 'CREDIT_CARD' && isset($payment->asaas_response['installment']) && isset($payment->asaas_response['installmentNumber']))
+                @php
+                    // Buscar informações de parcelamento via API do Asaas
+                    $installmentInfo = null;
+                    if ($payment->asaas_response['installment']) {
+                        try {
+                            $asaasService = app(\App\Services\AsaasService::class);
+                            $installmentData = $asaasService->getInstallment($payment->asaas_response['installment']);
+                            
+                            if ($installmentData && isset($installmentData['installmentCount']) && $installmentData['installmentCount'] > 1) {
+                                 $installmentInfo = [
+                                     'current' => $payment->asaas_response['installmentNumber'] ?? 1,
+                                     'total' => $installmentData['installmentCount'],
+                                     'value' => $installmentData['paymentValue'] ?? ($payment->asaas_response['value'] ?? $payment->amount)
+                                 ];
+                             }
+                        } catch (\Exception $e) {
+                            // Em caso de erro na API, tentar usar dados locais como fallback
+                            \Log::warning('Erro ao buscar dados de parcelamento do Asaas', [
+                                'payment_id' => $payment->id,
+                                'installment_id' => $payment->asaas_response['installment'],
+                                'error' => $e->getMessage()
+                            ]);
+                            
+                            // Fallback: buscar outros pagamentos da mesma parcela localmente
+                            $relatedPayments = \App\Models\Payment::where('asaas_response->installment', $payment->asaas_response['installment'])->get();
+                            $totalInstallments = $relatedPayments->count();
+                            
+                            if ($totalInstallments > 1) {
+                                $installmentInfo = [
+                                    'current' => $payment->asaas_response['installmentNumber'] ?? 1,
+                                    'total' => $totalInstallments,
+                                    'value' => $payment->asaas_response['value'] ?? $payment->amount
+                                ];
+                            }
+                        }
+                    }
+                @endphp
+                
+                @if($installmentInfo)
+                    <div class="info-row">
+                        <span class="info-label">Parcelamento:</span>
+                        <span class="info-value">
+                            {{ $installmentInfo['total'] }}x R$ {{ number_format($installmentInfo['value'], 2, ',', '.') }}
+                        </span>
+                    </div>
+                @endif
+            @endif
+            
             <div class="info-row">
                 <span class="info-label">Status:</span>
                 <span class="info-value">

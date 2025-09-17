@@ -364,6 +364,23 @@ class AsaasService
     }
 
     /**
+     * Buscar informações de parcelamento
+     */
+    public function getInstallment($installmentId)
+    {
+        try {
+            $response = $this->client->get("installments/{$installmentId}");
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (RequestException $e) {
+            Log::error('Erro ao buscar parcelamento no Asaas', [
+                'error' => $e->getMessage(),
+                'installment_id' => $installmentId
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
      * Atualizar assinatura no Asaas
      */
     public function updateSubscription($subscriptionId, $data)

@@ -99,13 +99,13 @@
             <div class="col-md-6">
                 <div class="info-section">
                     <label class="info-label">Nome</label>
-                    <div class="info-value">{{ $payment->user->name ?? 'KARAOKÊ CLUBE' }}</div>
+                    <div class="info-value">{{ $payment->company->fantasy_name ?? $payment->company->corporate_name ?? 'KARAOKÊ CLUBE' }}</div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="info-section">
                     <label class="info-label">Email</label>
-                    <div class="info-value">{{ $payment->user->email ?? 'agenciabardigital@gmail.com' }}</div>
+                    <div class="info-value">{{ $payment->company->email ?? 'agenciabardigital@gmail.com' }}</div>
                 </div>
             </div>
         </div>
@@ -166,6 +166,46 @@
         @elseif($payment->billing_type === 'CREDIT_CARD')
             <div class="credit-card-section">
                 <span class="badge bg-primary fs-6"><i class="bi bi-credit-card me-1"></i>Cartão de Crédito</span>
+                
+                @php
+                    $installmentInfo = null;
+                    
+                    // Buscar informações de parcelamento da API do Asaas
+                    if ($payment->asaas_response && isset($payment->asaas_response['installment'])) {
+                        try {
+                            $asaasService = app(App\Services\AsaasService::class);
+                            $installmentData = $asaasService->getInstallment($payment->asaas_response['installment']);
+                            
+                            if ($installmentData && isset($installmentData['installmentCount'], $installmentData['paymentValue'])) {
+                                $installmentInfo = [
+                                    'count' => $installmentData['installmentCount'],
+                                    'value' => $installmentData['paymentValue']
+                                ];
+                            }
+                        } catch (Exception $e) {
+                            \Log::error('Erro ao buscar parcelamento na modal de status', [
+                                'error' => $e->getMessage(),
+                                'payment_id' => $payment->id,
+                                'installment_id' => $payment->asaas_response['installment'] ?? null
+                            ]);
+                        }
+                    }
+                    
+                    // Fallback: buscar localmente se não conseguiu da API
+                    if (!$installmentInfo && $payment->asaas_response && isset($payment->asaas_response['installmentCount'])) {
+                        $installmentInfo = [
+                            'count' => $payment->asaas_response['installmentCount'],
+                            'value' => $payment->amount / $payment->asaas_response['installmentCount']
+                        ];
+                    }
+                @endphp
+                
+                @if($installmentInfo && $installmentInfo['count'] > 1)
+                    <div class="mt-2">
+                        <small class="text-muted d-block">Parcelamento:</small>
+                        <span class="fw-bold">{{ $installmentInfo['count'] }}x R$ {{ number_format($installmentInfo['value'], 2, ',', '.') }}</span>
+                    </div>
+                @endif
             </div>
         @else
             <div class="other-payment-section">

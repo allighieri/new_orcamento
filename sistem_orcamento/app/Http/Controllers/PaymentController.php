@@ -913,6 +913,8 @@ class PaymentController extends Controller
      */
     public function status(Payment $payment)
     {
+        // Carregar relacionamento company
+        $payment->load('company');
 
         // Verificar se o pagamento pertence à empresa do usuário
         if ($payment->company_id !== Auth::user()->company_id) {
