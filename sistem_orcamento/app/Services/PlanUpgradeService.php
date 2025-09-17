@@ -66,10 +66,12 @@ class PlanUpgradeService
 
             // Criar ou atualizar controle de uso para nova assinatura com orçamentos herdados
             // Usa método especial que reseta todos os valores para evitar manter dados antigos
+            // Para planos ilimitados (como Ouro), sempre zera todos os campos
+            $finalInheritedBudgets = $newPlan->isUnlimited() ? 0 : $inheritedBudgets;
             $newUsageControl = UsageControl::getOrCreateForCurrentMonthWithReset(
                 $oldSubscription->company_id,
                 $newSubscription->id,
-                $inheritedBudgets // Orçamentos não utilizados viram herdados
+                $finalInheritedBudgets
             );
 
             DB::commit();
@@ -104,12 +106,12 @@ class PlanUpgradeService
         $oldPlan = $oldSubscription->plan;
         
         // Se o plano antigo era ilimitado, não herda nada
-        if ($oldPlan->budget_limit === 0) {
+        if ($oldPlan->isUnlimited()) {
             return 0;
         }
 
         // Se o novo plano é ilimitado, não precisa herdar
-        if ($newPlan->budget_limit === 0) {
+        if ($newPlan->isUnlimited()) {
             return 0;
         }
 

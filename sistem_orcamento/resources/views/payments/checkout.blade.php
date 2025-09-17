@@ -115,7 +115,7 @@
                                         <div class="mb-3">
                                             <label for="pix_name" class="form-label">Nome Completo</label>
                                             <input type="text" class="form-control" id="pix_name" name="name" 
-                                                   value="{{ auth()->user()->name }}" required>
+                                                   value="{{ auth()->user()->company->fantasy_name ?? auth()->user()->name }}" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -176,7 +176,7 @@
                                         <div class="mb-3">
                                             <label for="cc_name" class="form-label">Nome Completo</label>
                                             <input type="text" class="form-control" id="cc_name" name="name" 
-                                                   value="{{ auth()->user()->name }}" required>
+                                                   value="{{ auth()->user()->company->fantasy_name ?? auth()->user()->name }}" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -193,7 +193,7 @@
                                         <div class="mb-3">
                                             <label for="cc_email" class="form-label">E-mail</label>
                                             <input type="email" class="form-control" id="cc_email" name="email" 
-                                                   value="{{ auth()->user()->email }}" required>
+                                                   value="{{ auth()->user()->company->email ?? auth()->user()->email }}" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -212,21 +212,21 @@
                                         <div class="mb-3">
                                             <label for="cc_postal_code" class="form-label">CEP</label>
                                             <input type="text" class="form-control" id="cc_postal_code" name="postal_code" 
-                                                   placeholder="00000-000" maxlength="9" required>
+                                                   value="{{ auth()->user()->company->cep ?? '' }}" placeholder="00000-000" maxlength="9" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="cc_address" class="form-label">Logradouro</label>
                                             <input type="text" class="form-control" id="cc_address" name="address" 
-                                                   placeholder="Rua, Avenida, etc." required>
+                                                   value="{{ auth()->user()->company->address ?? '' }} {{ auth()->user()->company->address_line_2 ?? '' }}" placeholder="Rua, Avenida, etc." required>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="mb-3">
                                             <label for="cc_address_number" class="form-label">Número</label>
                                             <input type="text" class="form-control" id="cc_address_number" name="address_number" 
-                                                   placeholder="123" required>
+                                                   value="" placeholder="07" required>
                                         </div>
                                     </div>
                                 </div>
@@ -235,48 +235,48 @@
                                         <div class="mb-3">
                                             <label for="cc_district" class="form-label">Bairro</label>
                                             <input type="text" class="form-control" id="cc_district" name="district" 
-                                                   placeholder="Bairro" required>
+                                                   value="{{ auth()->user()->company->district ?? '' }}" placeholder="Bairro" required>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="cc_city" class="form-label">Cidade</label>
                                             <input type="text" class="form-control" id="cc_city" name="city" 
-                                                   placeholder="Cidade" required>
+                                                   value="{{ auth()->user()->company->city ?? '' }}" placeholder="Cidade" required>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="cc_state" class="form-label">Estado</label>
                                             <select class="form-select" id="cc_state" name="state" required>
-                                                <option value="">Selecione</option>
-                                                <option value="AC">Acre</option>
-                                                <option value="AL">Alagoas</option>
-                                                <option value="AP">Amapá</option>
-                                                <option value="AM">Amazonas</option>
-                                                <option value="BA">Bahia</option>
-                                                <option value="CE">Ceará</option>
-                                                <option value="DF">Distrito Federal</option>
-                                                <option value="ES">Espírito Santo</option>
-                                                <option value="GO">Goiás</option>
-                                                <option value="MA">Maranhão</option>
-                                                <option value="MT">Mato Grosso</option>
-                                                <option value="MS">Mato Grosso do Sul</option>
-                                                <option value="MG">Minas Gerais</option>
-                                                <option value="PA">Pará</option>
-                                                <option value="PB">Paraíba</option>
-                                                <option value="PR">Paraná</option>
-                                                <option value="PE">Pernambuco</option>
-                                                <option value="PI">Piauí</option>
-                                                <option value="RJ">Rio de Janeiro</option>
-                                                <option value="RN">Rio Grande do Norte</option>
-                                                <option value="RS">Rio Grande do Sul</option>
-                                                <option value="RO">Rondônia</option>
-                                                <option value="RR">Roraima</option>
-                                                <option value="SC">Santa Catarina</option>
-                                                <option value="SP">São Paulo</option>
-                                                <option value="SE">Sergipe</option>
-                                                <option value="TO">Tocantins</option>
+                                                <option value="" {{ empty(auth()->user()->company->state) ? 'selected' : '' }}>Selecione</option>
+                                                <option value="AC" {{ (auth()->user()->company->state ?? '') == 'AC' ? 'selected' : '' }}>Acre</option>
+                                                <option value="AL" {{ (auth()->user()->company->state ?? '') == 'AL' ? 'selected' : '' }}>Alagoas</option>
+                                                <option value="AP" {{ (auth()->user()->company->state ?? '') == 'AP' ? 'selected' : '' }}>Amapá</option>
+                                                <option value="AM" {{ (auth()->user()->company->state ?? '') == 'AM' ? 'selected' : '' }}>Amazonas</option>
+                                                <option value="BA" {{ (auth()->user()->company->state ?? '') == 'BA' ? 'selected' : '' }}>Bahia</option>
+                                                <option value="CE" {{ (auth()->user()->company->state ?? '') == 'CE' ? 'selected' : '' }}>Ceará</option>
+                                                <option value="DF" {{ (auth()->user()->company->state ?? '') == 'DF' ? 'selected' : '' }}>Distrito Federal</option>
+                                                <option value="ES" {{ (auth()->user()->company->state ?? '') == 'ES' ? 'selected' : '' }}>Espírito Santo</option>
+                                                <option value="GO" {{ (auth()->user()->company->state ?? '') == 'GO' ? 'selected' : '' }}>Goiás</option>
+                                                <option value="MA" {{ (auth()->user()->company->state ?? '') == 'MA' ? 'selected' : '' }}>Maranhão</option>
+                                                <option value="MT" {{ (auth()->user()->company->state ?? '') == 'MT' ? 'selected' : '' }}>Mato Grosso</option>
+                                                <option value="MS" {{ (auth()->user()->company->state ?? '') == 'MS' ? 'selected' : '' }}>Mato Grosso do Sul</option>
+                                                <option value="MG" {{ (auth()->user()->company->state ?? '') == 'MG' ? 'selected' : '' }}>Minas Gerais</option>
+                                                <option value="PA" {{ (auth()->user()->company->state ?? '') == 'PA' ? 'selected' : '' }}>Pará</option>
+                                                <option value="PB" {{ (auth()->user()->company->state ?? '') == 'PB' ? 'selected' : '' }}>Paraíba</option>
+                                                <option value="PR" {{ (auth()->user()->company->state ?? '') == 'PR' ? 'selected' : '' }}>Paraná</option>
+                                                <option value="PE" {{ (auth()->user()->company->state ?? '') == 'PE' ? 'selected' : '' }}>Pernambuco</option>
+                                                <option value="PI" {{ (auth()->user()->company->state ?? '') == 'PI' ? 'selected' : '' }}>Piauí</option>
+                                                <option value="RJ" {{ (auth()->user()->company->state ?? '') == 'RJ' ? 'selected' : '' }}>Rio de Janeiro</option>
+                                                <option value="RN" {{ (auth()->user()->company->state ?? '') == 'RN' ? 'selected' : '' }}>Rio Grande do Norte</option>
+                                                <option value="RS" {{ (auth()->user()->company->state ?? '') == 'RS' ? 'selected' : '' }}>Rio Grande do Sul</option>
+                                                <option value="RO" {{ (auth()->user()->company->state ?? '') == 'RO' ? 'selected' : '' }}>Rondônia</option>
+                                                <option value="RR" {{ (auth()->user()->company->state ?? '') == 'RR' ? 'selected' : '' }}>Roraima</option>
+                                                <option value="SC" {{ (auth()->user()->company->state ?? '') == 'SC' ? 'selected' : '' }}>Santa Catarina</option>
+                                                <option value="SP" {{ (auth()->user()->company->state ?? '') == 'SP' ? 'selected' : '' }}>São Paulo</option>
+                                                <option value="SE" {{ (auth()->user()->company->state ?? '') == 'SE' ? 'selected' : '' }}>Sergipe</option>
+                                                <option value="TO" {{ (auth()->user()->company->state ?? '') == 'TO' ? 'selected' : '' }}>Tocantins</option>
                                             </select>
                                         </div>
                                     </div>
@@ -404,13 +404,16 @@ $(document).ready(function() {
     // Máscara para CEP
     $('#cc_postal_code').mask('00000-000');
     
+    // Máscara para número do endereço (somente números)
+    $('#cc_address_number').mask('0000000000');
+    
     // Busca automática de endereço por CEP
     $('#cc_postal_code').on('input', function() {
         var cep = $(this).val().replace(/\D/g, '');
         
         if (cep.length === 8) {
             // Exibe loading nos campos
-            $('#cc_address, #cc_district, #cc_city, #cc_state').prop('disabled', true);
+            $('#cc_address, #cc_district, #cc_city').prop('disabled', true);
             $('#cc_address').val('Carregando...');
             $('#cc_district').val('Carregando...');
             $('#cc_city').val('Carregando...');
@@ -439,8 +442,8 @@ $(document).ready(function() {
                         });
                         $('#cc_address, #cc_district, #cc_city, #cc_state').val('');
                     }
-                    // Reabilita os campos
-                    $('#cc_address, #cc_district, #cc_city').prop('disabled', false);
+                    // Reabilita os campos (mantém editáveis)
+                $('#cc_address, #cc_district, #cc_city').prop('disabled', false);
                 },
                 error: function() {
                     Swal.fire({
@@ -454,8 +457,8 @@ $(document).ready(function() {
                         timerProgressBar: true
                     });
                     $('#cc_address, #cc_district, #cc_city, #cc_state').val('');
-                    // Reabilita os campos
-                    $('#cc_address, #cc_district, #cc_city').prop('disabled', false);
+                    // Reabilita os campos (mantém editáveis)
+                $('#cc_address, #cc_district, #cc_city').prop('disabled', false);
                 }
             });
         } else {

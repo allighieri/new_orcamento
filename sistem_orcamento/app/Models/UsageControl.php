@@ -42,8 +42,8 @@ class UsageControl extends Model
     {
         $planLimit = $this->subscription->plan->budget_limit;
         
-        // Se o plano tem limite ilimitado (0), sempre pode criar
-        if ($planLimit === 0) {
+        // Se o plano tem limite ilimitado (null ou 0), sempre pode criar
+        if ($this->subscription->plan->isUnlimited()) {
             return true;
         }
         
@@ -60,8 +60,8 @@ class UsageControl extends Model
     {
         $planLimit = $this->subscription->plan->budget_limit;
         
-        // Se ainda tem orçamentos do plano base
-        if ($this->budgets_used < $planLimit) {
+        // Se ainda tem orçamentos do plano base (apenas para planos limitados)
+        if (!$this->subscription->plan->isUnlimited() && $this->budgets_used < $planLimit) {
             $this->increment('budgets_used');
         }
         // Se tem orçamentos extras disponíveis
@@ -81,8 +81,8 @@ class UsageControl extends Model
     {
         $planLimit = $this->subscription->plan->budget_limit;
         
-        // Se o plano tem limite ilimitado (0)
-        if ($planLimit === 0) {
+        // Se o plano tem limite ilimitado (null ou 0)
+        if ($this->subscription->plan->isUnlimited()) {
             return PHP_INT_MAX;
         }
         
@@ -99,8 +99,8 @@ class UsageControl extends Model
     {
         $planLimit = $this->subscription->plan->budget_limit;
         
-        // Se o plano tem limite ilimitado (0)
-        if ($planLimit === 0) {
+        // Se o plano tem limite ilimitado (null ou 0)
+        if ($this->subscription->plan->isUnlimited()) {
             return false;
         }
         

@@ -434,13 +434,20 @@ class ProcessAsaasWebhook implements ShouldQueue
                 return 'extra_budgets';
             }
             
-            Log::info('DEBUG: Detectado como assinatura normal', [
+            // CORREÇÃO: Se já tem assinatura ativa, mesmo sendo o mesmo plano,
+            // deve ser tratado como mudança de plano para herdar orçamentos corretamente
+            Log::info('DEBUG: Mesmo plano com assinatura ativa - tratando como plan_change', [
                 'payment_id' => $payment->id,
-                'same_plan' => true
+                'same_plan' => true,
+                'active_subscription_id' => $activeSubscription->id
             ]);
             
-            // Por padrão, é uma assinatura normal
-            return 'subscription';
+            // Verificar se é anual ou mensal baseado no billing_cycle
+            if ($payment->billing_cycle === 'annual') {
+                return 'plan_change_annual';
+            } else {
+                return 'plan_change';
+            }
             
         } catch (\Exception $e) {
             Log::error('Erro ao detectar tipo de pagamento', [
@@ -604,13 +611,24 @@ class ProcessAsaasWebhook implements ShouldQueue
             'subscription_id' => $newSubscription->id
         ]);
         
+        // Criar controle de uso para a nova assinatura
+        // Para planos ilimitados (como Ouro), zerar todos os orçamentos herdados
+        $inheritedBudgets = $plan->isUnlimited() ? 0 : 0; // Sempre 0 para novos pagamentos de assinatura
+        $usageControl = \App\Models\UsageControl::getOrCreateForCurrentMonthWithReset(
+            $payment->company_id,
+            $newSubscription->id,
+            $inheritedBudgets
+        );
+        
         Log::info('Nova assinatura criada e payment atualizado (fila)', [
             'payment_id' => $payment->id,
             'company_id' => $payment->company_id,
             'new_subscription_id' => $newSubscription->id,
             'plan_id' => $plan->id,
             'billing_cycle' => $payment->billing_cycle,
-            'amount' => $payment->amount
+            'amount' => $payment->amount,
+            'usage_control_created' => true,
+            'inherited_budgets' => $inheritedBudgets
         ]);
     }
 
