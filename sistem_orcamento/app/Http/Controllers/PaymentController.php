@@ -649,7 +649,7 @@ class PaymentController extends Controller
                     'asaas_payment_id' => $asaasPayment['id'], // ID da cobrança única
                     'asaas_subscription_id' => null, // Não há assinatura recorrente
                     'asaas_customer_id' => $customer['id'],
-                    'amount' => $asaasPayment['value'] ?? $asaasPayment['totalValue'], // Valor do pagamento
+                    'amount' => $plan->monthly_price, // Valor total do plano mensal
                     'billing_type' => 'CREDIT_CARD',
                     'type' => $paymentType,
                     'status' => 'PENDING',

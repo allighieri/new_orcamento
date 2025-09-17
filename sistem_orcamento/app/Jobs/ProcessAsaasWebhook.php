@@ -304,8 +304,36 @@ class ProcessAsaasWebhook implements ShouldQueue
      */
     private function handlePaymentApproved(Payment $payment, array $paymentData, PlanUpgradeService $planUpgradeService)
     {
-        // Atualizar status do pagamento
-        $payment->updateStatus($paymentData['status'], $paymentData);
+        // Atualizar status do pagamento e corrigir valor se necessário
+        $updateData = ['status' => strtolower($paymentData['status'])];
+        
+        // Para pagamentos de planos mensais/anuais, garantir que o valor seja o valor total do plano
+        if ($payment->plan_id && in_array($payment->type, ['subscription', 'plan_change', null])) {
+            $plan = \App\Models\Plan::find($payment->plan_id);
+            if ($plan) {
+                $correctAmount = $payment->billing_cycle === 'annual' ? $plan->yearly_price : $plan->monthly_price;
+                if (abs($payment->amount - $correctAmount) > 0.01) {
+                    $updateData['amount'] = $correctAmount;
+                    Log::info('Valor do pagamento corrigido no webhook', [
+                        'payment_id' => $payment->id,
+                        'old_amount' => $payment->amount,
+                        'new_amount' => $correctAmount,
+                        'plan_id' => $plan->id,
+                        'billing_cycle' => $payment->billing_cycle
+                    ]);
+                }
+            }
+        }
+        
+        $payment->update($updateData);
+        
+        if (isset($paymentData) && $paymentData) {
+            $payment->update(['asaas_response' => $paymentData]);
+        }
+        
+        if (in_array(strtolower($paymentData['status']), ['confirmed', 'received']) && !$payment->confirmed_at) {
+            $payment->update(['confirmed_at' => now()]);
+        }
         
         Log::info('DEBUG: Iniciando processamento de pagamento aprovado', [
             'payment_id' => $payment->id,
