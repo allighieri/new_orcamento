@@ -2,8 +2,9 @@
     // Definição única das traduções de status para uso em todo o arquivo
     $statusTranslations = [
         'PENDING' => 'Pendente',
-        'RECEIVED' => 'Pago',
-        'CONFIRMED' => 'Pago',
+        'RECEIVED' => 'Efetuado',
+        'CONFIRMED' => 'Efetuado',
+        'confirmed' => 'Efetuado',
         'OVERDUE' => 'Vencido',
         'REFUNDED' => 'Reembolsado',
         'RECEIVED_IN_CASH' => 'Pago em Dinheiro',

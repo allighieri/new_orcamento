@@ -201,7 +201,8 @@
                                     'PENDING' => 'Pendente',
                                     'RECEIVED' => 'Efetuado',
                                     'received' => 'Efetuado',
-                                    'CONFIRMED' => 'Confirmado',
+                                    'CONFIRMED' => 'Efetuado',
+                                    'confirmed' => 'Efetuado',
                                     'OVERDUE' => 'Vencido',
                                     'CANCELLED' => 'Cancelado',
                                     'paid' => 'Efetuado',
@@ -212,7 +213,7 @@
                                 ];
                                 $translatedStatus = $statusTranslations[$payment->status] ?? ucfirst($payment->status);
                             @endphp
-                            @if($payment->status === 'paid' || $payment->status === 'RECEIVED' || $payment->status === 'received' || $payment->status === 'CONFIRMED')
+                            @if($payment->status === 'paid' || $payment->status === 'RECEIVED' || $payment->status === 'received' || $payment->status === 'CONFIRMED' || $payment->status === 'confirmed')
                                 <span class="badge bg-success">Efetuado</span>
                             @elseif($payment->status === 'pending' || $payment->status === 'PENDING')
                                 <span class="badge bg-warning">Pendente</span>
@@ -238,6 +239,12 @@
                                                         onclick="showPaymentStatus({{ $payment->id }})" title="Ver Status">
                                                     <i class="bi bi-info-circle"></i>
                                                 </button>
+                                                @if($payment->status === 'paid' || $payment->status === 'RECEIVED' || $payment->status === 'received' || $payment->status === 'CONFIRMED' || $payment->status === 'confirmed')
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                            onclick="generateReceipt({{ $payment->id }})" title="Gerar Recibo">
+                                                        <i class="bi bi-receipt"></i>
+                                                    </button>
+                                                @endif
                                                 @if($payment->status === 'pending' || $payment->status === 'PENDING')
                                                     <button type="button" class="btn btn-sm btn-outline-danger" 
                                                             onclick="cancelPayment({{ $payment->id }})" title="Cancelar Pagamento">
@@ -373,6 +380,13 @@ function cancelPayment(paymentId) {
             });
         }
     });
+}
+
+// Função para gerar recibo
+function generateReceipt(paymentId) {
+    // Abrir recibo em nova janela
+    const receiptUrl = `/payments/${paymentId}/receipt`;
+    window.open(receiptUrl, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
 }
 </script>
 @endpush

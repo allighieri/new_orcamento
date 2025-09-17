@@ -87,11 +87,12 @@
                 @php
                     $statusTranslations = [
                         'PENDING' => 'Pendente',
-                        'RECEIVED' => 'Pago',
-                        'CONFIRMED' => 'Confirmado',
+                        'RECEIVED' => 'Efetuado',
+                        'CONFIRMED' => 'Efetuado',
+                        'confirmed' => 'Efetuado',
                         'OVERDUE' => 'Vencido',
                         'CANCELLED' => 'Cancelado',
-                        'paid' => 'Pago',
+                        'paid' => 'Efetuado',
                         'pending' => 'Pendente',
                         'overdue' => 'Vencido',
                         'cancelled' => 'Cancelado',

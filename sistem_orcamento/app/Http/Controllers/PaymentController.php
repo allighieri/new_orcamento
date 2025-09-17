@@ -792,8 +792,8 @@ class PaymentController extends Controller
     {
         return match(strtolower($status)) {
             'pending' => 'Aguardando Pagamento',
-            'received' => 'Pago',
-            'confirmed' => 'Confirmado',
+            'received' => 'Efetuado',
+            'confirmed' => 'Efetuado',
             'overdue' => 'Vencido',
             'cancelled' => 'Cancelado',
             default => ucfirst($status)

@@ -92,7 +92,7 @@
                                     };
                                     $localStatusText = match($payment->status) {
                                         'pending' => 'Pendente',
-                                        'paid' => 'Pago',
+                                        'paid' => 'Efetuado',
                                         'cancelled' => 'Cancelado',
                                         'expired' => 'Expirado',
                                         default => ucfirst($payment->status)
@@ -112,7 +112,8 @@
                                         $asaasStatusText = match($asaasPayment['status']) {
                                             'PENDING' => 'Pendente',
                                             'RECEIVED' => 'Recebido',
-                                            'CONFIRMED' => 'Confirmado',
+                                            'CONFIRMED' => 'Efetuado',
+                                            'confirmed' => 'Efetuado',
                                             'OVERDUE' => 'Vencido',
                                             'REFUNDED' => 'Reembolsado',
                                             default => $asaasPayment['status']
@@ -230,7 +231,7 @@
 
 <div class="modal-footer">
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-    @if($payment->status === 'paid' || ($asaasPayment && in_array($asaasPayment['status'], ['RECEIVED', 'CONFIRMED'])))
+    @if($payment->status === 'paid' || $payment->status === 'confirmed' || ($asaasPayment && in_array($asaasPayment['status'], ['RECEIVED', 'CONFIRMED'])))
         <button type="button" class="btn btn-success me-2" onclick="generateReceipt({{ $payment->id }})">
             <i class="fas fa-receipt"></i> Gerar Recibo
         </button>

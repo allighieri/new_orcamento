@@ -48,11 +48,12 @@
                         @php
                     $statusTranslations = [
                         'PENDING' => 'Pendente',
-                        'RECEIVED' => 'Pago',
-                        'CONFIRMED' => 'Confirmado',
+                        'RECEIVED' => 'Efetuado',
+                        'CONFIRMED' => 'Efetuado',
+                        'confirmed' => 'Efetuado',
                         'OVERDUE' => 'Vencido',
                         'CANCELLED' => 'Cancelado',
-                        'paid' => 'Pago',
+                        'paid' => 'Efetuado',
                         'pending' => 'Pendente',
                         'overdue' => 'Vencido',
                         'cancelled' => 'Cancelado',
@@ -60,7 +61,7 @@
                     ];
                     $translatedStatus = $statusTranslations[$payment->status] ?? ucfirst($payment->status);
                 @endphp
-                @if($payment->status === 'RECEIVED' || $payment->status === 'CONFIRMED')
+                @if($payment->status === 'RECEIVED' || $payment->status === 'CONFIRMED' || $payment->status === 'confirmed')
                     <span class="badge bg-success">Pago</span>
                 @elseif($payment->status === 'PENDING')
                     <span class="badge bg-warning">Pendente</span>
