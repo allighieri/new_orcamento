@@ -113,7 +113,7 @@
     <div class="row justify-content-center mt-4">
         <div class="col-lg-12">
             <div class="alert alert-info text-center">
-                <i class="mdi mdi-information me-2"></i>
+                <i class="bi bi-info-circle me-2"></i>
                 <strong>Plano Atual:</strong> {{ $currentSubscription->plan->name }} 
                 (válido até {{ $currentSubscription->ends_at->format('d/m/Y') }})
             </div>

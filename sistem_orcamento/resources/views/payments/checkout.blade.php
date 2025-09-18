@@ -93,6 +93,8 @@
                         </li>
                     </ul>
 
+                    <hr />
+
                     <div class="tab-content" id="paymentTabsContent">
                         <!-- PIX -->
                         <div class="tab-pane fade show active" id="pix" role="tabpanel">
@@ -139,7 +141,7 @@
                                         <div class="mb-3">
                                             <label for="pix_phone" class="form-label">Telefone</label>
                                             <input type="text" class="form-control" id="pix_phone" name="phone" 
-                                                   value="{{ auth()->user()->company->phone ?? '' }}" placeholder="(11) 99999-9999" required>
+                                                   value="{{ auth()->user()->company->phone ?? '' }}" placeholder="(61) 99999-9999" required>
                                         </div>
                                     </div>
                                 </div>
@@ -171,82 +173,79 @@
                                 </div>
 
                                 <!-- Dados do Cliente -->
-                                <h6 class="mb-3">Dados do Titular</h6>
+                                <h6 class="mb-3 fw-bold">Dados do Titular</h6>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="cc_name" class="form-label">Nome Completo</label>
                                             <input type="text" class="form-control" id="cc_name" name="name" 
                                                    value="{{ auth()->user()->company->fantasy_name ?? auth()->user()->name }}" required>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-2">
                                         <div class="mb-3">
                                             <label for="cc_cpf_cnpj" class="form-label">CPF/CNPJ</label>
                                             <input type="text" class="form-control" id="cc_cpf_cnpj" name="cpf_cnpj" 
                                                    placeholder="000.000.000-00" value="{{ auth()->user()->company->document_number ?? '' }}" required>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6">
+                                
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="cc_email" class="form-label">E-mail</label>
                                             <input type="email" class="form-control" id="cc_email" name="email" 
                                                    value="{{ auth()->user()->company->email ?? auth()->user()->email }}" required>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-2">
                                         <div class="mb-3">
                                             <label for="cc_phone" class="form-label">Telefone</label>
                                             <input type="text" class="form-control" id="cc_phone" name="phone" 
-                                                   value="{{ auth()->user()->company->phone ?? '' }}" placeholder="(11) 99999-9999" required>
+                                                   value="{{ auth()->user()->company->phone ?? '' }}" placeholder="(61) 99999-9999" required>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Endereço do Titular -->
-                                <h6 class="mb-3 mt-4">Endereço do Titular</h6>
+                                <h6 class="mb-3 mt-4 fw-bold">Endereço do Titular</h6>
                                 <div class="row">
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <div class="mb-3">
                                             <label for="cc_postal_code" class="form-label">CEP</label>
                                             <input type="text" class="form-control" id="cc_postal_code" name="postal_code" 
                                                    value="{{ auth()->user()->company->cep ?? '' }}" placeholder="00000-000" maxlength="9" required>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-3">
                                         <div class="mb-3">
                                             <label for="cc_address" class="form-label">Logradouro</label>
                                             <input type="text" class="form-control" id="cc_address" name="address" 
                                                    value="{{ auth()->user()->company->address ?? '' }} {{ auth()->user()->company->address_line_2 ?? '' }}" placeholder="Rua, Avenida, etc." required>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-1">
                                         <div class="mb-3">
                                             <label for="cc_address_number" class="form-label">Número</label>
                                             <input type="text" class="form-control" id="cc_address_number" name="address_number" 
                                                    value="" placeholder="07" required>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4">
+                               
+                                    <div class="col-md-2">
                                         <div class="mb-3">
                                             <label for="cc_district" class="form-label">Bairro</label>
                                             <input type="text" class="form-control" id="cc_district" name="district" 
                                                    value="{{ auth()->user()->company->district ?? '' }}" placeholder="Bairro" required>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-2">
                                         <div class="mb-3">
                                             <label for="cc_city" class="form-label">Cidade</label>
                                             <input type="text" class="form-control" id="cc_city" name="city" 
                                                    value="{{ auth()->user()->company->city ?? '' }}" placeholder="Cidade" required>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-2">
                                         <div class="mb-3">
                                             <label for="cc_state" class="form-label">Estado</label>
                                             <select class="form-select" id="cc_state" name="state" required>
@@ -284,26 +283,24 @@
                                 </div>
 
                                 <!-- Dados do Cartão -->
-                                <h6 class="mb-3 mt-4">Dados do Cartão</h6>
+                                <h6 class="mb-3 mt-4 fw-bold">Dados do Cartão</h6>
                                 <div class="row">
-                                    <div class="col-md-8">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="card_number" class="form-label">Número do Cartão</label>
                                             <input type="text" class="form-control" id="card_number" name="card_number" 
                                                    placeholder="0000 0000 0000 0000" maxlength="19" required>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-1">
                                         <div class="mb-3">
                                             <label for="card_cvv" class="form-label">CVV</label>
                                             <input type="text" class="form-control" id="card_cvv" name="card_cvv" 
                                                    placeholder="123" maxlength="4" required>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6">
+                                
+                                    <div class="col-md-2">
                                         <div class="mb-3">
                                             <label for="card_expiry_month" class="form-label">Mês de Vencimento</label>
                                             <select class="form-select" id="card_expiry_month" name="card_expiry_month" required>
@@ -314,7 +311,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-2">
                                         <div class="mb-3">
                                             <label for="card_expiry_year" class="form-label">Ano de Vencimento</label>
                                             <select class="form-select" id="card_expiry_year" name="card_expiry_year" required>
@@ -325,39 +322,39 @@
                                             </select>
                                         </div>
                                     </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="card_holder_name" class="form-label">Nome no Cartão</label>
+                                            <input type="text" class="form-control" id="card_holder_name" name="card_holder_name" 
+                                                placeholder="Nome como impresso no cartão" required>
+                                        </div>
+                                    </div>    
                                 </div>
 
-                                <div class="mb-3">
-                                    <label for="card_holder_name" class="form-label">Nome no Cartão</label>
-                                    <input type="text" class="form-control" id="card_holder_name" name="card_holder_name" 
-                                           placeholder="Nome como impresso no cartão" required>
-                                </div>
+                                    
 
                                 <!-- Parcelamento -->
                                 <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label for="installments" class="form-label">Parcelamento</label>
+                                    <div class="col-md-4">
+                                        <label for="installments" class="form-label fw-bold">Parcelamento</label>
                                         <select class="form-select" id="installments" name="installments" required>
-                                            <option value="1">1x sem juros</option>
-                                            <option value="2">2x sem juros</option>
-                                            <option value="3">3x sem juros</option>
-                                            <option value="4">4x sem juros</option>
-                                            <option value="5">5x sem juros</option>
-                                            <option value="6">6x sem juros</option>
-                                            <option value="7">7x sem juros</option>
-                                            <option value="8">8x sem juros</option>
-                                            <option value="9">9x sem juros</option>
-                                            <option value="10">10x sem juros</option>
-                                            <option value="11">11x sem juros</option>
-                                            <option value="12">12x sem juros</option>
+                                            @for($i = 1; $i <= 12; $i++)
+                                                @php
+                                                    $installmentValue = $amount / $i;
+                                                @endphp
+                                                @if($installmentValue >= 10)
+                                                    <option value="{{ $i }}">{{ $i }}x sem juros de R$ {{ number_format($installmentValue, 2, ',', '.') }}</option>
+                                                @endif
+                                            @endfor
                                         </select>
                                     </div>
-                                    <div class="col-md-6">
+
+                                    {{-- <div class="col-md-8">
                                         <label class="form-label">Valor da Parcela</label>
                                         <div class="form-control-plaintext fw-bold text-primary" id="installment_value">
                                             R$ {{ number_format($amount, 2, ',', '.') }}
                                         </div>
-                                    </div>
+                                    </div> --}}
                                 </div>
 
                                 <button type="submit" class="btn btn-primary btn-lg w-100" id="payment_button">
@@ -372,6 +369,17 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="row justify-content-center mt-5">
+                <div class="col-lg-12">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Ao fim do período do seu plano, nenhum pagamento será cobrado automaticamente. Caso queira continuar
+                        usando o <strong>Orça Já!</strong>, você poderá adquirir um novo plano.
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -413,15 +421,25 @@ $(document).ready(function() {
         }
     }).trigger('input'); // Aplica a máscara inicial
     
-    // Máscara dinâmica para telefone (baseada na view de clientes)
-    var phoneOptions = {
+    // Máscara dinâmica para telefone PIX (baseada na view de clientes)
+    var pixPhoneOptions = {
         onKeyPress: function(phone, e, field, options) {
             var masks = ['(00) 0000-00009', '(00) 00000-0000'];
             var mask = (phone.length > 14) ? masks[1] : masks[0];
-            $(field).mask(mask, options);
+            $('#pix_phone').mask(mask, options);
         }
     };
-    $('#pix_phone, #cc_phone').mask('(00) 0000-00009', phoneOptions);
+    $('#pix_phone').mask('(00) 0000-00009', pixPhoneOptions);
+    
+    // Máscara dinâmica para telefone Cartão (baseada na view de clientes)
+    var ccPhoneOptions = {
+        onKeyPress: function(phone, e, field, options) {
+            var masks = ['(00) 0000-00009', '(00) 00000-0000'];
+            var mask = (phone.length > 14) ? masks[1] : masks[0];
+            $('#cc_phone').mask(mask, options);
+        }
+    };
+    $('#cc_phone').mask('(00) 0000-00009', ccPhoneOptions);
     
     // Máscara para número do cartão
     $('#card_number').mask('0000 0000 0000 0000');
