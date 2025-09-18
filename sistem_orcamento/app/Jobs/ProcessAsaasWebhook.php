@@ -446,6 +446,13 @@ class ProcessAsaasWebhook implements ShouldQueue
     private function detectPaymentType(Payment $payment): ?string
     {
         try {
+            // Normalizar billing_cycle para garantir valores válidos
+            $billingCycleForSubscription = match($payment->billing_cycle) {
+                'yearly', 'annual' => 'yearly',
+                'monthly' => 'monthly',
+                default => 'monthly'
+            };
+            
             Log::info('DEBUG: ===== INICIANDO DETECÇÃO DE TIPO DE PAGAMENTO =====', [
                 'payment_id' => $payment->id,
                 'plan_id' => $payment->plan_id,
