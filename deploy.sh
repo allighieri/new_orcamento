@@ -34,8 +34,7 @@ echo "Instalando dependencias do Composer..."
 # Executa as migrações e apaga o banco de dados antes
 echo "Rodando migrations e seeds..."
 #desenvolvimento
-/opt/cpanel/ea-php83/root/usr/bin/php artisan migrate:fresh --force
-/opt/cpanel/ea-php83/root/usr/bin/php artisan migrate --seed
+/opt/cpanel/ea-php83/root/usr/bin/php artisan migrate:fresh --seed --force
 #produção
 #/opt/cpanel/ea-php83/root/usr/bin/php artisan migrate --force
 
