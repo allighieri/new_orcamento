@@ -31,7 +31,7 @@
         </div>
         <div class="payment-status-header">
             @if($payment->isPaid())
-                <i class="bi bi-check-circle-fill status-icon-header text-success"></i>
+                <i class="bi bi-check-circle-fill status-icon-header text-white"></i>
                 <span class="status-text">{{ $translatedStatus }}</span>
             @elseif($payment->status === 'PENDING')
                 <i class="bi bi-clock-fill status-icon-header text-white"></i>
@@ -275,7 +275,7 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="info-item mb-3">
-                    <label class="text-muted small">Status no Gateway</label>
+                    <label class="text-muted small">Status</label>
                     <div class="fw-bold">
                         @php
                             $gatewayStatus = $asaasPayment['status'] ?? 'N/A';
@@ -286,12 +286,14 @@
                 </div>
             </div>
             @if(isset($asaasPayment['invoiceUrl']))
-            <div class="col-md-6">
-                <div class="info-item mb-3">
-                    <label class="text-muted small">Fatura</label>
-                    <div><button type="button" class="btn btn-sm btn-outline-primary" onclick="openCustomInvoiceModal({{ $payment->id }})">Ver Fatura</button></div>
+                @if($payment->isPaid())        
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">Recibo</label>
+                        <div><button type="button" class="btn btn-sm btn-outline-primary" onclick="generateReceipt({{ $payment->id }})">Ver Recibo</button></div>
+                    </div>
                 </div>
-            </div>
+                @endif    
             @endif
         </div>
     </div>
@@ -458,22 +460,6 @@
     color: #6b7280;
 }
 
-/* Cards */
-.card {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-}
-
-.card-header {
-    background: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 1rem 1.5rem;
-}
-
-.card-body {
-    padding: 1.5rem;
-}
 
 /* Responsividade */
 @media (max-width: 768px) {
@@ -539,6 +525,13 @@ function reportProblem() {
     } else {
         alert('Entre em contato conosco através do email: suporte@karaokeclube.com.br');
     }
+}
+
+// Função para gerar recibo
+function generateReceipt(paymentId) {
+    // Abrir recibo em nova janela
+    const receiptUrl = `/payments/${paymentId}/receipt`;
+    window.open(receiptUrl, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
 }
 
 function updatePaymentStatusInModal(paymentId) {
@@ -610,137 +603,7 @@ function updatePaymentStatusInModal(paymentId) {
     });
 }
 
-// Função para abrir modal de fatura do Asaas (mantida para compatibilidade)
-function openInvoiceModal(invoiceUrl) {
-    // Criar modal dinamicamente
-    const modalId = 'invoiceModal';
-    let modal = document.getElementById(modalId);
-    
-    if (modal) {
-        modal.remove();
-    }
-    
-    // Criar nova modal
-    const modalHtml = `
-        <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="invoiceModalLabel">Fatura</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
-                    <div class="modal-body p-0">
-                        <div class="d-flex justify-content-center align-items-center" style="height: 400px;" id="invoiceLoader">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Carregando...</span>
-                            </div>
-                        </div>
-                        <iframe id="invoiceFrame" src="${invoiceUrl}" style="width: 100%; height: 600px; border: none; display: none;"></iframe>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        <a href="${invoiceUrl}" target="_blank" class="btn btn-primary">Abrir em Nova Aba</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    modal = document.getElementById(modalId);
-    
-    // Configurar iframe
-    const iframe = document.getElementById('invoiceFrame');
-    const loader = document.getElementById('invoiceLoader');
-    
-    iframe.onload = function() {
-        loader.style.display = 'none';
-        iframe.style.display = 'block';
-    };
-    
-    // Mostrar modal
-    const bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
-    
-    // Limpar modal quando fechar
-    modal.addEventListener('hidden.bs.modal', function () {
-        modal.remove();
-    });
-}
 
-// Função para abrir nossa fatura personalizada
-function openCustomInvoiceModal(paymentId) {
-    const modalId = 'customInvoiceModal';
-    let modal = document.getElementById(modalId);
-    
-    if (modal) {
-        modal.remove();
-    }
-    
-    // Criar modal
-    const modalHtml = `
-        <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="customInvoiceModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content" id="customInvoiceContent">
-                    <div class="modal-body text-center py-5">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Carregando fatura...</span>
-                        </div>
-                        <p class="mt-3 text-muted">Carregando fatura...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    modal = document.getElementById(modalId);
-    
-    // Mostrar modal
-    const bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
-    
-    // Carregar conteúdo da fatura via AJAX
-    fetch(`/payments/${paymentId}/invoice`, {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'text/html'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Erro ao carregar fatura');
-        }
-        return response.text();
-    })
-    .then(html => {
-        document.getElementById('customInvoiceContent').innerHTML = html;
-    })
-    .catch(error => {
-        console.error('Erro:', error);
-        document.getElementById('customInvoiceContent').innerHTML = `
-            <div class="modal-header">
-                <h5 class="modal-title">Erro</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body text-center py-5">
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Não foi possível carregar a fatura. Tente novamente.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            </div>
-        `;
-    });
-    
-    // Limpar modal quando fechar
-     modal.addEventListener('hidden.bs.modal', function () {
-         modal.remove();
-     });
- }
 
  // Função para gerar recibo
  function generateReceipt(paymentId) {
