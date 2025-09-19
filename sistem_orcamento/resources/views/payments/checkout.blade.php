@@ -227,7 +227,7 @@
                                         <div class="mb-3">
                                             <label for="cc_address_number" class="form-label">Número</label>
                                             <input type="text" class="form-control" id="cc_address_number" name="address_number" 
-                                                   value="" placeholder="07" required>
+                                                   value="" placeholder="" required>
                                         </div>
                                     </div>
                                
@@ -545,10 +545,17 @@ $(document).ready(function() {
                 console.log('Resposta do PIX:', response);
                 console.log('QR Code recebido:', response.pix_qr_code);
                 console.log('Payload recebido:', response.pix_copy_paste);
+                console.log('QR Code Data completo:', response.qr_code_data);
                 
                 if (response.success) {
-                    // Exibir QR Code
-                    showPixQrCode(response.pix_qr_code, response.pix_copy_paste, response.due_date);
+                    // Exibir QR Code - usar encodedImage se pix_qr_code estiver vazio
+                    var qrCodeImage = response.pix_qr_code || (response.qr_code_data ? response.qr_code_data.encodedImage : null);
+                    var copyPasteCode = response.pix_copy_paste || (response.qr_code_data ? response.qr_code_data.payload : null);
+                    
+                    console.log('QR Code final a ser exibido:', qrCodeImage);
+                    console.log('Copy paste final:', copyPasteCode);
+                    
+                    showPixQrCode(qrCodeImage, copyPasteCode, response.due_date);
                     
                     // Iniciar verificação de status em tempo real
                     if (response.payment_id) {
@@ -931,9 +938,11 @@ $(document).ready(function() {
     window.Echo.channel('payments')
         .listen('.payment.confirmed', (e) => {
             console.log('Evento de pagamento recebido:', e);
+            console.log('Payment ID do evento:', e.payment_id);
+            console.log('Payment ID atual:', {{ $payment->id ?? 'null' }});
             
-            // Verificar se é o pagamento atual
-            if (e.paymentId == {{ $payment->id ?? 'null' }}) {
+            // Verificar se é o pagamento atual (corrigir nome do campo)
+            if (e.payment_id == {{ $payment->id ?? 'null' }}) {
                 // Mostrar notificação de sucesso
                 Swal.fire({
                     icon: 'success',
@@ -952,11 +961,12 @@ $(document).ready(function() {
         });    
     @endif
     
-    // Configurar escuta de eventos de pagamento em tempo real
+    // Configurar escuta de eventos de pagamento em tempo real (fallback)
     if (window.Echo) {
         window.Echo.channel('payments')
             .listen('.payment.confirmed', (e) => {
-                console.log('Evento de pagamento recebido em checkout:', e);
+                console.log('Evento de pagamento recebido em checkout (fallback):', e);
+                console.log('Payment ID do evento (fallback):', e.payment_id);
                 
                 // Mostrar notificação de sucesso
                 if (typeof Swal !== 'undefined') {

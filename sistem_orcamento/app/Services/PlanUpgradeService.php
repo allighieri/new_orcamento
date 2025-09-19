@@ -41,7 +41,7 @@ class PlanUpgradeService
             
             // Normalizar billing_cycle para garantir valores válidos
             $billingCycleForSubscription = match($payment->billing_cycle ?? 'monthly') {
-                'yearly', 'annual' => 'yearly',
+                'yearly' => 'yearly',
                 'monthly' => 'monthly',
                 default => 'monthly'
             };

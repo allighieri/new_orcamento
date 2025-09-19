@@ -73,10 +73,10 @@ class SubscriptionController extends Controller
             // Criar assinatura
             $startDate = now();
             
-            // Normalizar billing_cycle para evitar valores inválidos como 'annual'
+            // Normalizar billing_cycle para evitar valores inválidos
             $billingCycle = in_array($request->billing_cycle, ['monthly', 'yearly']) 
                 ? $request->billing_cycle 
-                : ($request->billing_cycle === 'annual' ? 'yearly' : 'monthly');
+                : 'monthly';
             
             $endDate = $billingCycle === 'yearly' ? $startDate->copy()->addYear() : $startDate->copy()->addMonth();
             $gracePeriodEndDate = $endDate->copy()->addDays(3); // 3 dias de período de graça
@@ -112,7 +112,7 @@ class SubscriptionController extends Controller
             $payment = Payment::create([
                 'subscription_id' => $subscription->id,
                 'asaas_payment_id' => $paymentData['payment_id'],
-                'asaas_subscription_id' => null, // Será preenchido se for assinatura recorrente
+                'asaas_subscription_id' => null, // Não usamos assinaturas recorrentes
                 'payment_id' => null, // Será preenchido pelo webhook
                 'amount' => $amount,
                 'billing_type' => $this->mapPaymentMethod($request->payment_method),
@@ -266,7 +266,7 @@ class SubscriptionController extends Controller
             $payment = Payment::create([
                 'subscription_id' => $subscription->id,
                 'asaas_payment_id' => $paymentData['payment_id'],
-                'asaas_subscription_id' => null, // Será preenchido se for assinatura recorrente
+                'asaas_subscription_id' => null, // Não usamos assinaturas recorrentes
                 'payment_id' => null, // Será preenchido pelo webhook
                 'amount' => $amount,
                 'billing_type' => $this->mapPaymentMethod($request->payment_method),

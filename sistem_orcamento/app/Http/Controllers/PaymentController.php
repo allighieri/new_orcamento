@@ -266,7 +266,7 @@ class PaymentController extends Controller
                 ];
                 
                 $asaasPayment = $this->asaasService->createPixCharge($paymentData);
-                $asaasSubscription = null; // Não há assinatura recorrente
+                $asaasSubscription = null; // Não usamos assinaturas recorrentes
             } else {
                 // Criar cobrança PIX normal
                 $paymentData = [
@@ -393,13 +393,9 @@ class PaymentController extends Controller
                 $responseDueDate = $asaasPayment['dueDate'];
             }
             
-            return response()->json([
-                'success' => true,
-                'payment_id' => $payment->id,
-                'pix_qr_code' => $qrCodeImage,
-                'pix_copy_paste' => $payload,
-                'due_date' => $responseDueDate
-            ]);
+            // Redirecionar para a página de pagamento PIX
+            return redirect()->route('payments.pix-payment', $payment)
+                ->with('success', 'Pagamento PIX criado com sucesso!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -572,7 +568,7 @@ class PaymentController extends Controller
                 }
                 
                 $asaasPayment = $this->asaasService->createCreditCardCharge($paymentData);
-                $asaasSubscription = null; // Não há assinatura recorrente
+                $asaasSubscription = null; // Não usamos assinaturas recorrentes
             } else {
                 // Para todos os outros casos (planos mensais, orçamentos extras, etc.) - sempre cobrança única
                 $price = $billingCycle === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
@@ -620,7 +616,7 @@ class PaymentController extends Controller
                 }
 
                 $asaasPayment = $this->asaasService->createCreditCardCharge($paymentData);
-                $asaasSubscription = null; // Nunca há assinatura recorrente
+                $asaasSubscription = null; // Não usamos assinaturas recorrentes
             }
 
             // Salvar pagamento no banco
@@ -631,7 +627,7 @@ class PaymentController extends Controller
                     'company_id' => $company->id,
                     'plan_id' => $plan->id,
                     'asaas_payment_id' => $asaasPayment['id'], // ID da cobrança única
-                    'asaas_subscription_id' => null, // Não há assinatura recorrente
+                    'asaas_subscription_id' => null, // Não usamos assinaturas recorrentes
                     'asaas_customer_id' => $customer['id'],
                     'amount' => $yearlyTotalPrice, // Valor total anual
                     'billing_type' => 'CREDIT_CARD',
@@ -647,7 +643,7 @@ class PaymentController extends Controller
                     'company_id' => $company->id,
                     'plan_id' => $plan->id,
                     'asaas_payment_id' => $asaasPayment['id'], // ID da cobrança única
-                    'asaas_subscription_id' => null, // Não há assinatura recorrente
+                    'asaas_subscription_id' => null, // Não usamos assinaturas recorrentes
                     'asaas_customer_id' => $customer['id'],
                     'amount' => $plan->monthly_price, // Valor total do plano mensal
                     'billing_type' => 'CREDIT_CARD',
@@ -1160,6 +1156,14 @@ class PaymentController extends Controller
 
         // Verificar se é um pagamento PIX
         if ($payment->billing_type !== 'PIX') {
+            // Se for requisição AJAX, retornar JSON
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este pagamento não é do tipo PIX.'
+                ], 400);
+            }
+            
             return redirect()->route('payments.index')
                 ->with('error', 'Este pagamento não é do tipo PIX.');
         }
@@ -1171,12 +1175,40 @@ class PaymentController extends Controller
                 $qrCodeData = $this->asaasService->getPixQrCode($payment->asaas_payment_id);
             }
 
+            // Se for requisição AJAX, retornar JSON
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'payment' => [
+                        'id' => $payment->id,
+                        'status' => $payment->status,
+                        'amount' => $payment->amount,
+                        'due_date' => $payment->due_date,
+                        'description' => $payment->description,
+                        'billing_type' => $payment->billing_type
+                    ],
+                    'qr_code_data' => $qrCodeData,
+                    'pix_qr_code' => $qrCodeData['encodedImage'] ?? null,
+                    'pix_copy_paste' => $qrCodeData['payload'] ?? null,
+                    'payment_id' => $payment->id,
+                    'due_date' => $payment->due_date
+                ]);
+            }
+
             return view('payments.pix-payment', compact('payment', 'qrCodeData'));
         } catch (\Exception $e) {
             \Log::error('Erro ao carregar QR Code PIX', [
                 'error' => $e->getMessage(),
                 'payment_id' => $payment->id
             ]);
+            
+            // Se for requisição AJAX, retornar JSON de erro
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Não foi possível carregar o QR Code PIX.'
+                ], 500);
+            }
             
             return view('payments.pix-payment', compact('payment'))
                 ->with('error', 'Não foi possível carregar o QR Code PIX.');
@@ -1510,7 +1542,7 @@ class PaymentController extends Controller
                 'subscription_id' => $activeSubscription->id,
                 'asaas_payment_id' => $asaasPayment['id'],
                 'asaas_customer_id' => $customer['id'],
-                'asaas_subscription_id' => null, // Não é uma assinatura recorrente
+                'asaas_subscription_id' => null, // Não usamos assinaturas recorrentes
                 'payment_id' => null, // Será preenchido pelo webhook
                 'amount' => $totalAmount,
                 'billing_type' => strtoupper($request->payment_type),

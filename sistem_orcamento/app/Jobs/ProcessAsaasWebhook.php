@@ -363,7 +363,7 @@ class ProcessAsaasWebhook implements ShouldQueue
     {
         // Normalizar billing_cycle para garantir valores válidos
         $billingCycleForSubscription = match($payment->billing_cycle) {
-            'yearly', 'annual' => 'yearly',
+            'yearly' => 'yearly',
             'monthly' => 'monthly',
             default => 'monthly'
         };
@@ -408,240 +408,32 @@ class ProcessAsaasWebhook implements ShouldQueue
             'current_type' => $payment->type
         ]);
         
-        // Detectar automaticamente mudanças de plano se o tipo não estiver definido
-        if (!$payment->type || $payment->type === 'subscription') {
-            $detectedType = $this->detectPaymentType($payment);
-            if ($detectedType && $detectedType !== $payment->type) {
-                $payment->update(['type' => $detectedType]);
-                Log::info('Tipo de pagamento detectado automaticamente', [
-                    'payment_id' => $payment->id,
-                    'detected_type' => $detectedType,
-                    'original_type' => $payment->type
-                ]);
-            }
-        }
-        
-        Log::info('DEBUG: Tipo de pagamento final', [
-            'payment_id' => $payment->id,
-            'payment_type' => $payment->type
-        ]);
-        
-        // Verificar tipo de pagamento
-        if ($payment->type === 'cancellation_fee') {
-            $this->handleCancellationFeePayment($payment);
-        } elseif ($payment->type === 'plan_change') {
-            $this->handlePlanChangePayment($payment, $planUpgradeService);
-        } elseif ($payment->type === 'plan_change_yearly') {
-            $this->handleYearlyPlanChangePayment($payment, $paymentData);
-        } elseif ($payment->type === 'extra_budgets') {
-            $this->handleExtraBudgetsPayment($payment, $planUpgradeService);
-        } else {
-            $this->handleSubscriptionPayment($payment, $paymentData);
-        }
+        // Simplificar: todos os pagamentos são tratados como subscriptions
+        // Não há mais assinaturas recorrentes, apenas pagamentos únicos
+        $this->handleSubscriptionPayment($payment, $paymentData);
     }
 
-    /**
-     * Detectar automaticamente o tipo de pagamento baseado no contexto
-     */
-    private function detectPaymentType(Payment $payment): ?string
-    {
-        try {
-            // Normalizar billing_cycle para garantir valores válidos
-            $billingCycleForSubscription = match($payment->billing_cycle) {
-                'yearly', 'annual' => 'yearly',
-                'monthly' => 'monthly',
-                default => 'monthly'
-            };
-            
-            Log::info('DEBUG: ===== INICIANDO DETECÇÃO DE TIPO DE PAGAMENTO =====', [
-                'payment_id' => $payment->id,
-                'plan_id' => $payment->plan_id,
-                'company_id' => $payment->company_id,
-                'billing_cycle' => $billingCycleForSubscription
-             ]);
-            
-            // Se não tem plan_id, não é mudança de plano
-            if (!$payment->plan_id) {
-                Log::info('DEBUG: Sem plan_id, retornando null', [
-                    'payment_id' => $payment->id
-                ]);
-                return null;
-            }
-            
-            // Buscar empresa e assinatura ativa
-            $company = \App\Models\Company::find($payment->company_id);
-            if (!$company) {
-                Log::error('DEBUG: Empresa não encontrada', [
-                    'payment_id' => $payment->id,
-                    'company_id' => $payment->company_id
-                ]);
-                return null;
-            }
-            
-            $activeSubscription = $company->activeSubscription();
-            
-            Log::info('DEBUG: Verificando assinatura ativa', [
-                'payment_id' => $payment->id,
-                'company_id' => $payment->company_id,
-                'has_active_subscription' => $activeSubscription ? true : false,
-                'active_subscription_id' => $activeSubscription ? $activeSubscription->id : null,
-                'active_plan_id' => $activeSubscription ? $activeSubscription->plan_id : null
-            ]);
-            
-            if (!$activeSubscription) {
-                // Se não há assinatura ativa, é uma nova assinatura
-                Log::info('DEBUG: Sem assinatura ativa, detectado como subscription', [
-                    'payment_id' => $payment->id
-                ]);
-                return 'subscription';
-            }
-            
-            Log::info('DEBUG: ATENÇÃO - Assinatura ativa encontrada quando não deveria ter', [
-                'payment_id' => $payment->id,
-                'active_subscription_id' => $activeSubscription->id,
-                'active_subscription_status' => $activeSubscription->status,
-                'active_subscription_ends_at' => $activeSubscription->ends_at,
-                'now' => now(),
-                'comparison' => $activeSubscription->ends_at >= now() ? 'ends_at >= now (true)' : 'ends_at < now (false)'
-            ]);
-            
-            // Se o plano do pagamento é diferente do plano da assinatura ativa, é mudança de plano
-            if ($payment->plan_id != $activeSubscription->plan_id) {
-                Log::info('DEBUG: Detectada mudança de plano', [
-                'payment_id' => $payment->id,
-                'old_plan_id' => $activeSubscription->plan_id,
-                'new_plan_id' => $payment->plan_id,
-                'billing_cycle' => $billingCycleForSubscription
-            ]);
-                
-                // Verificar se é anual ou mensal baseado no billing_cycle
-             if ($billingCycleForSubscription === 'yearly') {
-                 return 'plan_change_yearly';
-             } else {
-                 return 'plan_change';
-             }
-            }
-            
-            // Se é o mesmo plano, pode ser renovação ou orçamentos extras
-            // Verificar se tem metadata de orçamentos extras
-            $metadata = is_string($payment->metadata) ? json_decode($payment->metadata, true) : $payment->metadata;
-            if ($metadata && isset($metadata['extra_budgets_quantity'])) {
-                Log::info('DEBUG: Detectado como extra_budgets', [
-                    'payment_id' => $payment->id,
-                    'metadata' => $metadata
-                ]);
-                return 'extra_budgets';
-            }
-            
-            // CORREÇÃO: Se já tem assinatura ativa, mesmo sendo o mesmo plano,
-            // deve ser tratado como mudança de plano para herdar orçamentos corretamente
-            Log::info('DEBUG: Mesmo plano com assinatura ativa - tratando como plan_change', [
-                'payment_id' => $payment->id,
-                'same_plan' => true,
-                'active_subscription_id' => $activeSubscription->id
-            ]);
-            
-            // Verificar se é anual ou mensal baseado no billing_cycle
-                if ($billingCycleForSubscription === 'yearly') {
-            return 'plan_change_yearly';
-            } else {
-                return 'plan_change';
-            }
-            
-        } catch (\Exception $e) {
-            Log::error('Erro ao detectar tipo de pagamento', [
-                'payment_id' => $payment->id,
-                'error' => $e->getMessage()
-            ]);
-            return null;
-        }
-    }
 
-    /**
-     * Processar pagamento de orçamentos extras
-     */
-    private function handleExtraBudgetsPayment(Payment $payment, PlanUpgradeService $planUpgradeService)
-    {
-        // Buscar assinatura ativa da empresa
-        $subscription = Subscription::where('company_id', $payment->company_id)
-            ->where('status', 'active')
-            ->first();
-            
-        if (!$subscription) {
-            Log::error('Assinatura ativa não encontrada para pagamento de orçamentos extras', [
-                'payment_id' => $payment->id,
-                'company_id' => $payment->company_id
-            ]);
-            return;
-        }
-        
-        // Obter quantidade de orçamentos extras do metadata do pagamento
-        $asaasResponse = is_string($payment->asaas_response) ? json_decode($payment->asaas_response, true) : $payment->asaas_response;
-        $quantity = $asaasResponse['extra_budgets_quantity'] ?? ($subscription->plan->budget_limit ?? 10);
-        
-        // Usar o PlanUpgradeService para processar a compra
-        $planUpgradeService->processExtraBudgetsPurchase($subscription, $quantity, $payment);
-        
-        Log::info('Orçamentos extras processados via PlanUpgradeService (fila)', [
-            'payment_id' => $payment->id,
-            'company_id' => $payment->company_id,
-            'subscription_id' => $subscription->id,
-            'quantity' => $quantity,
-            'amount_paid' => $payment->amount
-        ]);
-    }
+
 
     /**
      * Processar pagamento de assinatura
      */
     private function handleSubscriptionPayment(Payment $payment, array $paymentData = [])
     {
-
-
-	// Definir o ciclo de cobrança baseado no payment->billing_cycle
+        // Definir o ciclo de cobrança baseado no payment->billing_cycle
         $billingCycleForSubscription = match($payment->billing_cycle) {
-            'monthly' => 'monthly',
             'yearly' => 'yearly',
-            default => 'monthly' // Valor padrão para casos não previstos
+            'monthly' => 'monthly',
+            default => 'monthly'
         };
 
-
-	// Adicione esta linha:
-	$billingCycleForSubscription = 'monthly'; // Ou outro valor padrão que faça sentido para você
-
-        // Se o pagamento tem asaas_subscription_id, é uma cobrança recorrente (apenas para planos mensais)
-        if ($payment->asaas_subscription_id) {
-            // Buscar assinatura existente com o mesmo asaas_subscription_id
-            $subscriptionByAsaasId = Subscription::where('asaas_subscription_id', $payment->asaas_subscription_id)
-                ->where('status', 'active')
-                ->first();
-                
-            if ($subscriptionByAsaasId) {
-                Log::info('Pagamento recorrente de assinatura confirmado (fila)', [
-                    'payment_id' => $payment->id,
-                    'subscription_id' => $subscriptionByAsaasId->id,
-                    'asaas_subscription_id' => $payment->asaas_subscription_id,
-                    'amount' => $payment->amount
-                ]);
-                return; // Não precisa criar nova assinatura
-            }
-            
-            // Primeiro pagamento da assinatura - criar assinatura
-            Log::info('Primeiro pagamento de assinatura - criando assinatura (fila)', [
-                'payment_id' => $payment->id,
-                'company_id' => $payment->company_id,
-                'billing_cycle' => $billingCycleForSubscription,
-                'asaas_subscription_id' => $payment->asaas_subscription_id
-            ]);
-        } else if ($billingCycleForSubscription === 'yearly') {
-            // Para planos anuais, é um pagamento único - criar assinatura diretamente
-            Log::info('Pagamento único anual confirmado - criando assinatura (fila)', [
-                'payment_id' => $payment->id,
-                'company_id' => $payment->company_id,
-                'billing_cycle' => $billingCycleForSubscription,
-                'amount' => $payment->amount
-            ]);
-        }
+        Log::info('Processando pagamento como subscription simples', [
+            'payment_id' => $payment->id,
+            'company_id' => $payment->company_id,
+            'billing_cycle' => $billingCycleForSubscription,
+            'amount' => $payment->amount
+        ]);
         
         // Buscar e cancelar TODAS as assinaturas ativas da empresa antes de criar nova
         // Usar lockForUpdate para evitar condições de corrida
@@ -795,128 +587,7 @@ class ProcessAsaasWebhook implements ShouldQueue
         // Por exemplo, reativar a empresa ou permitir nova assinatura
     }
     
-    /**
-     * Processar pagamento de mudança entre planos anuais
-     */
-    private function handleYearlyPlanChangePayment(Payment $payment, array $paymentData)
-    {
-        Log::info('Pagamento de mudança entre planos anuais confirmado via fila', [
-            'payment_id' => $payment->id,
-            'company_id' => $payment->company_id,
-            'new_plan_id' => $payment->plan_id,
-            'amount' => $payment->amount
-        ]);
-        
-        try {
-            $company = \App\Models\Company::find($payment->company_id);
-            $newPlan = \App\Models\Plan::find($payment->plan_id);
-            
-            if (!$company || !$newPlan) {
-                Log::error('Empresa ou plano não encontrado para mudança de plano anual', [
-                    'payment_id' => $payment->id,
-                    'company_id' => $payment->company_id,
-                    'plan_id' => $payment->plan_id
-                ]);
-                return;
-            }
-            
-            // Buscar assinatura ativa para usar com PlanUpgradeService
-            $activeSubscription = $company->activeSubscription();
-            
-            if (!$activeSubscription) {
-                Log::error('Assinatura ativa não encontrada para mudança de plano anual', [
-                    'payment_id' => $payment->id,
-                    'company_id' => $payment->company_id
-                ]);
-                return;
-            }
-            
-            // Usar o PlanUpgradeService para processar o upgrade com herança de orçamentos
-            $planUpgradeService = new \App\Services\PlanUpgradeService();
-            $newSubscription = $planUpgradeService->processUpgrade($activeSubscription, $newPlan, $payment);
-            
-            Log::info('Mudança de plano anual processada via PlanUpgradeService (webhook)', [
-                'payment_id' => $payment->id,
-                'company_id' => $payment->company_id,
-                'old_subscription_id' => $activeSubscription->id,
-                'new_subscription_id' => $newSubscription->id,
-                'new_plan_id' => $newPlan->id,
-                'billing_cycle' => $billingCycleForSubscription
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Erro ao processar mudança de plano anual via webhook', [
-                'payment_id' => $payment->id,
-                'company_id' => $payment->company_id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
-    }
-    
-    /**
-     * Processar pagamento de mudança de plano
-     */
-    private function handlePlanChangePayment(Payment $payment, PlanUpgradeService $planUpgradeService)
-    {
-        // Normalizar billing_cycle para garantir valores válidos
-        $billingCycleForSubscription = match($payment->billing_cycle) {
-            'yearly', 'annual' => 'yearly',
-            'monthly' => 'monthly',
-            default => 'monthly'
-        };
-        
-        Log::info('Pagamento de mudança de plano confirmado via fila', [
-            'payment_id' => $payment->id,
-            'company_id' => $payment->company_id,
-            'amount' => $payment->amount,
-            'metadata' => $payment->metadata
-        ]);
-        
-        try {
-            $company = \App\Models\Company::find($payment->company_id);
-            $newPlan = \App\Models\Plan::find($payment->plan_id);
-            
-            if (!$company || !$newPlan) {
-                Log::error('Empresa ou plano não encontrado para mudança de plano', [
-                    'payment_id' => $payment->id,
-                    'company_id' => $payment->company_id,
-                    'plan_id' => $payment->plan_id
-                ]);
-                return;
-            }
-            
-            // Buscar assinatura ativa
-            $activeSubscription = $company->activeSubscription();
-            
-            if (!$activeSubscription) {
-                Log::error('Assinatura ativa não encontrada para mudança de plano', [
-                    'payment_id' => $payment->id,
-                    'company_id' => $payment->company_id
-                ]);
-                return;
-            }
-            
-            // Usar o PlanUpgradeService para processar o upgrade
-            $newSubscription = $planUpgradeService->processUpgrade($activeSubscription, $newPlan, $payment);
-            
-            Log::info('Mudança de plano processada via PlanUpgradeService (webhook)', [
-                'payment_id' => $payment->id,
-                'company_id' => $payment->company_id,
-                'old_subscription_id' => $activeSubscription->id,
-                'new_subscription_id' => $newSubscription->id,
-                'new_plan_id' => $newPlan->id
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Erro ao processar mudança de plano via webhook', [
-                'payment_id' => $payment->id,
-                'company_id' => $payment->company_id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
-    }
+
 
     /**
      * Handle a job failure.
