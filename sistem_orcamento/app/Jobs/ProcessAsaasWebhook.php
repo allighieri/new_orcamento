@@ -596,6 +596,19 @@ class ProcessAsaasWebhook implements ShouldQueue
      */
     private function handleSubscriptionPayment(Payment $payment, array $paymentData = [])
     {
+
+
+	// Definir o ciclo de cobrança baseado no payment->billing_cycle
+        $billingCycleForSubscription = match($payment->billing_cycle) {
+            'monthly' => 'monthly',
+            'yearly' => 'yearly',
+            default => 'monthly' // Valor padrão para casos não previstos
+        };
+
+
+	// Adicione esta linha:
+	$billingCycleForSubscription = 'monthly'; // Ou outro valor padrão que faça sentido para você
+
         // Se o pagamento tem asaas_subscription_id, é uma cobrança recorrente (apenas para planos mensais)
         if ($payment->asaas_subscription_id) {
             // Buscar assinatura existente com o mesmo asaas_subscription_id

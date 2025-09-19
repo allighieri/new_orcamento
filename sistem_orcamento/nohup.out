@@ -1,0 +1,45 @@
+  2025-09-18 16:03:19 App\Jobs\ProcessAsaasWebhook ................... RUNNING
+  2025-09-18 16:03:20 App\Jobs\ProcessAsaasWebhook ............. 248.97ms DONE
+  2025-09-18 16:08:05 App\Jobs\ProcessAsaasWebhook ................... RUNNING
+  2025-09-18 16:08:05 App\Jobs\ProcessAsaasWebhook ............. 105.97ms FAIL
+  2025-09-18 16:08:05 App\Jobs\ProcessAsaasWebhook ................... RUNNING
+  2025-09-18 16:08:05 App\Jobs\ProcessAsaasWebhook .............. 37.99ms FAIL
+  2025-09-18 16:08:05 App\Jobs\ProcessAsaasWebhook ................... RUNNING
+  2025-09-18 16:08:05 App\Jobs\ProcessAsaasWebhook .............. 24.02ms FAIL
+  2025-09-18 16:33:53 App\Jobs\ProcessAsaasWebhook ................... RUNNING
+  2025-09-18 16:33:53 App\Jobs\ProcessAsaasWebhook .............. 43.92ms DONE
+  2025-09-18 16:33:53 App\Jobs\ProcessAsaasWebhook ................... RUNNING
+  2025-09-18 16:33:53 App\Jobs\ProcessAsaasWebhook ............... 9.38ms DONE
+  2025-09-18 16:33:53 App\Jobs\ProcessAsaasWebhook ................... RUNNING
+  2025-09-18 16:33:53 App\Jobs\ProcessAsaasWebhook ............... 8.53ms DONE
+  2025-09-18 16:33:56 App\Jobs\ProcessAsaasWebhook ................... RUNNING
+  2025-09-18 16:33:56 App\Jobs\ProcessAsaasWebhook ............... 8.47ms DONE
+  2025-09-18 16:33:56 App\Jobs\ProcessAsaasWebhook ................... RUNNING
+  2025-09-18 16:33:56 App\Jobs\ProcessAsaasWebhook .............. 31.79ms FAIL
+  2025-09-18 16:33:56 App\Jobs\ProcessAsaasWebhook ................... RUNNING
+  2025-09-18 16:33:56 App\Jobs\ProcessAsaasWebhook ............... 7.44ms DONE
+  2025-09-18 16:33:56 App\Jobs\ProcessAsaasWebhook ................... RUNNING
+  2025-09-18 16:33:56 App\Jobs\ProcessAsaasWebhook .............. 25.91ms FAIL
+  2025-09-18 16:33:56 App\Jobs\ProcessAsaasWebhook ................... RUNNING
+  2025-09-18 16:33:56 App\Jobs\ProcessAsaasWebhook .............. 16.99ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[42S02]: Base table or view not found: 1146 Table 'karaoke_orcamento_test.cache' doesn't exist (Connection: mysql, SQL: select * from `cache` where `key` in (orca-ja-cache-illuminate:queue:restart))
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+      [2m+31 vendor frames [22m
+
+  32  artisan:16
+      Illuminate\Foundation\Application::handleCommand()
+
